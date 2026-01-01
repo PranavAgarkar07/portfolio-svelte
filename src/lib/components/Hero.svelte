@@ -7,9 +7,11 @@
             role: string;
             tagline: string;
             status: string;
+            avatar: string;
         };
         about: {
             bio: string;
+            stats: Array<{ label: string; value: string }>;
         };
         skills: Array<{ name: string; icon: string }>;
     }
@@ -72,20 +74,28 @@
         <h2>About Me</h2>
     </div>
     <div class="aero-card content-card fade-in">
-        <div class="about-simple-layout">
-            <p id="about-bio" class="bio-text">{about.bio}</p>
+        <div class="visual-profile">
+            <!-- Left Colon: Holographic Frame -->
+            <div class="profile-frame">
+                <img
+                    src={profile.avatar}
+                    alt="Pilot Avatar"
+                    class="profile-img"
+                />
+                <div class="frame-corners"></div>
+            </div>
 
-            <div class="about-meta-row">
-                <div class="meta-item">
-                    <i class="devicon-linux-plain"></i>
-                    <span>Solapur, India</span>
-                </div>
-                <div class="meta-separator">|</div>
-                <div class="meta-item">
-                    <div class="status-indicator">
-                        <span class="status-dot"></span>
-                        <span>{profile.status}</span>
-                    </div>
+            <!-- Right Column: Intel -->
+            <div class="profile-intel">
+                <p id="about-bio" class="bio-text">{about.bio}</p>
+
+                <div class="mission-stats">
+                    {#each about.stats as stat}
+                        <div class="stat-item">
+                            <span class="stat-label">{stat.label}</span>
+                            <span class="stat-value">{stat.value}</span>
+                        </div>
+                    {/each}
                 </div>
             </div>
         </div>
@@ -94,7 +104,7 @@
 
 <section id="skills" class="section-container">
     <div class="section-header fade-in">
-        <h2>Technical Arsenal</h2>
+        <h2>Technical Proficiency</h2>
     </div>
     <div class="skills-grid">
         {#each skills as skill}

@@ -11,13 +11,20 @@ export const portfolioData = {
             { name: "LinkedIn", url: "https://www.linkedin.com/in/pranavagarkar", label: "LINK_NET", icon: "fab fa-linkedin" },
             { name: "Email", url: "mailto:pranavagarkar8@gmail.com", label: "MAIL_TO", icon: "fas fa-envelope" },
             { name: "Resume", url: "./Pranav_Agarkar_Resume.pdf", label: "RESUME", icon: "fas fa-file-alt" }
-        ]
+        ],
+        avatar: "/src/lib/assets/avatar.png" // Asset path
     },
     about: {
-        bio: "2nd Year CSE student at Walchand Institute of Technology, Solapur. I build full-stack applications with Django and React/Svelte, focusing on clean architecture, secure data handling, and modern UI/UX. From encrypted task managers to offline P2P file transfer systems—I enjoy solving real problems with code."
+        bio: "2nd Year CSE student at Walchand Institute of Technology, Solapur. I build full-stack applications with Django and React/Svelte, focusing on clean architecture, secure data handling, and modern UI/UX. From encrypted task managers to offline P2P file transfer systems—I enjoy solving real problems with code.",
+        stats: [
+            { label: "EXPERIENCE", value: "2+ Years" },
+            { label: "EDUCATION", value: "B.Tech CSE" },
+            { label: "TECH STACK", value: "Full Stack" },
+            { label: "STATUS", value: "Available" }
+        ]
     },
     skills: [
-        { name: "Python", icon: "devicon-python-plain colored" },
+        { name: "Python", icon: "devicon-python-plain" },
         { name: "Django", icon: "devicon-django-plain" },
         { name: "React", icon: "devicon-react-original colored" },
         { name: "Svelte", icon: "devicon-svelte-plain colored" },
