@@ -236,9 +236,6 @@ a {
     /* JS controlled */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' fill='none' stroke='%23ff3300' stroke-width='2'/%3E%3C/svg%3E");
     transition: width 0.1s linear;
-    border-right: 2px solid var(--accent);
-    box-shadow: 2px 0 10px var(--accent);
-    /* Leading edge glow */
 }
 
 /* Quick Connect Socials */
