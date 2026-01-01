@@ -1,0 +1,107 @@
+<script lang="ts">
+    import { onMount } from "svelte";
+
+    interface Props {
+        profile: {
+            name: string;
+            role: string;
+            tagline: string;
+            status: string;
+        };
+        about: {
+            bio: string;
+        };
+        skills: Array<{ name: string; icon: string }>;
+    }
+
+    let { profile, about, skills }: Props = $props();
+
+    let displayName = $state("");
+    let displayRole = $state("");
+
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%";
+
+    function decryptText(target: string, setter: (val: string) => void) {
+        let iteration = 0;
+        const interval = setInterval(() => {
+            setter(
+                target
+                    .split("")
+                    .map((char, i) => {
+                        if (i < iteration) return char;
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    })
+                    .join(""),
+            );
+
+            iteration += 1 / 3;
+            if (iteration >= target.length) clearInterval(interval);
+        }, 30);
+    }
+
+    onMount(() => {
+        decryptText(profile.name, (v) => (displayName = v));
+        setTimeout(
+            () => decryptText(profile.role, (v) => (displayRole = v)),
+            300,
+        );
+    });
+</script>
+
+<section id="hero" class="hero-section">
+    <div class="aero-card hero-content fade-in-up">
+        <span
+            class="badge"
+            id="hero-status"
+            class:available={profile.status.includes("Open")}
+            >{profile.status}</span
+        >
+        <h1 id="hero-name">{displayName || profile.name}</h1>
+        <h2 id="hero-role">{displayRole || profile.role}</h2>
+        <p class="tagline" id="hero-tagline">{profile.tagline}</p>
+
+        <div class="cta-group">
+            <a href="#projects" class="btn btn-primary">View Work</a>
+            <a href="#contact" class="btn btn-secondary">Contact Me</a>
+        </div>
+    </div>
+</section>
+
+<section id="about" class="section-container">
+    <div class="section-header fade-in">
+        <h2>About Me</h2>
+    </div>
+    <div class="aero-card content-card fade-in">
+        <div class="about-simple-layout">
+            <p id="about-bio" class="bio-text">{about.bio}</p>
+
+            <div class="about-meta-row">
+                <div class="meta-item">
+                    <i class="devicon-linux-plain"></i>
+                    <span>Solapur, India</span>
+                </div>
+                <div class="meta-separator">|</div>
+                <div class="meta-item">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>{profile.status}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="skills" class="section-container">
+    <div class="section-header fade-in">
+        <h2>Technical Arsenal</h2>
+    </div>
+    <div class="skills-grid">
+        {#each skills as skill}
+            <div class="skill-card">
+                <i class="{skill.icon} skill-icon"></i>
+                <span>{skill.name}</span>
+            </div>
+        {/each}
+    </div>
+</section>

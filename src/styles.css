@@ -1,0 +1,1396 @@
+/* Aerospace Brutalism / Industrial Luxury Theme */
+:root {
+    /* Colors: Orbital Night (Refined) */
+    --bg-dark: #030405;
+    /* Void Black */
+    --surface-dark: #0e1116;
+    /* Deep Reactor Housing */
+    --text-primary: #f0f2f5;
+    /* High-Vis White */
+    --text-secondary: #94a3b8;
+    /* Cool Grey data text */
+
+    --accent: #ff4400;
+    /* International Orange (Higher Saturation) */
+    --accent-glow: rgba(255, 68, 0, 0.4);
+
+    --grid-line: rgba(255, 255, 255, 0.04);
+    /* Subtler noise */
+
+    /* Fonts */
+    --font-heading: 'Unbounded', sans-serif;
+    --font-body: 'JetBrains Mono', monospace;
+
+    /* Metrics */
+    --nav-height: 80px;
+    --radius: 0px;
+
+    /* Global Behavior */
+    scroll-behavior: smooth;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    /* Technical feel */
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    /* Subtle dark grey */
+    border-radius: 0;
+    /* Brutalist square */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+    /* Ignite on hover */
+}
+
+/* Cinematic Grain Overlay */
+.noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    /* Behind content, in front of background */
+    /* High Visibility Grain */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.09;
+    /* Reduced intensity */
+    pointer-events: none;
+    /* Removing blend mode so it sits 'on top' like dust */
+}
+
+/* Background Grid Lines (CAD Blueprint) */
+.background-gradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.05em;
+}
+
+h1 {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+}
+
+/* Force Monospace for Decryption Effect Stability */
+#hero-name,
+#hero-role {
+    font-family: var(--font-body);
+    /* JetBrains Mono */
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--accent);
+    padding-left: 1rem;
+}
+
+/* Section Header Wrapper */
+/* Section Header Wrapper */
+.section-header {
+    margin-bottom: 0.5rem;
+    /* Tighter gap for better grouping */
+    position: relative;
+}
+
+.section-header h2 {
+    margin-bottom: 0;
+    /* Let the container handle spacing */
+}
+
+/* Projects Grid */
+.projects-grid {
+    /* No manual margin-top needed */
+}
+
+p {
+    color: var(--text-primary);
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+/* Header with Scissor-Cut / Sine Wave Edge */
+/* Header with Scissor-Cut / Sine Wave Edge */
+.aero-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    min-height: var(--nav-height);
+    /* Background & Mask moved to ::before to prevent clipping mobile menu */
+    background: transparent;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aero-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    z-index: -1;
+
+    /* Exact Sine Wave Mask */
+    --wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0 0 L0 5 Q5 0 10 5 Q15 10 20 5 L20 0 Z' fill='%23000'/%3E%3C/svg%3E");
+
+    -webkit-mask: var(--wave-mask) bottom left / 20px 10px repeat-x,
+        linear-gradient(to bottom, #000, #000) top / 100% calc(100% - 8px) no-repeat;
+    mask: var(--wave-mask) bottom left / 20px 10px repeat-x,
+        linear-gradient(to bottom, #000, #000) top / 100% calc(100% - 8px) no-repeat;
+
+    /* Drop shadow applied to the shape */
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* Scroll Signal (Wave Border) */
+.signal-line {
+    position: absolute;
+    bottom: 0;
+    /* Sits natively on the bottom edge */
+    left: 0;
+    width: 100%;
+    height: 10px;
+    z-index: 1001;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.signal-track,
+.signal-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-repeat: repeat-x;
+    background-size: 20px 10px;
+    /* Tight frequency */
+}
+
+/* Inactive Trace (Grey) - Peak First */
+.signal-track {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' fill='none' stroke='%23333' stroke-width='1.5'/%3E%3C/svg%3E");
+    opacity: 0.5;
+}
+
+/* Active Trace (Orange Progress) - Peak First */
+.signal-fill {
+    width: 0%;
+    /* JS controlled */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' fill='none' stroke='%23ff3300' stroke-width='2'/%3E%3C/svg%3E");
+    transition: width 0.1s linear;
+    border-right: 2px solid var(--accent);
+    box-shadow: 2px 0 10px var(--accent);
+    /* Leading edge glow */
+}
+
+/* Quick Connect Socials */
+.quick-socials {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
+    margin-top: 2rem;
+    /* Changed from bottom to top */
+    width: 100%;
+}
+
+.quick-socials .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .quick-socials {
+        flex-direction: column;
+        /* Stack on mobile */
+        padding: 0 1rem;
+    }
+
+    .quick-socials .btn {
+        width: 100%;
+        /* Full width buttons for easier tapping */
+        justify-content: center;
+    }
+}
+
+/* Nav */
+.nav-container {
+    width: 90%;
+    max-width: 1400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 5px 10px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+}
+
+.nav-links a {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    position: relative;
+}
+
+.nav-links a:hover {
+    color: var(--accent);
+}
+
+.nav-links a::before {
+    content: '[';
+    margin-right: 5px;
+    opacity: 0;
+    color: var(--accent);
+    transition: opacity 0.2s;
+}
+
+.nav-links a::after {
+    content: ']';
+    margin-left: 5px;
+    opacity: 0;
+    color: var(--accent);
+    transition: opacity 0.2s;
+}
+
+.nav-links a:hover::before,
+.nav-links a:hover::after {
+    opacity: 1;
+}
+
+
+/* Theme Toggle Button */
+.theme-btn {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s cubic-bezier(0, 0, 0.2, 1);
+    width: 40px;
+    height: 40px;
+    margin-left: 1rem;
+    box-shadow: 4px 4px 0px var(--accent);
+    /* Hard shadow */
+}
+
+.theme-btn:hover {
+    background: rgba(255, 68, 0, 0.15);
+    /* Subtle Tint */
+    color: var(--accent);
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--accent);
+}
+
+.theme-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+.theme-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2px;
+}
+
+
+
+
+
+.mobile-menu-btn {
+    display: none;
+    /* Hidden on desktop */
+}
+
+/* Main Layout */
+main {
+    padding-top: 140px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    position: relative;
+    z-index: 2;
+    /* Sit above grain */
+}
+
+section {
+    scroll-margin-top: calc(var(--nav-height) + 2rem);
+    margin-bottom: 8rem;
+}
+
+/* Aerospace Cards ("Ticket" / "Chamfered") */
+.aero-card {
+    background: var(--surface-dark);
+    padding: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    /* Chamfered Corners */
+    clip-path: polygon(20px 0, 100% 0,
+            100% calc(100% - 20px), calc(100% - 20px) 100%,
+            0 100%, 0 20px);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+    /* For noise containment */
+
+    /* Idle State Improvements */
+    background: linear-gradient(160deg, #252e3a 0%, #171e28 100%);
+    /* Matte Metal Gradient */
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    /* Deep depth */
+    border-left: 3px solid rgba(255, 255, 255, 0.1);
+    /* Inactive Status Strip */
+}
+
+/* Texture removed from cards for cleaner UI */
+
+/* Precision Active Effect (No Flash) */
+.aero-card:hover {
+    border-color: var(--accent);
+    /* Ignite the Status Strip */
+    border-left-color: var(--accent);
+    box-shadow: 0 0 25px rgba(255, 51, 0, 0.2);
+    /* Subtle orange radioactive glow */
+    background-color: #263340;
+    /* Subtle lift - Solid color for smooth transition */
+    transform: translateY(-2px);
+    /* Mechanical lift */
+}
+
+.aero-card:hover .title-highlight {
+    color: var(--accent);
+}
+
+.aero-card:hover .tag {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Hero */
+.hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Left align for technical look */
+    text-align: left;
+    min-height: 400px;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    margin-inline: auto;
+    /* Lock width and center to prevent text stutter/jitter */
+}
+
+.badge {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 12px;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: inline-block;
+}
+
+.badge.available::before {
+    content: '●';
+    margin-right: 8px;
+    animation: blink 1s steps(2, start) infinite;
+}
+
+.tagline {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+.section-container {
+    margin-bottom: 8rem;
+    /* Explicit separation between sections */
+    position: relative;
+}
+
+/* Buttons */
+.cta-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    padding: 15px 30px;
+    font-weight: 700;
+    border: 2px solid var(--accent);
+    /* Thicker border */
+    color: var(--accent);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.1s cubic-bezier(0, 0, 0.2, 1);
+    box-shadow: 4px 4px 0px var(--accent);
+    /* Hard shadow */
+}
+
+.btn:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--accent);
+    background: rgba(255, 68, 0, 0.15);
+    /* Subtle Tint */
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 4px 4px 0px #fff;
+    /* White shadow for contrast */
+}
+
+.btn-primary:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    box-shadow: 2px 2px 0px var(--accent);
+    /* Accent shadow on hover */
+}
+
+.btn-secondary {
+    border-color: #fff;
+    color: #fff;
+    box-shadow: 4px 4px 0px #fff;
+}
+
+.btn-secondary:hover {
+    background: #fff;
+    color: #000;
+    box-shadow: 2px 2px 0px #fff;
+    transform: translate(2px, 2px);
+}
+
+.btn-primary:active,
+.btn-secondary:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+/* Skills */
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.skill-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.skill-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+/* Projects */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    /* Reduced min-width slightly for flexibility */
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.project-card {
+    min-height: 350px;
+    height: 100%;
+    /* Increased height for breathing room */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.3s ease, background-color 0.3s ease;
+    padding: 2rem;
+    /* Increased padding (Whitespace Principle) */
+    border: 1px solid var(--grid-line);
+    background: #161616;
+    /* Lighter Matte Charcoal for visibility */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Responsive Masonry (Removed) */
+
+.project-card:hover {
+    transform: translateY(-8px);
+    /* More pronounced lift */
+    border-color: var(--accent);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    /* Deep shadow */
+}
+
+.project-header {
+    display: block;
+    margin-bottom: 1.5rem;
+    /* Better separation */
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    /* Subtler separator */
+}
+
+.project-id {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--accent);
+    /* Accent color for hierarchy */
+    letter-spacing: 2px;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.project-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+}
+
+.project-content h3 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    /* Larger title (Hierarchy) */
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #fff;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    /* Tighter modern spacing */
+}
+
+.project-content p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: none;
+}
+
+.project-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Redundant .project-header block removed from here */
+
+.project-tags {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: rgba(255, 51, 0, 0.05);
+    /* Very subtle tint */
+    border: 1px solid rgba(255, 51, 0, 0.2);
+    padding: 4px 8px;
+    border-radius: 2px;
+}
+
+.project-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    /* Smaller font */
+    color: var(--accent);
+    padding: 8px 12px;
+    /* Smaller padding */
+    border: 2px solid var(--accent);
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.1s cubic-bezier(0, 0, 0.2, 1);
+    box-shadow: 3px 3px 0px var(--accent);
+    /* Slightly smaller shadow */
+    width: auto;
+    /* Compact width */
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.project-link:hover {
+    background: transparent;
+    /* Explicitly remove highlight */
+    color: var(--accent);
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--accent);
+    border-color: var(--accent);
+}
+
+.project-link:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+.project-link .link-arrow {
+    transition: transform 0.2s ease;
+}
+
+.project-link:hover .link-arrow {
+    transform: rotate(-45deg);
+}
+
+.link-arrow {
+    transition: transform 0.3s ease;
+}
+
+.project-link:hover .link-arrow {
+    transform: translateX(5px);
+}
+
+.aero-card:hover .link-arrow {
+    color: #fff !important;
+    /* On white bg, link should be black? Or accent? Let's go black */
+    color: #ff4400 !important;
+}
+
+/* Live Indicator */
+.live-indicator {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: #00ffaa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(0, 255, 170, 0.3);
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #00ffaa;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 170, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(0, 255, 170, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 170, 0);
+    }
+}
+
+.project-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.project-link-item {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.project-link-item:hover {
+    color: var(--accent);
+}
+
+/* Redundant project-header removed */
+
+/* About Simple Layout */
+.about-simple-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.bio-text {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    line-height: 1.8;
+    max-width: 800px;
+}
+
+.about-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--grid-line);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.meta-separator {
+    color: var(--grid-line);
+}
+
+/* Professional Status Indicator */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #00ffaa;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0, 255, 170, 0.4);
+}
+
+@media (max-width: 768px) {
+    h1 {
+        /* Fluid Typography: Aggressive scaling for "PRANAV AGARKAR" */
+        font-size: clamp(1.1rem, 7vw, 2rem);
+        min-height: 1.2em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        letter-spacing: -0.5px;
+    }
+
+    .about-meta-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .meta-separator {
+        display: none;
+    }
+
+    .quick-socials {
+        flex-direction: column;
+        padding: 0 1rem;
+        margin-top: 2rem;
+        /* Explicit spacing from terminal */
+        gap: 1rem;
+        /* Clear gap between stacked buttons */
+    }
+
+    .quick-socials .btn {
+        width: 100%;
+        justify-content: center;
+        margin: 0;
+        /* Reset */
+    }
+
+    .aero-card {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Galaxy Z Fold / Ultra-Narrow Devices */
+@media (max-width: 360px) {
+    h1 {
+        /* Hard-coded safety size for 344px width */
+        font-size: 1.25rem !important;
+        letter-spacing: -1px;
+        /* Squeeze it */
+        min-height: auto;
+        /* Allow natural height */
+    }
+
+    /* Shrink the Role/Subtitle */
+    #hero-role {
+        font-size: 1rem !important;
+        letter-spacing: 1px;
+        /* Maintain some breathable space */
+    }
+
+    .nav-container {
+        width: 100%;
+        /* Use full width */
+        padding: 0 5px;
+    }
+
+    main {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .aero-card {
+        padding: 1.5rem 0.5rem;
+        /* Minimal padding */
+    }
+
+    .project-header,
+    .project-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* Terminal Contact */
+.aero-card.contact-card {
+    border: 2px solid var(--accent);
+    /* Special highlight for contact */
+}
+
+/* Terminal Window Styles Override for Brutalism */
+.terminal-wrapper {
+    background: #050505;
+    border: 1px solid #333;
+    border-radius: 0;
+    /* Strict square */
+    box-shadow: none;
+    font-family: var(--font-body);
+    margin-top: 1rem;
+    /* Reduced overlapping margin */
+    margin-bottom: 2rem;
+    /* Ensure space for buttons below */
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-header {
+    margin-bottom: 1.5rem;
+    /* Reduced gap */
+    border-left: 2px solid var(--accent);
+    padding-left: 1.5rem;
+}
+
+.contact-header h2 {
+    border: none;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+}
+
+.contact-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.code-highlight {
+    color: var(--accent);
+    font-family: var(--font-body);
+    background: rgba(255, 51, 0, 0.1);
+    padding: 2px 6px;
+}
+
+.terminal-header {
+    background: #111;
+    border-bottom: 1px solid #333;
+    padding: 8px 15px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.sys-status {
+    color: var(--accent);
+}
+
+.terminal-body {
+    color: var(--text-primary);
+    padding: 20px;
+    min-height: 300px;
+    background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 2px 100%;
+    /* Subtle scanline */
+}
+
+.prompt {
+    color: var(--accent);
+    margin-right: 10px;
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+}
+
+.path {
+    color: #fff;
+    opacity: 0.7;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.cmd-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    /* Partially hidden to allow caret interaction but invisible visual */
+    background: transparent;
+    border: none;
+    color: transparent;
+    caret-color: transparent;
+    outline: none;
+}
+
+.cursor-block {
+    display: block;
+    width: 10px;
+    height: 1.2em;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+.output-line {
+    margin-bottom: 4px;
+    word-wrap: break-word;
+}
+
+/* Footer */
+.aero-footer {
+    background: var(--bg-dark);
+    /* Solid */
+    border-top: 2px solid var(--accent);
+    padding: 4rem 2rem;
+    margin-top: 5rem;
+    position: relative;
+    /* Ensure it sits above background if needed, though main is z-index 2 */
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.footer-bottom {
+    text-align: center;
+    border-top: 1px solid var(--grid-line);
+    padding-top: 2rem;
+    margin-top: 3rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Utilities */
+.social-icons {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.social-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    /* Silent grey */
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    width: auto;
+    height: auto;
+    border: none;
+    box-shadow: none;
+}
+
+.social-icons a:hover {
+    color: var(--accent);
+    transform: translateY(-2px);
+    background: transparent;
+    box-shadow: none;
+}
+
+.social-icons a:active {
+    transform: translateY(0);
+}
+
+/* Utilities */
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Responsive Metrics */
+    :root {
+        --nav-height: 70px;
+    }
+
+    /* Typography Scaling */
+    h1 {
+        font-size: 2.2rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    /* Layout Adjustments */
+    main {
+        padding-top: 100px;
+        /* Reduced specific to mobile */
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    section {
+        margin-bottom: 5rem;
+    }
+
+    .aero-card {
+        padding: 1.5rem;
+    }
+
+    /* Grid Collapsing */
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-card {
+        /* Mobile Specific Card Styles */
+        background: #0b0c10;
+        /* Solid background as requested */
+        border: 1px solid var(--grid-line);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
+        /* Better separation */
+        padding: 1.5rem;
+    }
+
+    .project-content h3 {
+        font-size: 1.3rem;
+        /* Slightly smaller to prevent bad wrapping */
+        line-height: 1.3;
+        word-break: break-word;
+        /* Ensure long words don't overflow */
+    }
+
+    .project-tags {
+        margin-bottom: 1rem;
+        /* Ensure spacing below tags */
+    }
+
+    .skills-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        /* Widened for text fit */
+        gap: 0.8rem;
+    }
+
+    .skill-card {
+        padding: 1rem 0.2rem;
+        /* Minimal side padding */
+    }
+
+    .skill-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+
+    .skill-card h3 {
+        font-size: 0.75rem;
+        overflow-wrap: normal;
+        /* Prefer keeping words together */
+        word-wrap: normal;
+        hyphens: none;
+        /* No broken words */
+        line-height: 1.25;
+        width: 100%;
+        padding: 0 2px;
+    }
+
+    /* Mobile Navigation (Tactical Overlay) */
+    .theme-btn {
+        /* Override/Update for mobile if needed */
+        margin-left: auto;
+        /* Push to right next to menu btn */
+        margin-right: 10px;
+        /* Gap between theme and menu btn */
+        padding: 0;
+        width: 36px;
+        height: 36px;
+    }
+
+    .theme-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+
+    .mobile-menu-btn {
+        display: block;
+        z-index: 2000;
+        position: relative;
+        background: #0b0c10;
+        /* Solid background */
+        border: 1px solid var(--accent);
+        /* Technical border */
+        color: var(--accent);
+        font-family: var(--font-heading);
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 8px 14px;
+        transition: all 0.3s ease;
+        /* Removed blur and shadow for flat look */
+    }
+
+    .mobile-menu-btn .btn-text {
+        letter-spacing: 2px;
+        font-weight: 600;
+    }
+
+    .mobile-menu-btn.active {
+        background: var(--accent);
+        color: #0b0c10;
+        /* Dark text on orange */
+        /* Removed glow */
+    }
+
+    .nav-links {
+        display: flex;
+        /* Reset display:none from previous styles if any */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: var(--bg-dark);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 3rem;
+        transform: translateY(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1500;
+    }
+
+    /* Mobile Nav Active State */
+    .nav-links.active {
+        display: flex;
+        transform: translateY(0);
+        /* IMPORTANT: Keep open */
+        animation: menuSlideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* Staggered Item Entrance */
+    .nav-links.active li {
+        width: 100%;
+        text-align: center;
+        opacity: 0;
+        animation: navItemFade 0.4s ease forwards;
+        transform: translateY(20px);
+    }
+
+    /* Stagger Delays */
+    .nav-links.active li:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .nav-links.active li:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .nav-links.active li:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .nav-links.active li:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes navItemFade {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Menu Slide Animation (Container) */
+    @keyframes menuSlideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .nav-links li {
+        margin: 1.5rem 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .nav-links a {
+        font-size: 2rem;
+        font-family: var(--font-heading);
+        /* Switch to heading font for impact */
+    }
+
+    /* Hamburger Animation Removed */
+
+    /* Footer Stacking */
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    /* Terminal Overflow Fix */
+    .terminal-body {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+
+    /* Ensure scroll signal stays at bottom */
+    .signal-line {
+        bottom: 0;
+    }
+}

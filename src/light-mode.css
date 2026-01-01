@@ -1,0 +1,337 @@
+/* Light Mode Theme ("Technical Manual") */
+/* Usage: Add class="light-mode" to <body> */
+
+body.light-mode {
+    /* Colors: Laboratory Bright */
+    --bg-dark: #ffffff;
+    /* Clean Paper White */
+    --surface-dark: #f2f2f2;
+    /* Light Grey Card */
+    --text-primary: #111111;
+    /* Ink Black */
+    --text-secondary: #555555;
+    /* Pencil Grey */
+
+    --accent: #ff4400;
+    /* Keep the Safety Orange */
+    --accent-glow: rgba(255, 68, 0, 0.15);
+
+    --grid-line: rgba(0, 0, 0, 0.08);
+    /* Graph Paper Lines */
+    --wire-color: #e0e0e0;
+    --wire-active: #000000;
+}
+
+/* Light Mode Overrides */
+body.light-mode .noise-overlay {
+    opacity: 0.18;
+    /* Visible "Paper Fiber" texture */
+    mix-blend-mode: multiply;
+    /* Burns into the white background */
+    filter: contrast(150%) brightness(100%);
+    /* Sharpens granular details */
+    z-index: 0;
+}
+
+/* Invert Nav Text for Contrast */
+body.light-mode .nav-links a {
+    color: var(--text-primary);
+}
+
+body.light-mode .mobile-menu-btn {
+    background: #fff;
+    color: #000;
+    border-color: #000;
+}
+
+body.light-mode .mobile-menu-btn.active {
+    background: #000;
+    color: #fff;
+}
+
+/* Card Adjustments (Neumorphic/Soft UI Principles) */
+body.light-mode .aero-card {
+    background: #f0f0f3;
+    /* Soft grey surface */
+    border: none;
+    border-left: 3px solid #c8c8cc;
+    /* Subtle inactive strip */
+    /* Neumorphic shadow - light from top-left, shadow bottom-right */
+    box-shadow:
+        8px 8px 16px rgba(0, 0, 0, 0.1),
+        -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+body.light-mode .aero-card:hover {
+    border-left-color: var(--accent);
+    /* Ignite the strip */
+    background: #f0f0f3 !important;
+    background-color: #f0f0f3 !important;
+    /* Override dark mode hover */
+    box-shadow:
+        12px 12px 24px rgba(0, 0, 0, 0.12),
+        -8px -8px 16px rgba(255, 255, 255, 0.9),
+        inset 0 0 0 1px rgba(255, 68, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Terminal Inversion (Light Mode) */
+body.light-mode .terminal-wrapper {
+    background: #fafafa;
+    border: 1px solid #111;
+    /* Status strip */
+}
+
+
+body.light-mode .terminal-header {
+    background: #111;
+    border-bottom: 1px solid #000;
+    color: #888;
+}
+
+body.light-mode .terminal-header .sys-status {
+    color: var(--accent);
+}
+
+body.light-mode .terminal-body {
+    background: #fafafa;
+    background-image: none;
+    /* Remove scanlines for clean paper look */
+    color: #111;
+}
+
+body.light-mode .prompt {
+    color: var(--accent);
+}
+
+body.light-mode .path {
+    color: #666;
+}
+
+body.light-mode .cmd-input {
+    color: #111;
+    caret-color: var(--accent);
+}
+
+body.light-mode .cursor-block {
+    box-shadow: none;
+    /* Remove glow */
+}
+
+body.light-mode .output-line {
+    color: #333;
+}
+
+body.light-mode .project-link-item {
+    color: #000;
+}
+
+body.light-mode .project-link-item:hover {
+    color: var(--accent);
+    background: rgba(0, 0, 0, 0.05);
+    /* Subtle highlight */
+}
+
+/* Icon Toggle Logic */
+.sun-icon {
+    display: block;
+}
+
+.moon-icon {
+    display: none;
+}
+
+body.light-mode .sun-icon {
+    display: none;
+}
+
+body.light-mode .moon-icon {
+    display: block;
+}
+
+/* --- Visibility Enhancements (Text Colors Only) --- */
+
+/* Headers & Titles */
+body.light-mode h1,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode h4,
+body.light-mode .project-content h3,
+body.light-mode .logo {
+    color: #111 !important;
+    /* Force black overrides for hardcoded #fff */
+    border-color: #111;
+}
+
+body.light-mode h2 {
+    border-color: var(--accent);
+}
+
+/* Links & Text */
+/* Links & Text */
+body.light-mode .path {
+    color: #333 !important;
+}
+
+/* Project Link Buttons (Light Mode) */
+body.light-mode .project-link {
+    color: #111;
+    border-color: #111;
+    background: transparent;
+    box-shadow: 4px 4px 0px #111;
+}
+
+body.light-mode .project-link:hover {
+    background: #111;
+    color: #fff;
+    box-shadow: 2px 2px 0px #111;
+    border-color: var(--accent);
+    /* Orange border on hover */
+}
+
+body.light-mode .project-link:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+/* Scroll Signal */
+body.light-mode .signal-track {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' fill='none' stroke='%23ccc' stroke-width='1.5'/%3E%3C/svg%3E");
+}
+
+/* Theme Button Styles (Light Mode) */
+body.light-mode .theme-btn {
+    border-color: #111;
+    color: #111;
+    box-shadow: 4px 4px 0px #111;
+}
+
+body.light-mode .theme-btn:hover {
+    background: #111;
+    color: #fff;
+    box-shadow: 2px 2px 0px #111;
+    border-color: var(--accent);
+    /* Orange border on hover */
+}
+
+body.light-mode .theme-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+/* Mobile Menu Overrides */
+body.light-mode .nav-links {
+    background: var(--bg-dark);
+    color: #111;
+}
+
+/* Interactive Elements (Colors Only) */
+/* Interactive Elements (Colors Only) */
+body.light-mode .aero-card:hover {
+    /* Main card hover */
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(255, 68, 0, 0.1);
+    background: #fff;
+}
+
+/* Specific Project Card Overrides */
+body.light-mode .project-card:hover {
+    transform: translateY(-5px);
+    box-shadow:
+        12px 12px 24px rgba(0, 0, 0, 0.12),
+        -8px -8px 16px rgba(255, 255, 255, 0.9);
+    background: #fff !important;
+}
+
+/* Button Styling (Light Mode) */
+body.light-mode .btn {
+    border-color: #111;
+    color: #111;
+    box-shadow: 4px 4px 0px #111;
+}
+
+body.light-mode .btn:hover {
+    background: #111;
+    color: #fff;
+    box-shadow: 2px 2px 0px #111;
+    border-color: var(--accent);
+    /* Orange border on hover */
+}
+
+body.light-mode .btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+body.light-mode .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+}
+
+body.light-mode .btn-primary:hover {
+    background: #111;
+    color: #fff !important;
+    border-color: #111;
+}
+
+/* Live Indicator (Light Mode) */
+body.light-mode .live-indicator {
+    color: #00aa77;
+    /* Darker green for light bg */
+    border-color: #00aa77;
+    background: rgba(0, 170, 119, 0.1);
+}
+
+body.light-mode .pulse-dot {
+    background-color: #00aa77;
+}
+
+/* Footer (Light Mode) */
+body.light-mode .aero-footer {
+    background: transparent;
+    border-top: 1px solid #111;
+}
+
+body.light-mode .signal-text {
+    color: #666;
+    /* Pencil grey instead of accent */
+    font-weight: 500;
+}
+
+body.light-mode .signal-track-footer {
+    background: linear-gradient(90deg, #666 0%, transparent 100%);
+}
+
+body.light-mode .aero-footer h3,
+body.light-mode .aero-footer h4,
+body.light-mode .footer-content p,
+body.light-mode .footer-bottom p {
+    color: #111;
+}
+
+body.light-mode .footer-section ul li a {
+    color: #333;
+}
+
+body.light-mode .footer-section ul li a:hover {
+    color: var(--accent);
+}
+
+body.light-mode .social-icons a {
+    color: #555;
+    /* Pencil grey */
+    border: none;
+    box-shadow: none;
+}
+
+body.light-mode .social-icons a:hover {
+    color: var(--accent);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+body.light-mode .social-icons a:active {
+    transform: translateY(0);
+}
