@@ -210,7 +210,6 @@ a {
     pointer-events: none;
     overflow: hidden;
     /* Add solid background to prevent any gaps */
-    background: var(--bg-dark);
 }
 
 .signal-track,
