@@ -1,6 +1,7 @@
 <script lang="ts">
     import { theme } from "$lib/stores/theme";
     import { onMount } from "svelte";
+    import { base } from "$app/paths";
 
     interface Props {
         profile: {
@@ -56,7 +57,7 @@
 
 <header class="aero-header">
     <nav class="nav-container">
-        <a href="/" class="logo">Pranav.</a>
+        <a href="{base}/" class="logo">Pranav.</a>
         <ul class="nav-links" class:active={mobileMenuOpen}>
             <li>
                 <a href="#about" onclick={() => (mobileMenuOpen = false)}
