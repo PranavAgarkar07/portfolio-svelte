@@ -147,9 +147,7 @@ h2 {
 }
 
 /* Projects Grid */
-.projects-grid {
-    /* No manual margin-top needed */
-}
+/* .projects-grid moved to main styles */
 
 p {
     color: var(--text-primary);
@@ -284,8 +282,13 @@ a {
     font-family: var(--font-heading);
     font-size: 1.5rem;
     color: #fff;
-    border: 1px solid #fff;
-    padding: 5px 10px;
+    /* border: 1px solid #fff; Removed per user request */
+    padding: 5px 0;
+    /* Reduced horizontal padding since no border */
+}
+
+.text-accent {
+    color: var(--accent);
 }
 
 .nav-links {
@@ -328,6 +331,8 @@ a {
 }
 
 
+
+
 /* Theme Toggle Button */
 .theme-btn {
     background: transparent;
@@ -343,19 +348,22 @@ a {
     height: 40px;
     margin-left: 1rem;
     box-shadow: 4px 4px 0px var(--accent);
-    /* Hard shadow */
+    /* Hard shadow causes visual shift, compensating: */
+    transform: translate(-2px, -2px);
 }
 
 .theme-btn:hover {
     background: rgba(255, 68, 0, 0.15);
     /* Subtle Tint */
     color: var(--accent);
-    transform: translate(2px, 2px);
+    /* Move towards 0,0 relative to parent, which means +2 from idle */
+    transform: translate(0px, 0px);
     box-shadow: 2px 2px 0px var(--accent);
 }
 
 .theme-btn:active {
-    transform: translate(4px, 4px);
+    /* Fully pressed */
+    transform: translate(2px, 2px);
     box-shadow: none;
 }
 
@@ -372,6 +380,16 @@ a {
 .mobile-menu-btn {
     display: none;
     /* Hidden on desktop */
+}
+
+/* Visibility Utilities */
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: flex;
+    /* Flex to maintain layout for theme btn */
 }
 
 /* Main Layout */
@@ -554,25 +572,81 @@ section {
 }
 
 /* Skills */
+.skills-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    justify-content: center;
+    /* Center the cards if they wrap */
+}
+
+.skill-category-card {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.category-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--grid-line);
+    margin-bottom: 0;
+}
+
 .skills-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
+    justify-content: center;
+    /* Center the items inside the card */
 }
 
 .skill-card {
     text-align: center;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    height: 100%;
+    justify-content: space-between;
 }
 
 .skill-icon {
     font-size: 2.5rem;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     color: var(--text-primary);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.skill-card:hover .skill-icon {
+    transform: scale(1.1);
+    color: var(--accent);
+}
+
+.skill-name {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.skill-level-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-level-bar .fill {
+    height: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
 }
 
 /* Projects */
@@ -1153,14 +1227,16 @@ section {
 }
 
 /* Footer */
+/* Footer */
 .aero-footer {
-    background: var(--bg-dark);
-    /* Solid */
+    background: var(--surface-dark);
+    /* Solid Surface Color */
     border-top: 2px solid var(--accent);
     padding: 4rem 2rem;
     margin-top: 5rem;
     position: relative;
-    /* Ensure it sits above background if needed, though main is z-index 2 */
+    z-index: 10;
+    /* Ensure it sits on top */
 }
 
 .footer-content {
@@ -1402,6 +1478,38 @@ section {
         transform: translateY(20px);
     }
 
+    /* Style for the internal theme button */
+    .nav-link-btn {
+        background: none;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        padding: 10px 20px;
+        cursor: pointer;
+        width: 80%;
+        /* Match touch target size */
+        margin: 0 auto;
+        display: block;
+        transition: all 0.2s ease;
+    }
+
+    .nav-link-btn:active {
+        background: var(--accent);
+        color: var(--bg-dark);
+    }
+
+    /* Mobile Visibility Overrides (Inside Mobile Media Query) */
+    .mobile-only {
+        display: block;
+        width: 100%;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
     /* Stagger Delays */
     .nav-links.active li:nth-child(1) {
         animation-delay: 0.1s;
@@ -1458,6 +1566,10 @@ section {
         grid-template-columns: 1fr;
         gap: 2rem;
         text-align: center;
+    }
+
+    .social-icons {
+        justify-content: center;
     }
 
     /* Terminal Overflow Fix */

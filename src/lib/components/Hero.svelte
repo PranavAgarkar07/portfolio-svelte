@@ -13,7 +13,10 @@
             bio: string;
             stats: Array<{ label: string; value: string }>;
         };
-        skills: Array<{ name: string; icon: string }>;
+        skills: Array<{
+            category: string;
+            items: Array<{ name: string; icon: string; level: number }>;
+        }>;
     }
 
     let { profile, about, skills }: Props = $props();
@@ -106,11 +109,24 @@
     <div class="section-header fade-in">
         <h2>Technical Proficiency</h2>
     </div>
-    <div class="skills-grid">
-        {#each skills as skill}
-            <div class="skill-card">
-                <i class="{skill.icon} skill-icon"></i>
-                <span>{skill.name}</span>
+    <div class="skills-wrapper">
+        {#each skills as category}
+            <div class="aero-card skill-category-card fade-in">
+                <h3 class="category-title">{category.category}</h3>
+                <div class="skills-grid">
+                    {#each category.items as skill}
+                        <div class="skill-card">
+                            <i class="{skill.icon} skill-icon"></i>
+                            <span class="skill-name">{skill.name}</span>
+                            <div class="skill-level-bar">
+                                <div
+                                    class="fill"
+                                    style="width: {skill.level}%"
+                                ></div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
             </div>
         {/each}
     </div>

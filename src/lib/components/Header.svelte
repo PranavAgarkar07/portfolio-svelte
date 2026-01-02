@@ -57,7 +57,9 @@
 
 <header class="aero-header">
     <nav class="nav-container">
-        <a href="{base}/" class="logo">Pranav.</a>
+        <a href="{base}/" class="logo"
+            >Pranav<span class="text-accent">.</span></a
+        >
         <ul class="nav-links" class:active={mobileMenuOpen}>
             <li>
                 <a href="#about" onclick={() => (mobileMenuOpen = false)}
@@ -83,11 +85,24 @@
                     onclick={() => (mobileMenuOpen = false)}>Contact</a
                 >
             </li>
+
+            <!-- Mobile Only Theme Switcher -->
+            <li class="mobile-only">
+                <button
+                    class="nav-link-btn"
+                    onclick={() => {
+                        toggleTheme();
+                        mobileMenuOpen = false;
+                    }}
+                >
+                    [ SWITCH THEME ]
+                </button>
+            </li>
         </ul>
 
         <button
             id="theme-toggle"
-            class="theme-btn"
+            class="theme-btn desktop-only"
             onclick={toggleTheme}
             aria-label="Toggle Theme"
         >

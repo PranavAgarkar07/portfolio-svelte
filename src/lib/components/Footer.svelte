@@ -22,11 +22,9 @@
         </div>
         <div class="footer-section links">
             <h4>Navigation</h4>
-            <ul>
-                <li><a href="#about">About</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#projects">Projects</a></li>
-            </ul>
+            <a href="#about">About</a><br />
+            <a href="#skills">Skills</a><br />
+            <a href="#projects">Projects</a><br />
         </div>
         <div class="footer-section social">
             <h4>Connect</h4>
@@ -91,6 +89,5 @@
         border-top: 1px solid var(--grid-line);
         padding-top: 3rem;
         padding-bottom: 2rem;
-        background: rgba(0, 0, 0, 0.2);
     }
 </style>

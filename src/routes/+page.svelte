@@ -50,16 +50,17 @@
         });
 
         // Skills Pop-in
-        gsap.from(".skills-grid .skill-tag", {
+        gsap.from(".skill-category-card", {
             scrollTrigger: {
                 trigger: "#skills",
                 start: "top 85%",
             },
-            scale: 0.8,
+            y: 30,
             opacity: 0,
-            stagger: 0.05,
-            duration: 0.5,
-            ease: "back.out(1.7)",
+            stagger: 0.1,
+            duration: 0.6,
+            ease: "power2.out",
+            clearProps: "all", // Ensure no residual transforms affect layout
         });
 
         // Section Headers Glitch-in (Simple Slide)

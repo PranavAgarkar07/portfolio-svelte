@@ -289,7 +289,7 @@ body.light-mode .pulse-dot {
 
 /* Footer (Light Mode) */
 body.light-mode .aero-footer {
-    background: transparent;
+    background: var(--surface-dark);
     border-top: 1px solid #111;
 }
 
@@ -334,4 +334,9 @@ body.light-mode .social-icons a:hover {
 
 body.light-mode .social-icons a:active {
     transform: translateY(0);
+}
+
+/* Proficiency Bar fix */
+body.light-mode .skill-level-bar {
+    background: rgba(0, 0, 0, 0.1);
 }

@@ -26,18 +26,32 @@ export const portfolioData = {
         ]
     },
     skills: [
-        { name: "Python", icon: "devicon-python-plain" },
-        { name: "Django", icon: "devicon-django-plain" },
-        { name: "React", icon: "devicon-react-original colored" },
-        { name: "Svelte", icon: "devicon-svelte-plain colored" },
-        { name: "Go", icon: "devicon-go-original-wordmark colored" },
-        { name: "C", icon: "devicon-c-plain colored" },
-        { name: "JavaScript", icon: "devicon-javascript-plain colored" },
-        { name: "HTML5", icon: "devicon-html5-plain colored" },
-        { name: "CSS3", icon: "devicon-css3-plain colored" },
-        { name: "Docker", icon: "devicon-docker-plain colored" },
-        { name: "Linux", icon: "devicon-linux-plain" },
-        { name: "Git", icon: "devicon-git-plain colored" }
+        {
+            category: "Core Stack",
+            items: [
+                { name: "Python", icon: "devicon-python-plain", level: 85 },
+                { name: "Django", icon: "devicon-django-plain", level: 90 },
+                { name: "Linux", icon: "devicon-linux-plain", level: 95 },
+                { name: "React", icon: "devicon-react-original colored", level: 70 }
+            ]
+        },
+        {
+            category: "Proficient",
+            items: [
+                { name: "C", icon: "devicon-c-plain colored", level: 80 },
+                { name: "JavaScript", icon: "devicon-javascript-plain colored", level: 85 },
+                { name: "Git", icon: "devicon-git-plain colored", level: 75 },
+                { name: "HTML5/CSS3", icon: "devicon-html5-plain colored", level: 95 }
+            ]
+        },
+        {
+            category: "In Orbit",
+            items: [
+                { name: "Go", icon: "devicon-go-original-wordmark colored", level: 65 },
+                { name: "Svelte", icon: "devicon-svelte-plain colored", level: 55 },
+                { name: "Docker", icon: "devicon-docker-plain colored", level: 50 }
+            ]
+        }
     ],
     projects: [
         {
