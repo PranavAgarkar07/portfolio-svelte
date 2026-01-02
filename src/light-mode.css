@@ -238,9 +238,13 @@ body.light-mode .aero-card:hover {
 body.light-mode .project-card:hover {
     transform: translateY(-5px);
     box-shadow:
-        12px 12px 24px rgba(0, 0, 0, 0.12),
-        -8px -8px 16px rgba(255, 255, 255, 0.9);
-    background: #fff !important;
+        0 8px 24px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    /* Distinct shadow + subtle border */
+    background: #eaeaea !important;
+    /* Visible light grey contrast */
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    /* Visible border */
 }
 
 /* Button Styling (Light Mode) */

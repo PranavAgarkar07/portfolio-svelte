@@ -42,8 +42,8 @@ body {
     font-size: 14px;
     /* Technical feel */
     line-height: 1.6;
+    width: 100%;
     overflow-x: hidden;
-    position: relative;
 }
 
 /* Custom Scrollbar */
@@ -91,7 +91,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     background-image:
         linear-gradient(var(--grid-line) 1px, transparent 1px),
@@ -394,19 +394,48 @@ a {
 
 /* Main Layout */
 main {
-    padding-top: 140px;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    /* Full screen scroll container reverted to standard block */
+    /* Reset old constraints */
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+
     position: relative;
     z-index: 2;
     /* Sit above grain */
 }
 
+/* Snap Section */
+.snap-section {
+    min-height: 100vh;
+    width: 100%;
+    /* Removed scroll snap properties */
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    /* Padding to account for fixed header */
+    padding-top: var(--nav-height);
+    padding-bottom: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+
+    position: relative;
+    /* overflow: hidden; Removed to allow sticky elements or popouts if needed */
+}
+
+/* Constrain content width within the full-width section */
+.snap-section>* {
+    width: 100%;
+    max-width: 1400px;
+}
+
 section {
-    scroll-margin-top: calc(var(--nav-height) + 2rem);
-    margin-bottom: 8rem;
+    /* Removed default margin since we use 100vh sections now */
+    scroll-margin-top: 0;
 }
 
 /* Aerospace Cards ("Ticket" / "Chamfered") */
@@ -447,9 +476,7 @@ section {
     /* Mechanical lift */
 }
 
-.aero-card:hover .title-highlight {
-    color: var(--accent);
-}
+
 
 .aero-card:hover .tag {
     border-color: var(--accent);
@@ -667,10 +694,12 @@ section {
     justify-content: space-between;
     transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.3s ease, background-color 0.3s ease;
     padding: 2rem;
+    padding: 2rem;
     /* Increased padding (Whitespace Principle) */
-    border: 1px solid var(--grid-line);
-    background: #161616;
-    /* Lighter Matte Charcoal for visibility */
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    /* Increased border visibility */
+    background: #1a1a1a;
+    /* Increased lightness for separation */
     position: relative;
     overflow: hidden;
 }
@@ -757,11 +786,14 @@ section {
 /* Responsive Masonry (Removed) */
 
 .project-card:hover {
-    transform: translateY(-8px);
-    /* More pronounced lift */
-    border-color: var(--accent);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-    /* Deep shadow */
+    transform: translateY(-4px);
+    /* Subtle professional lift */
+    border-color: rgba(255, 255, 255, 0.3);
+    /* Crisp white border, not orange */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    /* Elegant depth */
+    background: #202020;
+    /* Subtle lighten, no hue shift */
 }
 
 .project-header {
@@ -838,6 +870,8 @@ section {
     border: 1px solid rgba(255, 51, 0, 0.2);
     padding: 4px 8px;
     border-radius: 2px;
+    transition: border-color 0.4s ease, color 0.4s ease;
+    /* Smoother transition */
 }
 
 .project-link {
@@ -1581,5 +1615,148 @@ section {
     /* Ensure scroll signal stays at bottom */
     .signal-line {
         bottom: 0;
+    }
+}
+
+/* =========================================
+   Mobile Responsiveness & Stacked Layout
+   ========================================= */
+@media (max-width: 768px) {
+
+    /* --- Typography Scaling --- */
+    h1 {
+        font-size: 2.2rem;
+        /* Reduced from 3.5rem */
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        /* Reduced from 2rem */
+    }
+
+    .tagline {
+        font-size: 0.95rem;
+    }
+
+    /* --- Layout & Spacing --- */
+    .snap-section {
+        padding-top: calc(var(--nav-height) + 1rem);
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-bottom: 2rem;
+        /* Allow natural height if content overflows 100vh */
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start;
+        /* Start from top on mobile */
+    }
+
+    .section-container {
+        margin-bottom: 4rem;
+        /* Reduce large gap */
+    }
+
+    /* --- Hero Section --- */
+    .hero-content {
+        min-height: auto;
+        /* Remove rigid height constraint */
+        padding-top: 2rem;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .cta-group {
+        flex-direction: column;
+        /* Stack buttons */
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .cta-group .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* --- About Section --- */
+    .visual-profile {
+        display: flex;
+        flex-direction: column;
+        /* Stack image and text */
+        gap: 1.5rem;
+    }
+
+    .profile-frame {
+        width: 100%;
+        max-width: 200px;
+        /* Limit image size on mobile */
+        margin: 0 auto;
+        /* Center image */
+    }
+
+    .mission-stats {
+        margin-top: 1.5rem;
+        gap: 1rem;
+    }
+
+    /* --- Skills Section --- */
+    .skills-wrapper {
+        grid-template-columns: 1fr;
+        /* Stack categories */
+        gap: 1.5rem;
+    }
+
+    .skill-category-card {
+        padding: 1.5rem;
+        /* Reduce padding */
+    }
+
+    /* --- Projects Section --- */
+    .projects-grid {
+        grid-template-columns: 1fr;
+        /* Force single column */
+        gap: 1.5rem;
+    }
+
+    .project-card {
+        padding: 1.5rem;
+        /* Reduce padding */
+        min-height: auto;
+        /* Let content dictate height */
+        background: #1a1a1a;
+        /* Force desktop color */
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* --- Contact Section --- */
+    .contact-card {
+        padding: 1.5rem;
+    }
+
+    .quick-socials {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* --- General Utilities --- */
+    .aero-card {
+        padding: 1.5rem;
+        /* Consistent padding reduction */
+    }
+}
+
+@media (max-width: 380px) {
+
+    /* Small phone adjustments */
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 }

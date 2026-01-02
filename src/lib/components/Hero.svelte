@@ -53,7 +53,7 @@
     });
 </script>
 
-<section id="hero" class="hero-section">
+<section id="hero" class="hero-section snap-section">
     <div class="aero-card hero-content fade-in-up">
         <span
             class="badge"
@@ -72,7 +72,7 @@
     </div>
 </section>
 
-<section id="about" class="section-container">
+<section id="about" class="section-container snap-section">
     <div class="section-header fade-in">
         <h2>About Me</h2>
     </div>
@@ -105,7 +105,7 @@
     </div>
 </section>
 
-<section id="skills" class="section-container">
+<section id="skills" class="section-container snap-section">
     <div class="section-header fade-in">
         <h2>Technical Proficiency</h2>
     </div>

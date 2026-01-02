@@ -96,7 +96,7 @@
 <main>
     <Hero {profile} {about} {skills} />
 
-    <section id="projects" class="section-container">
+    <section id="projects" class="section-container snap-section">
         <div class="section-header fade-in">
             <h2>Featured Projects</h2>
         </div>
@@ -107,7 +107,7 @@
         </div>
     </section>
 
-    <section id="contact" class="section-container">
+    <section id="contact" class="section-container snap-section">
         <div class="aero-card contact-card fade-in">
             <div class="contact-header">
                 <h2>Quick Connect Interface</h2>
