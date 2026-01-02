@@ -13,6 +13,13 @@
 
     const { profile, about, skills, projects } = portfolioData;
 
+    const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
+    const pageTitle = `${profile.name} | ${profile.role}`;
+    const pageDescription = `${profile.tagline} Experienced in building secure, scalable applications with Django, React, Svelte, and Go.`;
+    const pageKeywords =
+        "Svelte, SvelteKit, Django, Go, Full Stack Developer, Portfolio, Pranav Agarkar, Web Development, TaskVault, BeamSync";
+    const coverImage = `${siteUrl}avatar.png`; // Fallback to avatar if no dedicated cover
+
     onMount(() => {
         gsap.registerPlugin(ScrollTrigger);
 
@@ -90,6 +97,49 @@
         });
     });
 </script>
+
+<svelte:head>
+    <!-- Primary Meta Tags -->
+    <title>{pageTitle}</title>
+    <meta name="title" content={pageTitle} />
+    <meta name="description" content={pageDescription} />
+    <meta name="keywords" content={pageKeywords} />
+    <meta name="author" content={profile.name} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:image" content={coverImage} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={siteUrl} />
+    <meta property="twitter:title" content={pageTitle} />
+    <meta property="twitter:description" content={pageDescription} />
+    <meta property="twitter:image" content={coverImage} />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "{profile.name}",
+            "url": "{siteUrl}",
+            "jobTitle": "{profile.role}",
+            "image": "{coverImage}",
+            "sameAs": [
+                {#each profile.socials as social, i}
+                    "{social.url}"{i < profile.socials.length - 1 ? ',' : ''}
+                {/each}
+            ],
+            "description": "{pageDescription}"
+        }
+    </script>
+</svelte:head>
 
 <Header {profile} />
 

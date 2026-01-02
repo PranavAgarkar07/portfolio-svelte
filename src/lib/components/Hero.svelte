@@ -82,7 +82,7 @@
             <div class="profile-frame">
                 <img
                     src={profile.avatar}
-                    alt="Pilot Avatar"
+                    alt="{profile.name} Profile Picture"
                     class="profile-img"
                 />
                 <div class="frame-corners"></div>
