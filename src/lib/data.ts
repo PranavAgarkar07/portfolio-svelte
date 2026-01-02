@@ -1,3 +1,5 @@
+import avatar from '$lib/assets/avatar.png';
+
 // Portfolio Data
 export const portfolioData = {
     profile: {
@@ -12,7 +14,7 @@ export const portfolioData = {
             { name: "Email", url: "mailto:pranavagarkar8@gmail.com", label: "MAIL_TO", icon: "fas fa-envelope" },
             { name: "Resume", url: "./Pranav_Agarkar_Resume.pdf", label: "RESUME", icon: "fas fa-file-alt" }
         ],
-        avatar: "/src/lib/assets/avatar.png" // Asset path
+        avatar: avatar // Asset path
     },
     about: {
         bio: "2nd Year CSE student at Walchand Institute of Technology, Solapur. I build full-stack applications with Django and React/Svelte, focusing on clean architecture, secure data handling, and modern UI/UX. From encrypted task managers to offline P2P file transfer systems—I enjoy solving real problems with code.",
