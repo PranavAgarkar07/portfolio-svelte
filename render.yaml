@@ -8,6 +8,8 @@ services:
     buildCommand: go build -o server main.go
     startCommand: ./server
     envVars:
+      - key: GITHUB_TOKEN
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: PORT

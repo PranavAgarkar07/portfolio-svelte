@@ -165,8 +165,19 @@ func generateDevLog() (string, error) {
 
 func fetchGitHubEvents() (string, error) {
 	url := fmt.Sprintf("https://api.github.com/users/%s/events/public", GitHubUsername)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// Add Token if available to increase rate limit (from 60 to 5000 requests/hr)
+	token := os.Getenv("GITHUB_TOKEN")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(url)
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
