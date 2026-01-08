@@ -18,12 +18,11 @@ git add .
 # 2. Commit
 git commit -m "$MSG"
 
-# 3. Deploy (Build + GH Pages Push)
-# Note: You have both a GitHub Action AND a local deploy script.
-# This script runs the local one as requested.
-npm run deploy
+# 3. Deploy
+# We are now relying on GitHub Actions to build and deploy with the correct API URL.
+# npm run deploy <--- Removed to prevent local build (localhost) from overriding.
 
-# 4. Push source code to main (triggers Action backup or redundancy)
+# 4. Push source code to main (triggers GitHub Action)
 git push origin main
 
 echo "✅ Deployed and Pushed!"
