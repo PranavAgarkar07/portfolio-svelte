@@ -4,10 +4,12 @@
     let lastUpdate = $state("");
     let loading = $state(true);
 
-    // Use deployed URL if valid, otherwise fallback to localhost
+    // Use deployed URL if valid, otherwise fallback to localhost for dev, or hardcoded render for prod
     const API_URL = import.meta.env.VITE_API_URL
         ? `${import.meta.env.VITE_API_URL}/api/status`
-        : "http://localhost:8080/api/status";
+        : import.meta.env.MODE === "development"
+          ? "http://localhost:8080/api/status"
+          : "https://sentinel-backend-4x3i.onrender.com/api/status";
 
     // Industrial/Aerospace Theme Colors (Orange Scale)
     const LEVEL_COLORS = [
