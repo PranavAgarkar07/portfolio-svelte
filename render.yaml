@@ -4,13 +4,12 @@ services:
     name: sentinel-backend
     env: go
     plan: free
-    region: singapore # Optional, can be removed or changed
-    root: backend # Important: Points to the subdirectory
+    rootDir: backend # Correct key for monorepo subdirectory
     buildCommand: go build -o server main.go
     startCommand: ./server
     envVars:
       - key: GEMINI_API_KEY
-        sync: false # User must enter this manually in dashboard
+        sync: false
       - key: PORT
-        value: 10000
+        value: "10000" # Quoted string
     autoDeploy: true
