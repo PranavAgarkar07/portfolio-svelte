@@ -2,7 +2,6 @@
     import { theme } from "$lib/stores/theme";
     import { onMount } from "svelte";
     import { base } from "$app/paths";
-
     interface Props {
         profile: {
             name: string;

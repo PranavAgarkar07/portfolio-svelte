@@ -9,6 +9,7 @@
     import Hero from "$lib/components/Hero.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
     import Terminal from "$lib/components/Terminal.svelte";
+    import DevLog from "$lib/components/DevLog.svelte";
     import Footer from "$lib/components/Footer.svelte";
 
     const { profile, about, skills, projects } = portfolioData;

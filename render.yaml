@@ -1,0 +1,16 @@
+services:
+  # Go Backend Service
+  - type: web
+    name: sentinel-backend
+    env: go
+    plan: free
+    region: singapore # Optional, can be removed or changed
+    root: backend # Important: Points to the subdirectory
+    buildCommand: go build -o server main.go
+    startCommand: ./server
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # User must enter this manually in dashboard
+      - key: PORT
+        value: 10000
+    autoDeploy: true

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import DevLog from "$lib/components/DevLog.svelte";
 
     interface Props {
         profile: {
@@ -130,4 +131,18 @@
             </div>
         {/each}
     </div>
+
+    <!-- Live Activity Metric -->
+    <div class="skills-footer fade-in">
+        <DevLog />
+    </div>
 </section>
+
+<style>
+    .skills-footer {
+        margin-top: 3rem;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+</style>

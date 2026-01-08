@@ -344,3 +344,55 @@ body.light-mode .social-icons a:active {
 body.light-mode .skill-level-bar {
     background: rgba(0, 0, 0, 0.1);
 }
+
+/* DevLog (Light Mode Technical) */
+body.light-mode .activity-card {
+    background: #ffffff;
+    border: 2px solid #333;
+    /* High contrast dark border */
+    border-left: 4px solid #333;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+    /* Hard shadow */
+}
+
+/* Keep the caution stripes, but make them dark/subtle */
+body.light-mode .activity-card::before {
+    display: block;
+    background: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 10px,
+            rgba(0, 0, 0, 0.05) 10px,
+            /* Dark grey stripes */
+            rgba(0, 0, 0, 0.05) 20px);
+}
+
+body.light-mode .activity-card:hover {
+    background: #ffffff;
+    border-color: #000;
+    border-left-color: var(--accent);
+    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .activity-card .card-header {
+    border-bottom: 1px dashed #ccc;
+}
+
+body.light-mode .activity-card .status-dot {
+    background-color: #e0e0e0;
+    border: 1px solid #333;
+}
+
+body.light-mode .activity-card .status-dot.pulsing {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+body.light-mode .activity-card .meta {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #eee;
+}
+
+body.light-mode .activity-card .skeleton-text {
+    background: rgba(0, 0, 0, 0.08);
+}
