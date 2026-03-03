@@ -25,20 +25,41 @@
     const history = [1, 3, 0, 2, 4, 1, 3]; // 0-4 intensity levels
 
     onMount(async () => {
-        try {
-            const res = await fetch(API_URL);
-            if (!res.ok) throw new Error("Network response was not ok");
-            const data = await res.json();
+        const fetchStatus = async (timeoutMs: number) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const res = await fetch(API_URL, { signal: controller.signal });
+                clearTimeout(timer);
+                if (!res.ok) throw new Error("Network response was not ok");
+                return await res.json();
+            } catch (e) {
+                clearTimeout(timer);
+                throw e;
+            }
+        };
 
+        try {
+            // First try: quick 8s timeout
+            const data = await fetchStatus(8000);
             setTimeout(() => {
                 status = data.summary;
-                lastUpdate = "Today"; // GitHub style
+                lastUpdate = "Today";
                 loading = false;
             }, 600);
-        } catch (e) {
-            console.error(e);
-            status = "System Offline";
-            loading = false;
+        } catch {
+            // Server likely cold-starting on Render free tier — retry once with longer timeout
+            status = "Waking up server...";
+            try {
+                const data = await fetchStatus(30000);
+                status = data.summary;
+                lastUpdate = "Today";
+                loading = false;
+            } catch (e) {
+                console.error(e);
+                status = "System Offline";
+                loading = false;
+            }
         }
     });
 
