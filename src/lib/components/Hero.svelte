@@ -85,6 +85,10 @@
                     src={profile.avatar}
                     alt="{profile.name} Profile Picture"
                     class="profile-img"
+                    loading="lazy"
+                    decoding="async"
+                    width="350"
+                    height="350"
                 />
                 <div class="frame-corners"></div>
             </div>

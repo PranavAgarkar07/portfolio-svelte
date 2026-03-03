@@ -44,6 +44,22 @@
         name="description"
         content="Portfolio of Pranav Agarkar - Fullstack Developer specializing in Django, React, and Svelte"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin="anonymous"
+    />
+    <link
+        rel="preconnect"
+        href="https://cdn.jsdelivr.net"
+        crossorigin="anonymous"
+    />
+    <link
+        rel="preconnect"
+        href="https://cdnjs.cloudflare.com"
+        crossorigin="anonymous"
+    />
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
@@ -56,6 +72,12 @@
         href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@400;600;700&display=swap"
         rel="stylesheet"
     />
+    <!-- Override icon font-display to prevent invisible text (FOIT) during CDN load -->
+    <style>
+        @font-face {
+            font-display: swap;
+        }
+    </style>
 </svelte:head>
 
 <div class="noise-overlay"></div>

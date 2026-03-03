@@ -1,4 +1,4 @@
-import avatar from '$lib/assets/avatar.png';
+import avatar from '$lib/assets/avatar.webp';
 
 // Portfolio Data
 export const portfolioData = {
