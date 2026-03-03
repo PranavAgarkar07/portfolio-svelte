@@ -20,7 +20,10 @@ import (
 // --- Configuration ---
 const (
 	GitHubUsername = "PranavAgarkar07"
-	CacheDuration  = 5 * time.Minute
+	CacheDuration  = 24 * time.Hour
+
+	// Shown when Gemini quota is exhausted for the day
+	QuotaFallback = "Deep in the code — pushing updates across multiple projects. Check back soon!"
 )
 
 // --- Structs ---
@@ -157,6 +160,12 @@ func generateDevLog() (string, error) {
 	// 3. Call Gemini API
 	summary, err := callGemini(apiKey, prompt)
 	if err != nil {
+		// If quota is exhausted, return a friendly fallback instead of an error
+		errStr := err.Error()
+		if strings.Contains(errStr, "429") || strings.Contains(errStr, "RESOURCE_EXHAUSTED") || strings.Contains(errStr, "quota") {
+			log.Printf("⚠️ Gemini quota exhausted, using fallback message.")
+			return QuotaFallback, nil
+		}
 		return "", err
 	}
 

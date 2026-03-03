@@ -31,8 +31,9 @@
             try {
                 const res = await fetch(API_URL, { signal: controller.signal });
                 clearTimeout(timer);
-                if (!res.ok) throw new Error("Network response was not ok");
-                return await res.json();
+                // Always try to parse JSON — even 500s carry a useful summary field
+                const data = await res.json();
+                return data;
             } catch (e) {
                 clearTimeout(timer);
                 throw e;
