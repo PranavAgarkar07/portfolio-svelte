@@ -7,7 +7,13 @@
     let { children } = $props();
 
     onMount(() => {
+        const prefersReducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+
         const handleMove = (e: MouseEvent) => {
+            if (prefersReducedMotion) return;
+
             const cards = document.querySelectorAll(
                 ".aero-card, .btn, .terminal-wrapper, .nav-links a, .theme-btn, .mobile-menu-btn",
             ) as NodeListOf<HTMLElement>;
@@ -20,7 +26,9 @@
             });
         };
 
-        window.addEventListener("mousemove", handleMove);
+        if (!prefersReducedMotion) {
+            window.addEventListener("mousemove", handleMove);
+        }
 
         // Sync body class on mount (hydration fix)
         const unsubscribe = theme.subscribe((value) => {
@@ -69,7 +77,7 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@400;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap"
         rel="stylesheet"
     />
     <!-- Override icon font-display to prevent invisible text (FOIT) during CDN load -->

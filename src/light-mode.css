@@ -12,9 +12,9 @@ body.light-mode {
     --text-secondary: #555555;
     /* Pencil Grey */
 
-    --accent: #ff4400;
-    /* Keep the Safety Orange */
-    --accent-glow: rgba(255, 68, 0, 0.15);
+    --accent: #d93d00;
+    /* Darker Safety Orange for WCAG contrast */
+    --accent-glow: rgba(217, 61, 0, 0.15);
 
     --grid-line: rgba(0, 0, 0, 0.08);
     /* Graph Paper Lines */
@@ -186,7 +186,6 @@ body.light-mode .project-link:hover {
     color: #fff;
     box-shadow: 2px 2px 0px #111;
     border-color: var(--accent);
-    /* Orange border on hover */
 }
 
 body.light-mode .project-link:active {
@@ -211,7 +210,6 @@ body.light-mode .theme-btn:hover {
     color: #fff;
     box-shadow: 2px 2px 0px #111;
     border-color: var(--accent);
-    /* Orange border on hover */
 }
 
 body.light-mode .theme-btn:active {
@@ -259,7 +257,6 @@ body.light-mode .btn:hover {
     color: #fff;
     box-shadow: 2px 2px 0px #111;
     border-color: var(--accent);
-    /* Orange border on hover */
 }
 
 body.light-mode .btn:active {

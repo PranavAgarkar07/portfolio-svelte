@@ -68,8 +68,9 @@ export const portfolioData = {
             name: "BeamSync",
             description: "High-performance offline P2P file transfer system with a cyberpunk terminal UI. Features auto-IP detection, dynamic port scouting, and QR-based mobile sync—no internet required.",
             tags: ["Go", "Wails", "Svelte", "Networking", "P2P"],
-            isLive: false,
+            isLive: true,
             links: [
+                { label: "Website", url: "https://pranavagarkar07.github.io/BeamSync/", icon: "fas fa-external-link-alt" },
                 { label: "GitHub", url: "https://github.com/PranavAgarkar07/BeamSync", icon: "fab fa-github" }
             ]
         }

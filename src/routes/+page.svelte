@@ -22,6 +22,9 @@
     const coverImage = `${siteUrl}avatar.png`; // Fallback to avatar if no dedicated cover
 
     onMount(() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) return; // Skip animations if user prefers reduced motion
+
         gsap.registerPlugin(ScrollTrigger);
 
         // Hero Timeline
