@@ -279,12 +279,17 @@ a {
 }
 
 .logo {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
+    font-family: 'Clash Display', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
     color: #fff;
-    /* border: 1px solid #fff; Removed per user request */
+    letter-spacing: 0.02em;
     padding: 5px 0;
-    /* Reduced horizontal padding since no border */
+    transition: opacity 0.2s ease;
+}
+
+.logo:hover {
+    opacity: 0.85;
 }
 
 .text-accent {
