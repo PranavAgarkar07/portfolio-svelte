@@ -530,10 +530,12 @@ section {
 }
 
 .btn {
-    font-family: var(--font-heading);
+    font-family: 'Clash Display', sans-serif;
     text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.85rem;
     padding: 15px 30px;
-    font-weight: 700;
+    font-weight: 600;
     border: 2px solid var(--accent);
     color: var(--accent);
     background: transparent;
@@ -871,19 +873,18 @@ section {
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
-    font-family: var(--font-heading);
-    font-size: 0.8rem;
-    /* Smaller font */
+    font-family: 'Clash Display', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
     color: var(--accent);
-    padding: 8px 12px;
-    /* Smaller padding */
+    padding: 8px 14px;
     border: 2px solid var(--accent);
     background: rgba(0, 0, 0, 0.3);
     transition: all 0.1s cubic-bezier(0, 0, 0.2, 1);
     box-shadow: 3px 3px 0px var(--accent);
-    /* Slightly smaller shadow */
     width: auto;
-    /* Compact width */
     margin-right: 0.5rem;
     margin-bottom: 0.5rem;
 }
