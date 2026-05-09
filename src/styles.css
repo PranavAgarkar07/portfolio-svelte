@@ -883,9 +883,16 @@ section {
 
 /* Terminal Contact - Quick Connect Console */
 .aero-card.contact-card {
+    position: relative;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-left: 3px solid var(--accent);
     background: linear-gradient(160deg, #1a1f28 0%, #0e1116 100%);
+    padding: 0.25rem 0;
+    transition: box-shadow 0.3s ease;
+    animation: pulseBorder 3s ease-in-out infinite;
+}
+.aero-card.contact-card:hover {
+    box-shadow: inset 0 0 60px rgba(255, 68, 0, 0.06);
 }
 :global(body.light-mode) .aero-card.contact-card {
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -895,24 +902,26 @@ section {
 
 .contact-header {
     margin-bottom: 1.25rem;
-    padding-left: 1.5rem;
+    padding-left: 2rem;
     position: relative;
 }
 .contact-header::before {
-    content: "CONNECT";
+    content: "CONTACT";
     display: block;
     font-family: var(--font-body);
     font-size: 0.6rem;
     letter-spacing: 0.15em;
     color: #555;
     margin-bottom: 0.5rem;
+    animation: fadeSlideIn 0.6s ease-out;
 }
 .contact-header h2 {
     border: none;
     padding: 0;
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     color: var(--text-primary);
+    text-shadow: 0 0 20px rgba(255, 68, 0, 0.15);
 }
 .contact-header p {
     color: var(--text-secondary);
@@ -922,7 +931,7 @@ section {
 
 /* Contact Form */
 .contact-form {
-    padding: 0 1.5rem 1.5rem;
+    padding: 0 2rem 2rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -946,6 +955,7 @@ section {
 .form-input:focus,
 .form-textarea:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
 }
 .form-textarea {
     resize: vertical;
@@ -963,17 +973,20 @@ section {
 }
 .form-submit {
     margin-top: 0.5rem;
-    width: fit-content;
+    width: 100%;
 }
 .form-success {
     color: #00ffaa;
     font-size: 0.8rem;
     padding: 0.5rem 0;
+    animation: fadeSlideIn 0.4s ease-out;
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
 }
 .form-error {
     color: #ff4444;
     font-size: 0.8rem;
     padding: 0.5rem 0;
+    animation: shake 0.3s ease-out;
 }
 :global(body.light-mode) .form-success {
     color: #00aa6e;
@@ -983,27 +996,27 @@ section {
 .contact-socials {
     display: flex;
     gap: 0.75rem;
-    padding: 0 1.5rem 1.5rem;
+    padding: 0 2rem 2rem;
     flex-wrap: wrap;
 }
 .contact-social-link {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.7rem;
+    gap: 8px;
+    font-size: 0.75rem;
     font-family: var(--font-body);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
-    color: #555;
-    padding: 6px 12px;
+    color: #777;
+    padding: 8px 14px;
     border: 1px solid transparent;
     transition: all 0.2s ease;
 }
 .contact-social-link:hover {
     color: var(--accent);
     border-color: var(--accent);
-    background: rgba(255, 68, 0, 0.04);
+    background: rgba(255, 68, 0, 0.08);
 }
 :global(body.light-mode) .contact-social-link {
     color: #888;
@@ -1482,6 +1495,20 @@ section {
 *:focus-visible {
     outline: 3px solid var(--accent);
     outline-offset: 4px;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseBorder {
+    0%, 100% { border-left-color: var(--accent); }
+    50% { border-left-color: rgba(255, 68, 0, 0.3); }
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

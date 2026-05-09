@@ -91,10 +91,12 @@
     .form-input:focus,
     .form-textarea:focus {
         border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent);
     }
     .form-textarea {
         resize: vertical;
         min-height: 100px;
+        background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.008) 2px, rgba(255, 255, 255, 0.008) 4px);
     }
     :global(body.light-mode) .form-input,
     :global(body.light-mode) .form-textarea {
@@ -104,19 +106,41 @@
     }
     .form-submit {
         margin-top: 0.5rem;
-        width: fit-content;
+        width: 100%;
     }
     .form-success {
         color: #00ffaa;
         font-size: 0.8rem;
         padding: 0.5rem 0;
+        animation: fadeSlideIn 0.4s ease-out;
     }
     .form-error {
         color: #ff4444;
         font-size: 0.8rem;
         padding: 0.5rem 0;
+        animation: shake 0.3s ease-out;
     }
     :global(body.light-mode) .form-success {
         color: #00aa6e;
+    }
+
+    @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .form-success,
+        .form-error,
+        .form-input,
+        .form-textarea {
+            animation: none !important;
+            transition: none !important;
+        }
     }
 </style>
