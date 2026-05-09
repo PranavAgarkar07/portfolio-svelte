@@ -4,7 +4,7 @@
     let status = $state("Fetching latest commit...");
     let lastUpdate = $state("");
     let loading = $state(true);
-    const API_URL = import.meta.env.VITE_API_URL || "";
+    const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api/status";
 
     onMount(async () => {
         const fetchStatus = async (timeoutMs: number, attemptNumber: number) => {
