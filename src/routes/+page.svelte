@@ -98,7 +98,6 @@
                 start: "top 80%",
             },
             y: 50,
-            opacity: 0,
             duration: 1,
             ease: "power2.out",
         });
