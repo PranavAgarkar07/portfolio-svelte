@@ -310,7 +310,7 @@ func handleSubmitContact(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
 	}
 
-	return c.JSON(fiber.Map{"success": true, "message": "Message sent successfully."})
+	return c.Status(201).JSON(fiber.Map{"success": true, "message": "Message sent successfully."})
 }
 
 func handleAdminContact(c *fiber.Ctx) error {

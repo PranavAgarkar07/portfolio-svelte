@@ -8,8 +8,6 @@
     let messages = $state<any[]>([]);
     let loading = $state(false);
     let error = $state("");
-    let editingKey = $state(false);
-
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
         const urlKey = params.get("key");
@@ -20,8 +18,6 @@
         const saved = localStorage.getItem("contact_admin_key");
         if (saved) {
             storedKey = saved;
-        } else {
-            editingKey = true;
         }
     });
 
@@ -75,7 +71,6 @@
     function clearKey() {
         localStorage.removeItem("contact_admin_key");
         storedKey = "";
-        editingKey = true;
     }
 
     function truncate(s: string, len: number): string {
@@ -89,7 +84,7 @@
 </script>
 
 <div class="admin-page">
-    {#if !storedKey && !editingKey}
+    {#if !storedKey}
         <div class="key-entry">
             <h1>Admin — Contact Messages</h1>
             <input

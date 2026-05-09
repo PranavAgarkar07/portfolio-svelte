@@ -29,7 +29,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: name.trim(), email: email.trim(), message: message.trim() }),
             });
-            if (res.status === 201) {
+            if (res.ok) {
                 success = true;
                 name = ""; email = ""; message = "";
                 setTimeout(() => success = false, 6000);
