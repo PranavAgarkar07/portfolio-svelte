@@ -93,8 +93,6 @@
             if (matches.length === 1) {
                 inputValue = matches[0];
             } else if (matches.length > 1) {
-                // Determine common prefix
-                // Simpler: just show matches if not empty
                 outputLines = [
                     ...outputLines,
                     { type: "input", content: `➜ ~ ${inputValue}` },
@@ -136,7 +134,6 @@
 
         if (cmd) {
             hasInteracted = true;
-            // Add to history if unique or different from last
             if (history.length === 0 || history[history.length - 1] !== cmd) {
                 history.push(cmd);
             }
@@ -189,7 +186,6 @@
     }
 
     onMount(() => {
-        // Boot sequence
         setTimeout(
             () =>
                 (outputLines = [
@@ -238,7 +234,6 @@
             2200,
         );
 
-        // Cursor blink
         const interval = setInterval(() => {
             cursorVisible = !cursorVisible;
         }, 500);
@@ -251,8 +246,11 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="terminal-wrapper" onclick={focusInput}>
     <div class="terminal-header">
-        <span class="sys-status">[SYSTEM :: ONLINE]</span>
-        <span class="sys-title">PRANAV_OS // KERNEL_V1.0</span>
+        <span class="header-left">
+            <span class="pwr-led"></span>
+            <span class="sys-title">PRANAV_OS/KERNEL_V1.0</span>
+        </span>
+        <span class="sys-status">[COMMS :: ONLINE]</span>
     </div>
 
     <div class="terminal-body" bind:this={terminalBody}>
@@ -307,23 +305,60 @@
     .dim {
         color: #666;
     }
+    .terminal-wrapper {
+        position: relative;
+    }
     .terminal-body {
-        max-height: 300px;
+        max-height: 320px;
         overflow-y: auto;
         padding-bottom: 2rem;
     }
-    /* Ensure prompt colors match original */
     .prompt {
         color: var(--accent);
         margin-right: 8px;
         font-weight: bold;
     }
     .path {
-        color: #00bcd4; /* Cyan/Blue path color */
+        color: #00bcd4;
     }
     :global(.code-highlight) {
         color: var(--accent);
         font-weight: bold;
+    }
+    .terminal-header {
+        background: #0a0a0a;
+        border-bottom: 1px solid #222;
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: var(--font-body);
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        color: #666;
+        text-transform: uppercase;
+    }
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .pwr-led {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #00ffaa;
+        box-shadow: 0 0 6px rgba(0, 255, 170, 0.5);
+    }
+    :global(body.light-mode) .pwr-led {
+        background: #00cc77;
+        box-shadow: 0 0 6px rgba(0, 204, 119, 0.4);
+    }
+    .sys-title {
+        color: #555;
+    }
+    .sys-status {
+        color: var(--accent);
     }
     .terminal-hint {
         display: flex;

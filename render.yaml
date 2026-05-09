@@ -14,4 +14,8 @@ services:
         sync: false
       - key: PORT
         value: "10000" # Quoted string
+      - key: DATABASE_URL
+        sync: false
+      - key: CONTACT_SECRET
+        sync: false
     autoDeploy: true

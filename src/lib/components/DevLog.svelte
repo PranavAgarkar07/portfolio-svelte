@@ -3,6 +3,7 @@
     import type { DevLogResponse } from "$lib/types";
     let status = $state("Fetching latest commit...");
     let lastUpdate = $state("");
+    let source = $state<"cache" | "live" | "stale-cache" | null>(null);
     let loading = $state(true);
     const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api/status";
 
@@ -28,104 +29,193 @@
 
         try {
             const data = await fetchStatus(8000, 1);
-            setTimeout(() => {
-                status = data.summary;
-                lastUpdate = "Today";
-                loading = false;
-            }, 600);
+            status = data.summary;
+            lastUpdate = data.last_update;
+            source = data.source;
+            loading = false;
         } catch {
             status = "Waking up server...";
             try {
                 const data = await fetchStatus(30000, 2);
                 status = data.summary;
-                lastUpdate = "Today";
+                lastUpdate = data.last_update;
+                source = data.source;
                 loading = false;
-            } catch (e) {
-                console.error("[DevLog] Fetch failed:", {
-                    attempt: 2,
-                    timeout: 30000,
-                    error: e instanceof Error ? e.message : String(e),
-                });
+            } catch {
                 status = "System Offline";
                 loading = false;
             }
         }
     });
 
+    function formatSource(src: string) {
+        switch (src) {
+            case "live": return "LIVE";
+            case "cache": return "CACHED";
+            case "stale-cache": return "STALE";
+            default: return src.toUpperCase();
+        }
+    }
 </script>
 
-<div class="devlog-strip">
-    <div class="status-block">
-        <span class="status-label">SYS::STATUS</span>
-        {#if loading}
-            <div class="skeleton-bar"></div>
-        {:else}
-            <span class="status-text">{status}</span>
-        {/if}
+<div class="status-panel" class:offline={status === "System Offline"}>
+    <div class="panel-header">
+        <span class="panel-label">SYS::STATUS</span>
+        <div class="pulse-indicator" class:loading class:online={!loading && status !== "System Offline"} class:offline={status === "System Offline"}>
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">
+                {#if loading}
+                    BOOT
+                {:else if status === "System Offline"}
+                    OFFLINE
+                {:else}
+                    ONLINE
+                {/if}
+            </span>
+        </div>
     </div>
-    <div class="pulse-indicator" class:loading class:online={!loading && status !== "System Offline"} class:offline={status === "System Offline"}>
-        <span class="pulse-dot"></span>
-        <span class="pulse-label">
-            {#if loading}
-                INITIALIZING
-            {:else if status === "System Offline"}
-                OFFLINE
-            {:else}
-                ONLINE
-            {/if}
-        </span>
+    <div class="panel-divider"></div>
+    <div class="panel-body">
+        {#if loading}
+            <div class="skeleton-group">
+                <div class="skeleton-line w-80"></div>
+                <div class="skeleton-line w-50"></div>
+            </div>
+        {:else}
+            <div class="status-message">{status}</div>
+            <div class="status-meta">
+                {#if lastUpdate}
+                    <span class="meta-item">
+                        <span class="meta-key">UPDATED</span>
+                        <span class="meta-value">{lastUpdate}</span>
+                    </span>
+                {/if}
+                {#if source}
+                    <span class="meta-item">
+                        <span class="meta-key">SOURCE</span>
+                        <span class="meta-value source" class:live={source === "live"} class:cached={source === "cache"}>{formatSource(source)}</span>
+                    </span>
+                {/if}
+            </div>
+        {/if}
     </div>
 </div>
 
 <style>
-    .devlog-strip {
+    .status-panel {
         display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 16px;
-        padding: 0.75rem 1rem;
+        flex-direction: column;
+        width: 100%;
+        max-width: 480px;
         background: #050505;
         border: 1px solid var(--grid-line);
-        border-right: 3px solid var(--accent);
-        border-radius: 0;
-        width: fit-content;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-    }
-    :global(body.light-mode) .devlog-strip {
-        background: rgba(255, 255, 255, 0.9);
-        border-color: rgba(0, 0, 0, 0.15);
-        border-right: 3px solid var(--accent);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-    .status-block {
-        display: flex;
-        gap: 8px;
-        align-items: center;
+        border-left: 3px solid var(--accent);
+        border-right: 1px solid var(--grid-line);
         font-family: var(--font-body);
-        font-size: 0.7rem;
+        transition: border-color 0.3s ease;
     }
-    .status-label {
+    .status-panel.offline {
+        border-left-color: #ff4444;
+    }
+    :global(body.light-mode) .status-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+    :global(body.light-mode) .status-panel.offline {
+        border-left-color: #ff4444;
+    }
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 1rem;
+    }
+    .panel-label {
         font-weight: 700;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
         color: var(--accent);
-        letter-spacing: 0.1em;
     }
-    .status-text {
+    :global(body.light-mode) .panel-label {
+        color: var(--accent);
+    }
+    .panel-divider {
+        height: 1px;
+        background: var(--grid-line);
+        margin: 0 1rem;
+    }
+    :global(body.light-mode) .panel-divider {
+        background: rgba(0, 0, 0, 0.1);
+    }
+    .panel-body {
+        padding: 0.75rem 1rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .status-message {
+        font-size: 0.75rem;
+        line-height: 1.5;
         color: var(--text-secondary);
-        white-space: normal;
+        word-wrap: break-word;
     }
-    :global(body.light-mode) .status-text {
-        color: #111;
+    :global(body.light-mode) .status-message {
+        color: #1a1a1a;
         font-weight: 500;
     }
-    .skeleton-bar {
-        width: 180px;
-        height: 0.7rem;
+    .status-meta {
+        display: flex;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+    }
+    .meta-key {
+        color: #555;
+        font-weight: 600;
+    }
+    :global(body.light-mode) .meta-key {
+        color: #888;
+    }
+    .meta-value {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    :global(body.light-mode) .meta-value {
+        color: #333;
+    }
+    .meta-value.source.live {
+        color: #00ffaa;
+    }
+    :global(body.light-mode) .meta-value.source.live {
+        color: #00aa6e;
+    }
+    .meta-value.source.cached {
+        color: #ffaa00;
+    }
+    :global(body.light-mode) .meta-value.source.cached {
+        color: #cc8800;
+    }
+    .skeleton-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .skeleton-line {
+        height: 0.65rem;
         background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
         background-size: 200% 100%;
         animation: shimmer 1.5s ease-in-out infinite;
         border-radius: 2px;
     }
-    :global(body.light-mode) .skeleton-bar {
+    .skeleton-line.w-80 { width: 80%; }
+    .skeleton-line.w-50 { width: 50%; }
+    :global(body.light-mode) .skeleton-line {
         background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
         background-size: 200% 100%;
     }
@@ -137,15 +227,12 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        padding-left: 16px;
-        border-left: 1px solid var(--grid-line);
-        font-family: var(--font-body);
-        font-size: 0.65rem;
-        letter-spacing: 0.1em;
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
     }
     .pulse-dot {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
         border-radius: 50%;
         background: #555;
         transition: background 0.3s ease;
@@ -164,26 +251,10 @@
     .pulse-label {
         color: var(--text-secondary);
     }
-    :global(body.light-mode) .pulse-indicator {
-        border-left-color: rgba(0, 0, 0, 0.15);
-    }
     :global(body.light-mode) .pulse-label {
         color: #555;
     }
     @keyframes blink {
         50% { opacity: 0; }
-    }
-    @media (max-width: 768px) {
-        .devlog-strip {
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .pulse-indicator {
-            border-left: none;
-            border-top: 1px solid var(--grid-line);
-            padding-left: 0;
-            padding-top: 8px;
-            width: 100%;
-        }
     }
 </style>

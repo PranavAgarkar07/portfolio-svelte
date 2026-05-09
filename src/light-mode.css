@@ -75,53 +75,6 @@ body.light-mode .aero-card:hover {
     transform: translateY(-2px);
 }
 
-/* Terminal Inversion (Light Mode) */
-body.light-mode .terminal-wrapper {
-    background: #fafafa;
-    border: 1px solid #111;
-    /* Status strip */
-}
-
-
-body.light-mode .terminal-header {
-    background: #111;
-    border-bottom: 1px solid #000;
-    color: #888;
-}
-
-body.light-mode .terminal-header .sys-status {
-    color: var(--accent);
-}
-
-body.light-mode .terminal-body {
-    background: #fafafa;
-    background-image: none;
-    /* Remove scanlines for clean paper look */
-    color: #111;
-}
-
-body.light-mode .prompt {
-    color: var(--accent);
-}
-
-body.light-mode .path {
-    color: #666;
-}
-
-body.light-mode .cmd-input {
-    color: #111;
-    caret-color: var(--accent);
-}
-
-body.light-mode .cursor-block {
-    box-shadow: none;
-    /* Remove glow */
-}
-
-body.light-mode .output-line {
-    color: #333;
-}
-
 /* Icon Toggle Logic */
 .sun-icon {
     display: block;
@@ -157,10 +110,6 @@ body.light-mode h2 {
 }
 
 /* Links & Text */
-/* Links & Text */
-body.light-mode .path {
-    color: #333 !important;
-}
 
 /* Scroll Signal */
 body.light-mode .signal-track {

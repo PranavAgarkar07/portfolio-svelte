@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +20,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 // --- Configuration ---
@@ -61,6 +64,12 @@ type Metrics struct {
 	startTime    time.Time
 }
 
+type ContactSubmission struct {
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Message string `json:"message"`
+}
+
 var (
 	cache         CachedData
 	cacheMutex    sync.Mutex
@@ -68,6 +77,7 @@ var (
 	lastResponses []string
 	responsesMu   sync.Mutex
 	metrics       Metrics
+	db            *sql.DB
 )
 
 func init() {
@@ -88,6 +98,39 @@ func main() {
 		slog.Info("API key loaded", "prefix", key[:4], "suffix", key[len(key)-4:])
 	} else {
 		slog.Warn("API key is empty or invalid")
+	}
+
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL != "" {
+		var err error
+		db, err = sql.Open("postgres", databaseURL)
+		if err != nil {
+			slog.Warn("Failed to open database", "error", err)
+		} else {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := db.PingContext(ctx); err != nil {
+				slog.Warn("Failed to ping database", "error", err)
+				db.Close()
+				db = nil
+			} else {
+				slog.Info("Database connected successfully")
+				migrateQuery := `CREATE TABLE IF NOT EXISTS contact_messages (
+					id SERIAL PRIMARY KEY,
+					name TEXT NOT NULL,
+					email TEXT NOT NULL,
+					message TEXT NOT NULL,
+					is_read BOOLEAN DEFAULT FALSE,
+					created_at TIMESTAMPTZ DEFAULT NOW()
+				)`
+				if _, err := db.Exec(migrateQuery); err != nil {
+					slog.Warn("Auto-migrate failed", "error", err)
+				}
+			}
+		}
+	}
+	if db != nil {
+		defer db.Close()
 	}
 
 	app := fiber.New()
@@ -120,6 +163,10 @@ func main() {
 
 	app.Get("/api/status", handleStatus)
 	app.Get("/api/metrics", handleMetrics)
+	app.Post("/api/contact", handleSubmitContact)
+	app.Get("/admin/contact", handleAdminContact)
+	app.Get("/api/contact/messages", handleGetMessages)
+	app.Patch("/api/contact/messages/:id/read", handleMarkRead)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -231,6 +278,193 @@ func handleMetrics(c *fiber.Ctx) error {
 		"avg_latency_ms": avgLatency.Milliseconds(),
 		"uptime_seconds": int64(time.Since(metrics.startTime).Seconds()),
 	})
+}
+
+func handleSubmitContact(c *fiber.Ctx) error {
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	var sub ContactSubmission
+	if err := c.BodyParser(&sub); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	if strings.TrimSpace(sub.Name) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "name is required"})
+	}
+
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(sub.Email) {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid email address"})
+	}
+
+	if len(strings.TrimSpace(sub.Message)) < 10 {
+		return c.Status(400).JSON(fiber.Map{"error": "message must be at least 10 characters"})
+	}
+
+	_, err := db.Exec("INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)",
+		sub.Name, sub.Email, sub.Message)
+	if err != nil {
+		slog.Error("Failed to insert contact message", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	return c.JSON(fiber.Map{"success": true, "message": "Message sent successfully."})
+}
+
+func handleAdminContact(c *fiber.Ctx) error {
+	if c.Query("key") != os.Getenv("CONTACT_SECRET") {
+		return c.Status(401).SendString("Unauthorized")
+	}
+
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	rows, err := db.Query("SELECT id, name, email, message, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
+	if err != nil {
+		slog.Error("Failed to query contact messages", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+	defer rows.Close()
+
+	type MessageRow struct {
+		ID        int
+		Name      string
+		Email     string
+		Message   string
+		IsRead    bool
+		CreatedAt time.Time
+	}
+
+	var messages []MessageRow
+	for rows.Next() {
+		var m MessageRow
+		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Message, &m.IsRead, &m.CreatedAt); err != nil {
+			slog.Error("Failed to scan contact message row", "error", err)
+			continue
+		}
+		messages = append(messages, m)
+	}
+
+	var htmlBuilder strings.Builder
+	htmlBuilder.WriteString(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Messages — Admin</title>
+<style>
+body { background: #1a1a2e; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 2rem; }
+h1 { color: #e94560; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #333; }
+th { background: #16213e; color: #e94560; font-weight: 600; }
+tr:hover { background: #16213e; }
+.badge-read { background: #0f3460; color: #e94560; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+.badge-new { background: #e94560; color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<h1>Contact Messages — Admin</h1>
+<table>
+<thead><tr><th>#</th><th>Name</th><th>Email</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
+<tbody>`)
+
+	for _, m := range messages {
+		truncated := m.Message
+		if len(truncated) > 100 {
+			truncated = truncated[:100] + "..."
+		}
+		statusBadge := `<span class="badge-read">Read</span>`
+		if !m.IsRead {
+			statusBadge = `<span class="badge-new">New</span>`
+		}
+		htmlBuilder.WriteString(fmt.Sprintf(`<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>`,
+			m.ID, htmlEscape(m.Name), htmlEscape(m.Email), htmlEscape(truncated), m.CreatedAt.Format("Jan 2, 2006 15:04"), statusBadge))
+	}
+
+	htmlBuilder.WriteString(`</tbody>
+</table>
+</body>
+</html>`)
+
+	c.Type("text/html")
+	return c.SendString(htmlBuilder.String())
+}
+
+func handleGetMessages(c *fiber.Ctx) error {
+	if c.Query("key") != os.Getenv("CONTACT_SECRET") {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	rows, err := db.Query("SELECT id, name, email, message, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
+	if err != nil {
+		slog.Error("Failed to query contact messages", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+	defer rows.Close()
+
+	type MessageJSON struct {
+		ID        int       `json:"id"`
+		Name      string    `json:"name"`
+		Email     string    `json:"email"`
+		Message   string    `json:"message"`
+		IsRead    bool      `json:"is_read"`
+		CreatedAt time.Time `json:"created_at"`
+	}
+
+	var messages []MessageJSON
+	for rows.Next() {
+		var m MessageJSON
+		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Message, &m.IsRead, &m.CreatedAt); err != nil {
+			slog.Error("Failed to scan message row", "error", err)
+			continue
+		}
+		messages = append(messages, m)
+	}
+
+	return c.JSON(fiber.Map{"messages": messages})
+}
+
+func handleMarkRead(c *fiber.Ctx) error {
+	if c.Query("key") != os.Getenv("CONTACT_SECRET") {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	result, err := db.Exec("UPDATE contact_messages SET is_read = TRUE WHERE id = $1", id)
+	if err != nil {
+		slog.Error("Failed to mark message as read", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "message not found"})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func htmlEscape(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	s = strings.ReplaceAll(s, "'", "&#39;")
+	return s
 }
 
 // --- Logic ---

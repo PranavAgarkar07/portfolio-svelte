@@ -8,9 +8,10 @@
     import Header from "$lib/components/Header.svelte";
     import Hero from "$lib/components/Hero.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
-    import Terminal from "$lib/components/Terminal.svelte";
+
     import DevLog from "$lib/components/DevLog.svelte";
     import Footer from "$lib/components/Footer.svelte";
+    import ContactForm from "$lib/components/ContactForm.svelte";
     import Icon from "$lib/components/Icon.svelte";
 
     const { profile, about, skills, projects } = portfolioData;
@@ -90,7 +91,7 @@
             });
         });
 
-        // Contact Terminal
+        // Contact Section
         gsap.from(".contact-card", {
             scrollTrigger: {
                 trigger: "#contact",
@@ -166,26 +167,25 @@
     <section id="contact" class="section-container snap-section">
         <div class="aero-card contact-card fade-in">
             <div class="contact-header">
-                <h2>Quick Connect Interface</h2>
+                <h2>Connect</h2>
                 <p>
-                    Type <span class="code-highlight">hi</span> or
-                    <span class="code-highlight">email</span> to initiate protocol.
+                    Send me a message below or reach out directly on social platforms.
                 </p>
             </div>
 
-            <Terminal />
+            <ContactForm />
 
-            <div class="quick-socials">
+            <div class="contact-socials">
                 {#each profile.socials as social}
                     <a
                         href={social.url}
-                        target="_blank"
+                        target={social.url.startsWith("mailto") ? undefined : "_blank"}
                         rel="noopener"
-                        class="btn"
+                        class="contact-social-link"
                     >
-                        <Icon name={social.icon} size={16} />
-                        {social.label}</a
-                    >
+                        <Icon name={social.icon} size={14} />
+                        <span>{social.label}</span>
+                    </a>
                 {/each}
             </div>
         </div>
