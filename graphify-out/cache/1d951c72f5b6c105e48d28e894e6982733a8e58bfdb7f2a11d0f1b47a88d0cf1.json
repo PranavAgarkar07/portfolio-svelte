@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source": "avatar_png", "target": "+page.svelte", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "src/routes/+page.svelte", "source_location": 22, "weight": 1.0}], "hyperedges": []}

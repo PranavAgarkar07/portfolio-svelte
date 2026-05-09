@@ -1,243 +1,189 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import type { DevLogResponse } from "$lib/types";
     let status = $state("Fetching latest commit...");
     let lastUpdate = $state("");
     let loading = $state(true);
-
-    // Use deployed URL if valid, otherwise fallback to localhost for dev, or hardcoded render for prod
-    const API_URL = import.meta.env.VITE_API_URL
-        ? `${import.meta.env.VITE_API_URL}/api/status`
-        : import.meta.env.MODE === "development"
-          ? "http://localhost:8080/api/status"
-          : "https://sentinel-backend-4x3i.onrender.com/api/status";
-
-    // Industrial/Aerospace Theme Colors (Orange Scale)
-    const LEVEL_COLORS = [
-        "rgba(255, 255, 255, 0.03)", // Level 0: Subtle surface
-        "rgba(255, 68, 0, 0.2)", // Level 1: Faint Orange
-        "rgba(255, 68, 0, 0.4)", // Level 2: Visible Orange
-        "rgba(255, 68, 0, 0.7)", // Level 3: Strong Orange
-        "#ff4400", // Level 4: Full Accent
-    ];
-    // Light Mode equivalents handled via CSS variables if needed, but these usually work well on dark.
-
-    // Mock data for the "Past Days" to create the graph look
-    const history = [1, 3, 0, 2, 4, 1, 3]; // 0-4 intensity levels
+    const API_URL = import.meta.env.VITE_API_URL || "";
 
     onMount(async () => {
-        const fetchStatus = async (timeoutMs: number) => {
+        const fetchStatus = async (timeoutMs: number, attemptNumber: number) => {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
                 const res = await fetch(API_URL, { signal: controller.signal });
                 clearTimeout(timer);
-                // Always try to parse JSON — even 500s carry a useful summary field
-                const data = await res.json();
+                const data: DevLogResponse = await res.json();
                 return data;
             } catch (e) {
                 clearTimeout(timer);
+                console.error("[DevLog] Fetch failed:", {
+                    attempt: attemptNumber,
+                    timeout: timeoutMs,
+                    error: e instanceof Error ? e.message : String(e),
+                });
                 throw e;
             }
         };
 
         try {
-            // First try: quick 8s timeout
-            const data = await fetchStatus(8000);
+            const data = await fetchStatus(8000, 1);
             setTimeout(() => {
                 status = data.summary;
                 lastUpdate = "Today";
                 loading = false;
             }, 600);
         } catch {
-            // Server likely cold-starting on Render free tier — retry once with longer timeout
             status = "Waking up server...";
             try {
-                const data = await fetchStatus(30000);
+                const data = await fetchStatus(30000, 2);
                 status = data.summary;
                 lastUpdate = "Today";
                 loading = false;
             } catch (e) {
-                console.error(e);
+                console.error("[DevLog] Fetch failed:", {
+                    attempt: 2,
+                    timeout: 30000,
+                    error: e instanceof Error ? e.message : String(e),
+                });
                 status = "System Offline";
                 loading = false;
             }
         }
     });
 
-    function getIntensityColor(level: number) {
-        return LEVEL_COLORS[level] || LEVEL_COLORS[0];
-    }
 </script>
 
-<div class="github-activity-strip">
-    <div class="graph-label">Contribution Activity</div>
-
-    <div class="graph-grid">
-        <!-- Render past days (static visual) -->
-        {#each history as level, i}
-            <div
-                class="contribution-cell"
-                style="background-color: {getIntensityColor(level)}"
-                title="Activity level: {level}"
-            ></div>
-        {/each}
-
-        <!-- Today's Live Cell (Static) -->
-        <div class="contribution-cell live"></div>
+<div class="devlog-strip">
+    <div class="status-block">
+        <span class="status-label">SYS::STATUS</span>
+        {#if loading}
+            <div class="skeleton-bar"></div>
+        {:else}
+            <span class="status-text">{status}</span>
+        {/if}
     </div>
-
-    <div class="live-status">
-        <span class="status-label">STATUS:</span>
-        <span class="status-text">{status}</span>
+    <div class="pulse-indicator" class:loading class:online={!loading && status !== "System Offline"} class:offline={status === "System Offline"}>
+        <span class="pulse-dot"></span>
+        <span class="pulse-label">
+            {#if loading}
+                INITIALIZING
+            {:else if status === "System Offline"}
+                OFFLINE
+            {:else}
+                ONLINE
+            {/if}
+        </span>
     </div>
-
-    <!-- AI Watermark -->
-    <div class="ai-watermark">AI GEN</div>
 </div>
 
 <style>
-    /* GitHub Grid Container */
-    .github-activity-strip {
-        position: relative; /* For watermark */
-        /* overflow: visible; Default */
+    .devlog-strip {
         display: flex;
-        flex-direction: row; /* Horizontal for Skills Footer */
+        flex-direction: row;
         align-items: center;
         gap: 16px;
         padding: 0.75rem 1rem;
-        background: #050505; /* Deep Jet Black (Solid) */
+        background: #050505;
         border: 1px solid var(--grid-line);
-        border-right: 3px solid var(--accent); /* Technical Accent Edge */
-        border-radius: 0px; /* Brutalist */
+        border-right: 3px solid var(--accent);
+        border-radius: 0;
         width: fit-content;
-        margin-top: 0;
-        backdrop-filter: none; /* Removed blur for solid bg */
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); /* Deeper shadow */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     }
-
-    /* AI Watermark Sticker */
-    .ai-watermark {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        transform: rotate(25deg); /* Natural sticker angle */
-
-        background: var(--accent);
-        color: #000;
-
-        font-family: var(--font-body);
-        font-size: 0.45rem;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-
-        padding: 2px 6px;
-        border: 2px solid rgba(255, 255, 255, 0.8); /* Die-cut effect */
-        border-radius: 2px;
-
-        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Texture depth */
-
-        pointer-events: none;
-        z-index: 20;
-        white-space: nowrap;
-        text-transform: uppercase;
-    }
-
-    /* Light Mode Sticker: Darker border for contrast */
-    :global(body.light-mode) .ai-watermark {
-        border-color: #000;
-        color: #000;
-    }
-
-    /* Light Mode Overrides for Container */
-    :global(body.light-mode) .github-activity-strip {
+    :global(body.light-mode) .devlog-strip {
         background: rgba(255, 255, 255, 0.9);
         border-color: rgba(0, 0, 0, 0.15);
         border-right: 3px solid var(--accent);
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
-
-    .graph-label {
-        font-family: var(--font-body); /* JetBrains Mono */
-        font-size: 0.65rem;
-        color: var(--text-secondary);
-        letter-spacing: 0.1em;
-        font-weight: 700;
-        opacity: 0.8;
-    }
-
-    :global(body.light-mode) .graph-label {
-        color: #333; /* Darker clean text */
-        opacity: 1;
-    }
-
-    .graph-grid {
+    .status-block {
         display: flex;
-        gap: 2px; /* Tight technical gap */
-    }
-
-    .contribution-cell {
-        width: 10px; /* Precise small blocks */
-        height: 10px;
-        border-radius: 0px; /* Sharp */
-        background-color: rgba(255, 255, 255, 0.03);
-    }
-
-    :global(body.light-mode) .contribution-cell {
-        background-color: #e1e4e8; /* Visible grey on white */
-    }
-
-    /* Today's Cell (Static Industrial) */
-    .contribution-cell.live {
-        background-color: var(--accent); /* International Orange */
-        box-shadow: 0 0 6px var(--accent-glow);
-    }
-
-    /* Live Status Text */
-    .live-status {
-        display: flex;
-        gap: 6px;
+        gap: 8px;
         align-items: center;
         font-family: var(--font-body);
         font-size: 0.7rem;
-        color: var(--text-primary);
-        border-left: 1px solid var(--grid-line);
-        padding-left: 16px;
     }
-
     .status-label {
         font-weight: 700;
-        color: var(--accent); /* Industrial Orange */
+        color: var(--accent);
+        letter-spacing: 0.1em;
     }
-
     .status-text {
         color: var(--text-secondary);
-        white-space: normal; /* Allow wrap */
-        max-width: none; /* Show full text */
-        overflow: visible;
+        white-space: normal;
     }
-
     :global(body.light-mode) .status-text {
         color: #111;
         font-weight: 500;
     }
-
+    .skeleton-bar {
+        width: 180px;
+        height: 0.7rem;
+        background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s ease-in-out infinite;
+        border-radius: 2px;
+    }
+    :global(body.light-mode) .skeleton-bar {
+        background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+        background-size: 200% 100%;
+    }
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    .pulse-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 16px;
+        border-left: 1px solid var(--grid-line);
+        font-family: var(--font-body);
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+    }
+    .pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #555;
+        transition: background 0.3s ease;
+    }
+    .pulse-indicator.loading .pulse-dot {
+        background: #ffaa00;
+        animation: blink 1s step-end infinite;
+    }
+    .pulse-indicator.online .pulse-dot {
+        background: #00ffaa;
+        box-shadow: 0 0 6px rgba(0, 255, 170, 0.4);
+    }
+    .pulse-indicator.offline .pulse-dot {
+        background: #ff4444;
+    }
+    .pulse-label {
+        color: var(--text-secondary);
+    }
+    :global(body.light-mode) .pulse-indicator {
+        border-left-color: rgba(0, 0, 0, 0.15);
+    }
+    :global(body.light-mode) .pulse-label {
+        color: #555;
+    }
+    @keyframes blink {
+        50% { opacity: 0; }
+    }
     @media (max-width: 768px) {
-        .github-activity-strip {
+        .devlog-strip {
             flex-wrap: wrap;
             gap: 12px;
         }
-
-        .live-status {
-            display: flex; /* Show on mobile */
-            border-left: none; /* Remove separator */
-            border-top: 1px solid var(--grid-line); /* Stack with separator */
+        .pulse-indicator {
+            border-left: none;
+            border-top: 1px solid var(--grid-line);
             padding-left: 0;
             padding-top: 8px;
             width: 100%;
-        }
-
-        .status-text {
-            max-width: none; /* Full width on mobile */
         }
     }
 </style>

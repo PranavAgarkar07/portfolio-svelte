@@ -11,6 +11,7 @@
     import Terminal from "$lib/components/Terminal.svelte";
     import DevLog from "$lib/components/DevLog.svelte";
     import Footer from "$lib/components/Footer.svelte";
+    import Icon from "$lib/components/Icon.svelte";
 
     const { profile, about, skills, projects } = portfolioData;
 
@@ -48,16 +49,17 @@
         );
 
         // Featured Projects Stagger
-        gsap.from(".project-card", {
-            scrollTrigger: {
-                trigger: "#projects",
-                start: "top 80%",
-            },
-            scale: 0.98,
-            opacity: 0,
-            stagger: 0.1,
-            duration: 0.8,
-            ease: "power2.out",
+        gsap.utils.toArray(".project-card").forEach((card: any, i: number) => {
+            gsap.from(card, {
+                scrollTrigger: {
+                    trigger: card,
+                    start: "top 85%",
+                },
+                x: i === 0 ? -120 : 120,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out",
+            });
         });
 
         // Skills Pop-in
@@ -152,7 +154,7 @@
 
     <section id="projects" class="section-container snap-section">
         <div class="section-header fade-in">
-            <h2>Featured Projects</h2>
+            <h2>Featured Projects <span class="count-badge">{projects.length}</span></h2>
         </div>
         <div class="projects-grid">
             {#each projects as project, i}
@@ -181,7 +183,7 @@
                         rel="noopener"
                         class="btn"
                     >
-                        <i class={social.icon}></i>
+                        <Icon name={social.icon} size={16} />
                         {social.label}</a
                     >
                 {/each}

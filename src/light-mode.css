@@ -122,16 +122,6 @@ body.light-mode .output-line {
     color: #333;
 }
 
-body.light-mode .project-link-item {
-    color: #000;
-}
-
-body.light-mode .project-link-item:hover {
-    color: var(--accent);
-    background: rgba(0, 0, 0, 0.05);
-    /* Subtle highlight */
-}
-
 /* Icon Toggle Logic */
 .sun-icon {
     display: block;
@@ -156,7 +146,6 @@ body.light-mode h1,
 body.light-mode h2,
 body.light-mode h3,
 body.light-mode h4,
-body.light-mode .project-content h3,
 body.light-mode .logo {
     color: #111 !important;
     /* Force black overrides for hardcoded #fff */
@@ -171,26 +160,6 @@ body.light-mode h2 {
 /* Links & Text */
 body.light-mode .path {
     color: #333 !important;
-}
-
-/* Project Link Buttons (Light Mode) */
-body.light-mode .project-link {
-    color: #111;
-    border-color: #111;
-    background: transparent;
-    box-shadow: 4px 4px 0px #111;
-}
-
-body.light-mode .project-link:hover {
-    background: #111;
-    color: #fff;
-    box-shadow: 2px 2px 0px #111;
-    border-color: var(--accent);
-}
-
-body.light-mode .project-link:active {
-    transform: translate(4px, 4px);
-    box-shadow: none;
 }
 
 /* Scroll Signal */
@@ -232,18 +201,6 @@ body.light-mode .aero-card:hover {
     background: #fff;
 }
 
-/* Specific Project Card Overrides */
-body.light-mode .project-card:hover {
-    transform: translateY(-5px);
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
-    /* Distinct shadow + subtle border */
-    background: #eaeaea !important;
-    /* Visible light grey contrast */
-    border-color: rgba(0, 0, 0, 0.15) !important;
-    /* Visible border */
-}
 
 /* Button Styling (Light Mode) */
 body.light-mode .btn {

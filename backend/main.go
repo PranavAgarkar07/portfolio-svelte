@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -14,16 +15,21 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
 )
 
 // --- Configuration ---
 const (
 	GitHubUsername = "PranavAgarkar07"
-	CacheDuration  = 24 * time.Hour
+	CacheDuration  = 4 * time.Hour
+	RequestTimeout = 15 * time.Second
 
-	// Shown when Gemini quota is exhausted for the day
 	QuotaFallback = "Deep in the code — pushing updates across multiple projects. Check back soon!"
+
+	maxFailures    = 3
+	breakerTimeout = 15 * time.Minute
 )
 
 // --- Structs ---
@@ -31,7 +37,7 @@ const (
 type DevLogResponse struct {
 	Summary    string `json:"summary"`
 	LastUpdate string `json:"last_update"`
-	Source     string `json:"source"` // "cache" or "live"
+	Source     string `json:"source"`
 }
 
 type CachedData struct {
@@ -39,135 +45,261 @@ type CachedData struct {
 	ExpiresAt time.Time
 }
 
+type CircuitBreaker struct {
+	failures    int
+	lastFailure time.Time
+	mu          sync.Mutex
+}
+
+type Metrics struct {
+	mu           sync.Mutex
+	cacheHits    int64
+	cacheMisses  int64
+	geminiErrors int64
+	totalLatency time.Duration
+	totalCalls   int64
+	startTime    time.Time
+}
+
 var (
-	cache      CachedData
-	cacheMutex sync.Mutex
+	cache         CachedData
+	cacheMutex    sync.Mutex
+	breaker       CircuitBreaker
+	lastResponses []string
+	responsesMu   sync.Mutex
+	metrics       Metrics
 )
+
+func init() {
+	metrics.startTime = time.Now()
+}
 
 // --- Main ---
 
 func main() {
-	// Load .env
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, relying on system env vars")
+		slog.Warn("No .env file found, relying on system env vars")
 	} else {
-		log.Println(".env file loaded successfully")
+		slog.Info(".env file loaded successfully")
 	}
 
 	key := os.Getenv("GEMINI_API_KEY")
 	if len(key) > 10 {
-		log.Printf("Loaded API Key: %s...%s", key[:4], key[len(key)-4:])
+		slog.Info("API key loaded", "prefix", key[:4], "suffix", key[len(key)-4:])
 	} else {
-		log.Println("Loaded API Key: [EMPTY] or [INVALID LENGTH]")
+		slog.Warn("API key is empty or invalid")
 	}
 
 	app := fiber.New()
 
-	// Enable CORS for all origins (since frontend is on different port/domain)
+	app.Use(requestid.New())
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
+		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:4173",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	// Routes
+	app.Use(limiter.New(limiter.Config{
+		Max:        120,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(429).JSON(fiber.Map{"error": "rate limit exceeded"})
+		},
+	}))
+
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Sentinel API is Online 🟢")
 	})
 
-	app.Get("/api/status", handleStatus)
+	app.Get("/healthz", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"status": "ok", "time": time.Now().Unix()})
+	})
 
-	// Start Server
+	app.Get("/api/status", handleStatus)
+	app.Get("/api/metrics", handleMetrics)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Sentinel listening on port %s", port)
-	log.Fatal(app.Listen(":" + port))
+	slog.Info("Sentinel starting", "port", port)
+	if err := app.Listen(":" + port); err != nil {
+		slog.Error("Server failed to start", "error", err)
+		os.Exit(1)
+	}
 }
 
 // --- Handlers ---
 
 func handleStatus(c *fiber.Ctx) error {
 	cacheMutex.Lock()
-	defer cacheMutex.Unlock()
+	valid := time.Now().Before(cache.ExpiresAt)
+	hasData := cache.Response.Summary != ""
+	expired := !valid && hasData
+	resp := cache.Response
+	cacheMutex.Unlock()
 
-	// 1. Check Cache
-	if time.Now().Before(cache.ExpiresAt) {
-		log.Println("⚡ Serving from CACHE")
-		resp := cache.Response
+	metrics.mu.Lock()
+	metrics.totalCalls++
+	if valid {
+		metrics.cacheHits++
+	} else if expired {
+		metrics.cacheHits++
+	} else {
+		metrics.cacheMisses++
+	}
+	metrics.mu.Unlock()
+
+	if valid {
+		slog.Info("Serving from cache", "source", "cache", "request_id", c.Locals("requestid"))
 		resp.Source = "cache"
 		return c.JSON(resp)
 	}
 
-	log.Println("🔄 Cache expired or empty. Fetching LIVE data...")
+	if expired {
+		slog.Info("Serving stale cache, refreshing in background", "request_id", c.Locals("requestid"), "source", "stale-cache")
+		resp.Source = "stale-cache"
+		go func() {
+			start := time.Now()
+			summary, err := generateDevLog()
+			if err != nil {
+				slog.Error("Background refresh failed", "error", err)
+				metrics.mu.Lock()
+				metrics.geminiErrors++
+				metrics.mu.Unlock()
+				return
+			}
+			cacheMutex.Lock()
+			cache.Response = DevLogResponse{
+				Summary:    summary,
+				LastUpdate: time.Now().Format("2006-01-02 15:04:05"),
+				Source:     "live",
+			}
+			cache.ExpiresAt = time.Now().Add(CacheDuration)
+			cacheMutex.Unlock()
+			slog.Info("Cache refreshed in background", "latency_ms", time.Since(start).Milliseconds())
+		}()
+		return c.JSON(resp)
+	}
 
-	// 2. Fetch Live Data
+	slog.Info("Cache empty, fetching live data", "request_id", c.Locals("requestid"))
+	startTime := time.Now()
 	summary, err := generateDevLog()
+	latency := time.Since(startTime)
+
+	metrics.mu.Lock()
+	metrics.totalLatency += latency
 	if err != nil {
-		// On error, try to return stale cache if available
-		if cache.Response.Summary != "" {
-			log.Printf("⚠️ Error fetching fresh data: %v. Returning STALE cache.", err)
-			resp := cache.Response
-			resp.Source = "stale-cache"
-			return c.JSON(resp)
-		}
-		// If no cache, return the error
+		metrics.geminiErrors++
+	}
+	metrics.mu.Unlock()
+
+	if err != nil {
+		slog.Error("Live fetch failed", "error", err, "latency_ms", latency.Milliseconds(), "request_id", c.Locals("requestid"))
 		return c.Status(500).JSON(fiber.Map{"error": err.Error(), "summary": "System Update: Offline (Retrying...)"})
 	}
 
-	// 3. Update Cache
 	newResp := DevLogResponse{
 		Summary:    summary,
 		LastUpdate: time.Now().Format("2006-01-02 15:04:05"),
 		Source:     "live",
 	}
+
+	cacheMutex.Lock()
 	cache.Response = newResp
 	cache.ExpiresAt = time.Now().Add(CacheDuration)
+	cacheMutex.Unlock()
 
 	return c.JSON(newResp)
+}
+
+func handleMetrics(c *fiber.Ctx) error {
+	metrics.mu.Lock()
+	defer metrics.mu.Unlock()
+	avgLatency := time.Duration(0)
+	if metrics.totalCalls > 0 {
+		avgLatency = metrics.totalLatency / time.Duration(metrics.totalCalls)
+	}
+	return c.JSON(fiber.Map{
+		"cache_hits":     metrics.cacheHits,
+		"cache_misses":   metrics.cacheMisses,
+		"gemini_errors":  metrics.geminiErrors,
+		"total_requests": metrics.totalCalls,
+		"avg_latency_ms": avgLatency.Milliseconds(),
+		"uptime_seconds": int64(time.Since(metrics.startTime).Seconds()),
+	})
 }
 
 // --- Logic ---
 
 func generateDevLog() (string, error) {
+	breaker.mu.Lock()
+	if breaker.failures >= maxFailures {
+		if time.Since(breaker.lastFailure) < breakerTimeout {
+			breaker.mu.Unlock()
+			slog.Warn("Circuit breaker open — skipping Gemini call")
+			return QuotaFallback, nil
+		}
+		breaker.failures = 0
+	}
+	breaker.mu.Unlock()
+
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
 		return "System Error: Neural Link Disconnected (Missing API Key). Please configure the satellite uplink.", nil
 	}
 
-	// 1. Fetch GitHub Events
 	events, err := fetchGitHubEvents()
 	if err != nil {
 		return "", err
 	}
 
-	// 2. Generate Prompt
-	prompt := fmt.Sprintf(`You are Pranav Agarkar, a Senior Software Engineer writing a quick status update for your personal portfolio.
-	Analyze your following raw GitHub commit history:
-	
-	Raw Data:
-	%s
+	responsesMu.Lock()
+	diversityInstruction := ""
+	if len(lastResponses) > 0 {
+		diversityInstruction = fmt.Sprintf("Avoid repeating these recent responses: %s", strings.Join(lastResponses, "; "))
+	}
+	responsesMu.Unlock()
 
-	Task: Write a SINGLE, casual but professional sentence about what you've been building lately.
-	Tone: Highly personal and authentic. Use "I". Sound like a human engineer talking to a friend.
-	Examples:
-	- "I've been deep in the backend refactoring the auth middleware for better security."
-	- "Just pushed some major updates to the rendering engine to smooth out animations."
-	- "Spending the weekend optimizing database queries for the TaskVault project."
-	
-	Constraint: Keep it under 20 words. No robotic "Pranav has updated" language. Be you.`, events)
+	prompt := fmt.Sprintf(`You are a senior software engineer named Pranav writing a quick personal status update.
+Today is %s. Your recent GitHub activity:
 
-	// 3. Call Gemini API
+%s
+
+Examples of good responses (use these as tone & style reference):
+- "Just landed a full CI/CD overhaul — Dockerized the backend and cut deploy times in half."
+- "Spent the week refactoring the auth layer. Token validation is 40ms faster now."
+- "Dropped a new P2P transfer feature in BeamSync — QR pairing works on the first try."
+- "Been debugging a nasty race condition in the WebSocket handler. Found it — was a missing mutex unlock."
+
+Write ONE sentence (max 20 words) summarizing the work you've been doing recently. 
+Be specific about which project and what kind of work. Sound human, not robotic.
+
+%s`, time.Now().Weekday().String(), events, diversityInstruction)
+
 	summary, err := callGemini(apiKey, prompt)
 	if err != nil {
-		// If quota is exhausted, return a friendly fallback instead of an error
 		errStr := err.Error()
 		if strings.Contains(errStr, "429") || strings.Contains(errStr, "RESOURCE_EXHAUSTED") || strings.Contains(errStr, "quota") {
-			log.Printf("⚠️ Gemini quota exhausted, using fallback message.")
+			breaker.mu.Lock()
+			breaker.failures++
+			breaker.lastFailure = time.Now()
+			breaker.mu.Unlock()
+			slog.Warn("Gemini quota exhausted", "failures", breaker.failures)
 			return QuotaFallback, nil
 		}
 		return "", err
 	}
+
+	responsesMu.Lock()
+	lastResponses = append(lastResponses, summary)
+	if len(lastResponses) > 3 {
+		lastResponses = lastResponses[len(lastResponses)-3:]
+	}
+	responsesMu.Unlock()
 
 	return summary, nil
 }
@@ -179,7 +311,6 @@ func fetchGitHubEvents() (string, error) {
 		return "", err
 	}
 
-	// Add Token if available to increase rate limit (from 60 to 5000 requests/hr)
 	token := os.Getenv("GITHUB_TOKEN")
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
@@ -201,17 +332,31 @@ func fetchGitHubEvents() (string, error) {
 		return "", err
 	}
 
-	// Parse JSON to extract "type" and "repo.name" and commit messages pushed
 	var events []map[string]interface{}
 	if err := json.Unmarshal(body, &events); err != nil {
 		return "", err
 	}
 
-	// Summarize locally first to save token count
+	relevantTypes := map[string]bool{
+		"PushEvent":    true,
+		"CreateEvent":  true,
+		"ReleaseEvent": true,
+		"IssuesEvent":  true,
+	}
+
+	var filtered []map[string]interface{}
+	for _, event := range events {
+		eventType, _ := event["type"].(string)
+		if relevantTypes[eventType] {
+			filtered = append(filtered, event)
+		}
+	}
+	events = filtered
+
 	var summaryBuilder strings.Builder
 	count := 0
 	for _, event := range events {
-		if count >= 30 { // Increased from 15 to 30 to grab more context
+		if count >= 30 {
 			break
 		}
 		eventType, _ := event["type"].(string)
@@ -237,7 +382,7 @@ func fetchGitHubEvents() (string, error) {
 }
 
 func callGemini(apiKey, text string) (string, error) {
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey
 
 	requestBody, _ := json.Marshal(map[string]interface{}{
 		"contents": []interface{}{
@@ -251,7 +396,18 @@ func callGemini(apiKey, text string) (string, error) {
 		},
 	})
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
+	ctx, cancel := context.WithTimeout(context.Background(), RequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -267,8 +423,6 @@ func callGemini(apiKey, text string) (string, error) {
 		return "", err
 	}
 
-	// Extract text from response structure
-	// candidates[0].content.parts[0].text
 	if candidates, ok := result["candidates"].([]interface{}); ok && len(candidates) > 0 {
 		if candidate, ok := candidates[0].(map[string]interface{}); ok {
 			if content, ok := candidate["content"].(map[string]interface{}); ok {

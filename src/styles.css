@@ -18,7 +18,7 @@
     /* Subtler noise */
 
     /* Fonts */
-    --font-heading: 'Syncopate', sans-serif;
+    --font-heading: 'Clash Display', sans-serif;
     --font-body: 'Space Grotesk', sans-serif;
 
     /* Metrics */
@@ -108,7 +108,7 @@ h3,
 h4 {
     font-family: var(--font-heading);
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 600;
     color: #fff;
     letter-spacing: 0.05em;
 }
@@ -127,8 +127,8 @@ h1 {
 }
 
 h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
     border-left: 4px solid var(--accent);
     padding-left: 1rem;
 }
@@ -141,16 +141,23 @@ h2 {
     position: relative;
 }
 
+.count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 1px 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+    line-height: 1;
+}
+
 .section-header h2 {
     margin-bottom: 0;
     /* Let the container handle spacing */
-}
-
-/* Projects Grid */
-/* .projects-grid moved to main styles */
-
-p {
-    color: var(--text-primary);
 }
 
 a {
@@ -439,8 +446,24 @@ main {
 }
 
 section {
-    /* Removed default margin since we use 100vh sections now */
     scroll-margin-top: 0;
+}
+
+.snap-section-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: calc(var(--nav-height) + 2rem);
+    padding-bottom: 4rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    position: relative;
+}
+
+.snap-section-content > * {
+    width: 100%;
+    max-width: 1400px;
 }
 
 /* Aerospace Cards ("Ticket" / "Chamfered") */
@@ -518,9 +541,17 @@ section {
 }
 
 .section-container {
-    margin-bottom: 8rem;
+    margin-bottom: 4rem;
     /* Explicit separation between sections */
     position: relative;
+}
+
+/* Projects section: override snap-section to fit on screen */
+#projects.snap-section {
+    justify-content: flex-start;
+    min-height: auto;
+    padding-top: calc(var(--nav-height) + 1.5rem);
+    padding-bottom: 0;
 }
 
 /* Buttons */
@@ -606,6 +637,7 @@ section {
     flex-direction: column;
     gap: 1.5rem;
     height: 100%;
+    min-height: 0;
 }
 
 .category-title {
@@ -672,29 +704,18 @@ section {
 /* Projects */
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    /* Reduced min-width slightly for flexibility */
+    grid-template-columns: 1fr;
     gap: 1rem;
     align-items: stretch;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
 }
 
-.project-card {
-    min-height: 350px;
-    height: 100%;
-    /* Increased height for breathing room */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.3s ease, background-color 0.3s ease;
-    padding: 2rem;
-    padding: 2rem;
-    /* Increased padding (Whitespace Principle) */
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    /* Increased border visibility */
-    background: #1a1a1a;
-    /* Increased lightness for separation */
-    position: relative;
-    overflow: hidden;
+@media (min-width: 768px) {
+    .projects-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 /* Visual Profile (About Section) */
@@ -725,12 +746,12 @@ section {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: grayscale(100%);
+    filter: grayscale(0%);
     transition: filter 0.3s ease;
 }
 
 .profile-frame:hover .profile-img {
-    filter: grayscale(0%);
+    filter: grayscale(100%);
 }
 
 .frame-corners {
@@ -741,8 +762,6 @@ section {
     height: 100%;
     pointer-events: none;
     border: 1px solid transparent;
-    /* Uses clip-path or pseudo-elements for corners if needed, 
-       but simple border for now fits the aesthetic */
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -775,211 +794,6 @@ section {
     font-weight: 700;
     color: var(--accent);
 }
-
-/* Responsive Masonry (Removed) */
-
-.project-card:hover {
-    transform: translateY(-4px);
-    /* Subtle professional lift */
-    border-color: rgba(255, 255, 255, 0.3);
-    /* Crisp white border, not orange */
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-    /* Elegant depth */
-    background: #202020;
-    /* Subtle lighten, no hue shift */
-}
-
-.project-header {
-    display: block;
-    margin-bottom: 1.5rem;
-    /* Better separation */
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    /* Subtler separator */
-}
-
-.project-id {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    color: var(--accent);
-    /* Accent color for hierarchy */
-    letter-spacing: 2px;
-    opacity: 0.8;
-    margin-bottom: 0.5rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.project-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    height: 100%;
-}
-
-.project-content h3 {
-    font-family: var(--font-heading);
-    font-size: 1.8rem;
-    /* Larger title (Hierarchy) */
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #fff;
-    line-height: 1.2;
-    letter-spacing: -0.5px;
-    /* Tighter modern spacing */
-}
-
-.project-content p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    max-width: none;
-}
-
-.project-footer {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-/* Redundant .project-header block removed from here */
-
-.project-tags {
-    margin-top: auto;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.tag {
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    color: var(--accent);
-    background: rgba(255, 51, 0, 0.05);
-    /* Very subtle tint */
-    border: 1px solid rgba(255, 51, 0, 0.2);
-    padding: 4px 8px;
-    border-radius: 2px;
-    transition: border-color 0.4s ease, color 0.4s ease;
-    /* Smoother transition */
-}
-
-.project-link {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    font-family: 'Clash Display', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--accent);
-    padding: 8px 14px;
-    border: 2px solid var(--accent);
-    background: rgba(0, 0, 0, 0.3);
-    transition: all 0.1s cubic-bezier(0, 0, 0.2, 1);
-    box-shadow: 3px 3px 0px var(--accent);
-    width: auto;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.project-link:hover {
-    background: transparent;
-    /* Explicitly remove highlight */
-    color: var(--accent);
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px var(--accent);
-    border-color: var(--accent);
-}
-
-.project-link:active {
-    transform: translate(4px, 4px);
-    box-shadow: none;
-}
-
-.project-link .link-arrow {
-    transition: transform 0.2s ease;
-}
-
-.project-link:hover .link-arrow {
-    transform: rotate(-45deg);
-}
-
-.link-arrow {
-    transition: transform 0.3s ease;
-}
-
-.project-link:hover .link-arrow {
-    transform: translateX(5px);
-}
-
-.aero-card:hover .link-arrow {
-    color: #fff !important;
-    /* On white bg, link should be black? Or accent? Let's go black */
-    color: #ff4400 !important;
-}
-
-/* Live Indicator */
-.live-indicator {
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    color: #00ffaa;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid rgba(0, 255, 170, 0.3);
-    padding: 2px 6px;
-    border-radius: 2px;
-}
-
-.pulse-dot {
-    width: 6px;
-    height: 6px;
-    background-color: #00ffaa;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(0, 255, 170, 0.7);
-    }
-
-    70% {
-        box-shadow: 0 0 0 6px rgba(0, 255, 170, 0);
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 255, 170, 0);
-    }
-}
-
-.project-links {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-}
-
-.project-link-item {
-    font-family: var(--font-body);
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.project-link-item:hover {
-    color: var(--accent);
-}
-
-/* Redundant project-header removed */
 
 /* About Simple Layout */
 .about-simple-layout {
@@ -1366,32 +1180,8 @@ section {
         padding: 1.5rem;
     }
 
-    /* Grid Collapsing */
     .projects-grid {
         grid-template-columns: 1fr;
-    }
-
-    .project-card {
-        /* Mobile Specific Card Styles */
-        background: #0b0c10;
-        /* Solid background as requested */
-        border: 1px solid var(--grid-line);
-        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
-        /* Better separation */
-        padding: 1.5rem;
-    }
-
-    .project-content h3 {
-        font-size: 1.3rem;
-        /* Slightly smaller to prevent bad wrapping */
-        line-height: 1.3;
-        word-break: break-word;
-        /* Ensure long words don't overflow */
-    }
-
-    .project-tags {
-        margin-bottom: 1rem;
-        /* Ensure spacing below tags */
     }
 
     .skills-grid {
@@ -1702,21 +1492,8 @@ section {
         /* Reduce padding */
     }
 
-    /* --- Projects Section --- */
     .projects-grid {
-        grid-template-columns: 1fr;
-        /* Force single column */
-        gap: 1.5rem;
-    }
-
-    .project-card {
-        padding: 1.5rem;
-        /* Reduce padding */
-        min-height: auto;
-        /* Let content dictate height */
-        background: #1a1a1a;
-        /* Force desktop color */
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        gap: 1rem;
     }
 
     /* --- Contact Section --- */

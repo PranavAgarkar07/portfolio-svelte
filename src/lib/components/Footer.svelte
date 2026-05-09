@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Icon from "./Icon.svelte";
+
     interface Props {
         profile: {
             socials: Array<{ name: string; url: string; label: string }>;
@@ -11,7 +13,6 @@
 
 <footer class="aero-footer">
     <div class="scroll-signal">
-        <span class="signal-text">// END_OF_LINE</span>
         <div class="signal-track-footer"></div>
     </div>
 
@@ -37,13 +38,13 @@
                             aria-label={social.name}
                             rel="noopener"
                         >
-                            <i
-                                class={social.name === "GitHub"
-                                    ? "devicon-github-original"
-                                    : social.name === "LinkedIn"
-                                      ? "devicon-linkedin-plain"
-                                      : "fas fa-envelope"}
-                            ></i>
+                            {#if social.name === "GitHub"}
+                                <Icon name="github" size={20} />
+                            {:else if social.name === "LinkedIn"}
+                                <Icon name="linkedin" size={20} />
+                            {:else}
+                                <Icon name="envelope" size={20} />
+                            {/if}
                         </a>
                     {/if}
                 {/each}
@@ -53,7 +54,7 @@
 
     <div class="footer-bottom">
         <p>
-            &copy; {currentYear} Pranav Agarkar. All Rights Reserved. // System Operational
+            &copy; {currentYear} Pranav Agarkar. All Rights Reserved.
         </p>
     </div>
 </footer>

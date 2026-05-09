@@ -73,7 +73,7 @@
     </div>
 </section>
 
-<section id="about" class="section-container snap-section">
+<section id="about" class="section-container snap-section-content">
     <div class="section-header fade-in">
         <h2>About Me</h2>
     </div>
@@ -110,7 +110,7 @@
     </div>
 </section>
 
-<section id="skills" class="section-container snap-section">
+<section id="skills" class="section-container snap-section-content">
     <div class="section-header fade-in">
         <h2>Technical Proficiency</h2>
     </div>

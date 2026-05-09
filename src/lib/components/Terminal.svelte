@@ -10,6 +10,7 @@
     let history = $state<string[]>([]);
     let historyIndex = $state(-1);
     let tempInput = $state("");
+    let hasInteracted = $state(false);
 
     const CONTACT_INFO = [
         "Email:    pranavagarkar8@gmail.com",
@@ -134,6 +135,7 @@
         const cmdKey = cmd.toLowerCase();
 
         if (cmd) {
+            hasInteracted = true;
             // Add to history if unique or different from last
             if (history.length === 0 || history[history.length - 1] !== cmd) {
                 history.push(cmd);
@@ -288,6 +290,11 @@
             </div>
         </div>
     </div>
+
+    <div class="terminal-hint" class:dimmed={hasInteracted}>
+        <span class="hint-icon">&#9654;</span>
+        <span class="hint-text">try: help &nbsp;|&nbsp; about &nbsp;|&nbsp; projects &nbsp;|&nbsp; skills &nbsp;|&nbsp; contact &nbsp;|&nbsp; email</span>
+    </div>
 </div>
 
 <style>
@@ -317,5 +324,33 @@
     :global(.code-highlight) {
         color: var(--accent);
         font-weight: bold;
+    }
+    .terminal-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 15px;
+        border-top: 1px solid #222;
+        background: #080808;
+        font-family: var(--font-body);
+        font-size: 0.7rem;
+        color: #555;
+        transition: opacity 0.5s ease;
+    }
+    .terminal-hint.dimmed {
+        opacity: 0;
+        pointer-events: none;
+    }
+    .hint-icon {
+        color: var(--accent);
+        font-size: 0.6rem;
+    }
+    .hint-text {
+        letter-spacing: 0.05em;
+    }
+    :global(body.light-mode) .terminal-hint {
+        background: #f0f0f0;
+        border-top-color: #ddd;
+        color: #888;
     }
 </style>

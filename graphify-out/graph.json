@@ -1,0 +1,462 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "svelte.config.js",
+      "file_type": "code",
+      "source_file": "svelte.config.js",
+      "source_location": "L1",
+      "id": "svelte_config_js",
+      "community": 5
+    },
+    {
+      "label": "vite.config.ts",
+      "file_type": "code",
+      "source_file": "vite.config.ts",
+      "source_location": "L1",
+      "id": "vite_config_ts",
+      "community": 6
+    },
+    {
+      "label": "app.d.ts",
+      "file_type": "code",
+      "source_file": "src/app.d.ts",
+      "source_location": "L1",
+      "id": "src_app_d_ts",
+      "community": 7
+    },
+    {
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": "src/lib/index.ts",
+      "source_location": "L1",
+      "id": "src_lib_index_ts",
+      "community": 8
+    },
+    {
+      "label": "Profile Data (Pranav Agarkar, Fullstack Developer)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_profile",
+      "community": 1
+    },
+    {
+      "label": "Tagline: Building Secure Scalable Applications",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_tagline",
+      "community": 1
+    },
+    {
+      "label": "About Bio (2nd Year CSE at Walchand Institute)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_about_bio",
+      "community": 9
+    },
+    {
+      "label": "TaskVault Lite (Secure Full-Stack Task Manager)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_taskvault_lite",
+      "community": 3
+    },
+    {
+      "label": "BeamSync (Offline P2P File Transfer)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_beamsync",
+      "community": 4
+    },
+    {
+      "label": "Core Stack Skills (Python, Django, Linux, React)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_skill_core_stack",
+      "community": 3
+    },
+    {
+      "label": "Proficient Skills (C, JavaScript, Git, HTML5/CSS3)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_skill_proficient",
+      "community": 10
+    },
+    {
+      "label": "In Orbit Skills (Go, Svelte, Docker)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_skill_in_orbit",
+      "community": 4
+    },
+    {
+      "label": "Social Links (GitHub, LinkedIn, Email, Resume)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_social_links",
+      "community": 11
+    },
+    {
+      "label": "Fullstack Developer Role (Profile)",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_ts_fullstack_role",
+      "community": 1
+    },
+    {
+      "label": "theme.ts",
+      "file_type": "code",
+      "source_file": "src/lib/stores/theme.ts",
+      "source_location": "L1",
+      "id": "src_lib_stores_theme_ts",
+      "community": 2
+    },
+    {
+      "label": "getInitialTheme()",
+      "file_type": "code",
+      "source_file": "src/lib/stores/theme.ts",
+      "source_location": "L5",
+      "id": "theme_getinitialtheme",
+      "community": 2
+    },
+    {
+      "label": "createThemeStore()",
+      "file_type": "code",
+      "source_file": "src/lib/stores/theme.ts",
+      "source_location": "L14",
+      "id": "theme_createthemestore",
+      "community": 2
+    },
+    {
+      "label": "+layout.ts",
+      "file_type": "code",
+      "source_file": "src/routes/+layout.ts",
+      "source_location": "L1",
+      "id": "src_routes_layout_ts",
+      "community": 12
+    },
+    {
+      "label": "main.go",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L1",
+      "id": "backend_main_go",
+      "community": 0
+    },
+    {
+      "label": "DevLogResponse",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L31",
+      "id": "backend_devlogresponse",
+      "community": 0
+    },
+    {
+      "label": "CachedData",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L37",
+      "id": "backend_cacheddata",
+      "community": 0
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L49",
+      "id": "main_main",
+      "community": 0
+    },
+    {
+      "label": "handleStatus()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L90",
+      "id": "main_handlestatus",
+      "community": 0
+    },
+    {
+      "label": "generateDevLog()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L132",
+      "id": "main_generatedevlog",
+      "community": 0
+    },
+    {
+      "label": "fetchGitHubEvents()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L175",
+      "id": "main_fetchgithubevents",
+      "community": 0
+    },
+    {
+      "label": "callGemini()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L239",
+      "id": "main_callgemini",
+      "community": 0
+    }
+  ],
+  "links": [
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "data_ts_profile",
+      "_tgt": "data_ts_tagline",
+      "source": "data_ts_profile",
+      "target": "data_ts_tagline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "data_ts_profile",
+      "_tgt": "data_ts_fullstack_role",
+      "source": "data_ts_profile",
+      "target": "data_ts_fullstack_role"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "data_ts_taskvault_lite",
+      "_tgt": "data_ts_skill_core_stack",
+      "source": "data_ts_taskvault_lite",
+      "target": "data_ts_skill_core_stack"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/lib/data.ts",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "data_ts_beamsync",
+      "_tgt": "data_ts_skill_in_orbit",
+      "source": "data_ts_beamsync",
+      "target": "data_ts_skill_in_orbit"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/stores/theme.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "src_lib_stores_theme_ts",
+      "_tgt": "theme_getinitialtheme",
+      "source": "src_lib_stores_theme_ts",
+      "target": "theme_getinitialtheme",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/stores/theme.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_src": "src_lib_stores_theme_ts",
+      "_tgt": "theme_createthemestore",
+      "source": "src_lib_stores_theme_ts",
+      "target": "theme_createthemestore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/stores/theme.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "theme_createthemestore",
+      "_tgt": "theme_getinitialtheme",
+      "source": "theme_getinitialtheme",
+      "target": "theme_createthemestore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "backend_devlogresponse",
+      "source": "backend_main_go",
+      "target": "backend_devlogresponse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "backend_cacheddata",
+      "source": "backend_main_go",
+      "target": "backend_cacheddata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L49",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_main",
+      "source": "backend_main_go",
+      "target": "main_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_handlestatus",
+      "source": "backend_main_go",
+      "target": "main_handlestatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L132",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_generatedevlog",
+      "source": "backend_main_go",
+      "target": "main_generatedevlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L175",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_fetchgithubevents",
+      "source": "backend_main_go",
+      "target": "main_fetchgithubevents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L239",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_callgemini",
+      "source": "backend_main_go",
+      "target": "main_callgemini",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_src": "main_handlestatus",
+      "_tgt": "main_generatedevlog",
+      "source": "main_handlestatus",
+      "target": "main_generatedevlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_src": "main_generatedevlog",
+      "_tgt": "main_fetchgithubevents",
+      "source": "main_generatedevlog",
+      "target": "main_fetchgithubevents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L161",
+      "weight": 1.0,
+      "_src": "main_generatedevlog",
+      "_tgt": "main_callgemini",
+      "source": "main_generatedevlog",
+      "target": "main_callgemini",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": []
+}
