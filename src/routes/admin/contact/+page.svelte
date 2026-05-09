@@ -150,6 +150,7 @@
                             <tr>
                                 <th class="col-num"></th>
                                 <th class="col-name">Sender</th>
+                                <th class="col-topic">Topic</th>
                                 <th class="col-msg">Message</th>
                                 <th class="col-date">Date</th>
                                 <th class="col-status">Status</th>
@@ -167,6 +168,9 @@
                                     <td>
                                         <div class="name-cell">{msg.name || msg.sender_name || "Unknown"}</div>
                                         <div class="email-sub">{msg.email || msg.sender_email || ""}</div>
+                                    </td>
+                                    <td>
+                                        <span class="topic-badge">{msg.topic || "general"}</span>
                                     </td>
                                     <td>
                                         <div class="msg-cell">
@@ -418,9 +422,10 @@
         vertical-align: top;
     }
     .col-num { width: 2.5rem; }
-    .col-name { width: 18%; }
+    .col-name { width: 16%; }
+    .col-topic { width: 10%; }
     .col-msg {  }
-    .col-date { width: 16%; }
+    .col-date { width: 14%; }
     .col-status { width: 8%; }
     .col-action { width: 9%; }
 
@@ -487,6 +492,18 @@
         font-family: var(--font-body);
         color: var(--text-secondary);
         white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .topic-badge {
+        display: inline-block;
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-secondary);
+        opacity: 0.7;
         font-variant-numeric: tabular-nums;
     }
 

@@ -95,6 +95,10 @@ export const portfolioData = {
           src: "images/taskvault/MainDashboardSS.webp",
           alt: "TaskVault Lite main dashboard with task list",
         },
+        {
+          src: "images/taskvault/secureDBwithEncrypetedTasks.webp",
+          alt: "TaskVault Lite secure database with encrypted tasks",
+        },
       ],
       tags: ["Django", "React", "JWT", "OAuth", "Security"],
       isLive: true,

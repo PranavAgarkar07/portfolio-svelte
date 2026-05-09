@@ -67,6 +67,7 @@ type Metrics struct {
 type ContactSubmission struct {
 	Name    string `json:"name"`
 	Email   string `json:"email"`
+	Topic   string `json:"topic"`
 	Message string `json:"message"`
 }
 
@@ -119,10 +120,12 @@ func main() {
 					id SERIAL PRIMARY KEY,
 					name TEXT NOT NULL,
 					email TEXT NOT NULL,
+					topic TEXT DEFAULT '',
 					message TEXT NOT NULL,
 					is_read BOOLEAN DEFAULT FALSE,
 					created_at TIMESTAMPTZ DEFAULT NOW()
 				)`
+			db.Exec(`ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS topic TEXT DEFAULT ''`)
 				if _, err := db.Exec(migrateQuery); err != nil {
 					slog.Warn("Auto-migrate failed", "error", err)
 				}
@@ -303,8 +306,8 @@ func handleSubmitContact(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "message must be at least 10 characters"})
 	}
 
-	_, err := db.Exec("INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)",
-		sub.Name, sub.Email, sub.Message)
+	_, err := db.Exec("INSERT INTO contact_messages (name, email, topic, message) VALUES ($1, $2, $3, $4)",
+		sub.Name, sub.Email, sub.Topic, sub.Message)
 	if err != nil {
 		slog.Error("Failed to insert contact message", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
@@ -322,7 +325,7 @@ func handleAdminContact(c *fiber.Ctx) error {
 		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
 	}
 
-	rows, err := db.Query("SELECT id, name, email, message, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
+	rows, err := db.Query("SELECT id, name, email, topic, message, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
 	if err != nil {
 		slog.Error("Failed to query contact messages", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
@@ -333,6 +336,7 @@ func handleAdminContact(c *fiber.Ctx) error {
 		ID        int
 		Name      string
 		Email     string
+		Topic     string
 		Message   string
 		IsRead    bool
 		CreatedAt time.Time
@@ -341,7 +345,7 @@ func handleAdminContact(c *fiber.Ctx) error {
 	var messages []MessageRow
 	for rows.Next() {
 		var m MessageRow
-		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Message, &m.IsRead, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Topic, &m.Message, &m.IsRead, &m.CreatedAt); err != nil {
 			slog.Error("Failed to scan contact message row", "error", err)
 			continue
 		}
@@ -369,7 +373,7 @@ tr:hover { background: #16213e; }
 <body>
 <h1>Contact Messages — Admin</h1>
 <table>
-<thead><tr><th>#</th><th>Name</th><th>Email</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
+<thead><tr><th>#</th><th>Name</th><th>Email</th><th>Topic</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
 <tbody>`)
 
 	for _, m := range messages {
@@ -381,8 +385,8 @@ tr:hover { background: #16213e; }
 		if !m.IsRead {
 			statusBadge = `<span class="badge-new">New</span>`
 		}
-		htmlBuilder.WriteString(fmt.Sprintf(`<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>`,
-			m.ID, htmlEscape(m.Name), htmlEscape(m.Email), htmlEscape(truncated), m.CreatedAt.Format("Jan 2, 2006 15:04"), statusBadge))
+		htmlBuilder.WriteString(fmt.Sprintf(`<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>`,
+			m.ID, htmlEscape(m.Name), htmlEscape(m.Email), htmlEscape(m.Topic), htmlEscape(truncated), m.CreatedAt.Format("Jan 2, 2006 15:04"), statusBadge))
 	}
 
 	htmlBuilder.WriteString(`</tbody>
@@ -402,7 +406,7 @@ func handleGetMessages(c *fiber.Ctx) error {
 		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
 	}
 
-	rows, err := db.Query("SELECT id, name, email, message, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
+	rows, err := db.Query("SELECT id, name, email, topic, message, is_read, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50")
 	if err != nil {
 		slog.Error("Failed to query contact messages", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
@@ -413,6 +417,7 @@ func handleGetMessages(c *fiber.Ctx) error {
 		ID        int       `json:"id"`
 		Name      string    `json:"name"`
 		Email     string    `json:"email"`
+		Topic     string    `json:"topic"`
 		Message   string    `json:"message"`
 		IsRead    bool      `json:"is_read"`
 		CreatedAt time.Time `json:"created_at"`
@@ -421,7 +426,7 @@ func handleGetMessages(c *fiber.Ctx) error {
 	var messages []MessageJSON
 	for rows.Next() {
 		var m MessageJSON
-		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Message, &m.IsRead, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Topic, &m.Message, &m.IsRead, &m.CreatedAt); err != nil {
 			slog.Error("Failed to scan message row", "error", err)
 			continue
 		}

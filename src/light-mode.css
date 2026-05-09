@@ -299,3 +299,47 @@ body.light-mode .activity-card .meta {
 body.light-mode .activity-card .skeleton-text {
     background: rgba(0, 0, 0, 0.08);
 }
+
+/* Light Mode: Hero Overrides */
+body.light-mode .hero-status-dot.available {
+    background: #00aa77;
+}
+
+body.light-mode .hero-status-value {
+    color: var(--text-primary);
+}
+
+body.light-mode .hero-status-value.available {
+    color: #00aa77;
+}
+
+body.light-mode .hero-scroll-line line {
+    stroke: var(--accent);
+}
+
+/* Light Mode: About Overrides */
+body.light-mode .about-frame {
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .about-frame-border {
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .about-frame-grid {
+    background-image:
+        linear-gradient(rgba(217, 61, 0, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217, 61, 0, 0.06) 1px, transparent 1px);
+}
+
+body.light-mode .about-specs {
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .about-spec-divider {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .about-metrics {
+    border-top-color: var(--accent);
+}
