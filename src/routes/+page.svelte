@@ -28,6 +28,8 @@
         if (prefersReducedMotion) return;
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
+        ScrollTrigger.normalizeScroll(true);
+        window.addEventListener("resize", () => ScrollTrigger.refresh());
 
         // ──────────────────────────────────────────────
         // 1. READING PROGRESS BAR
@@ -241,6 +243,30 @@
                 ease: "elastic.out(1.2, 0.5)",
             });
         });
+
+        // ──────────────────────────────────────────────
+        // 14. MOBILE SAFETY — force visibility if ScrollTrigger failed
+        // ──────────────────────────────────────────────
+        setTimeout(() => {
+            ScrollTrigger.refresh();
+            const hiddenSelectors = [
+                ".section-header", ".skill-category-card", ".skill-card", ".project-card",
+                ".about-visual-col", ".about-content-col", ".about-spec-row",
+                ".about-metric", ".contact-info", ".contact-form-container",
+                ".info-item", ".social-link"
+            ];
+            document.querySelectorAll(hiddenSelectors.join(",")).forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const inViewport = rect.top < window.innerHeight + 100 && rect.bottom > -100;
+                if (inViewport) {
+                    gsap.set(el, {
+                        opacity: 1, y: 0, x: 0, scale: 1,
+                        rotateY: 0, rotateX: 0,
+                        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+                    });
+                }
+            });
+        }, 2000);
     });
 </script>
 
