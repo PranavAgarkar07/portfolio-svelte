@@ -179,6 +179,16 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.aero-header.header-hidden {
+    transform: translateY(-100%);
+}
+
+.aero-header.at-top {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .aero-header::before {
