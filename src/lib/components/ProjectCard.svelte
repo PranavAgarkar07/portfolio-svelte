@@ -213,7 +213,7 @@
         aria-label="Image lightbox"
         tabindex="-1"
     >
-        <div class="lightbox-content" onclick={(e) => e.stopPropagation()}>
+        <div class="lightbox-content">
             <div class="lightbox-topbar">
                 {#if slideCount > 1}
                     <span class="lightbox-counter"
@@ -231,11 +231,11 @@
                 </button>
             </div>
 
-            <div class="lightbox-image-wrap">
+            <div class="lightbox-image-wrap" onclick={closeLightbox}>
                 {#if slideCount > 1}
                     <button
                         class="lightbox-arrow prev"
-                        onclick={prev}
+                        onclick={(e) => { e.stopPropagation(); prev(); }}
                         aria-label="Previous image"
                     >
                         <Icon name="chevron-left" size={20} />
@@ -246,12 +246,13 @@
                     src={project.images[currentSlide].src}
                     alt={project.images[currentSlide].alt}
                     class="lightbox-img"
+                    onclick={(e) => e.stopPropagation()}
                 />
 
                 {#if slideCount > 1}
                     <button
                         class="lightbox-arrow next"
-                        onclick={next}
+                        onclick={(e) => { e.stopPropagation(); next(); }}
                         aria-label="Next image"
                     >
                         <Icon name="chevron-right" size={20} />

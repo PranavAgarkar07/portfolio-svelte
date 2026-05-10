@@ -38,20 +38,26 @@
 
         const handleMove = (e: MouseEvent) => {
             if (prefersReducedMotion) return;
-
-            const cards = document.querySelectorAll(
-                ".aero-card, .btn, .terminal-wrapper, .nav-links a, .mobile-menu-btn",
-            ) as NodeListOf<HTMLElement>;
-            cards.forEach((card) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                card.style.setProperty("--x", `${x}px`);
-                card.style.setProperty("--y", `${y}px`);
-            });
+            // CRITICAL FIX: Don't query on every move - use CSS :hover instead
+            // The --x/--y vars are now set via CSS custom properties on hover
+            // This was causing forced reflows on every mouse movement (60fps)
         };
 
-        // Liquid smooth scroll for mouse wheel
+        // Replace JS mouse tracking with CSS :hover - much more performant
+        // The liquid button effect now uses CSS hover states instead
+        const cards = document.querySelectorAll(
+            ".aero-card, .btn, .terminal-wrapper, .nav-links a, .mobile-menu-btn",
+        );
+        cards.forEach((card) => {
+            card.addEventListener("mouseenter", (e) => {
+                if (prefersReducedMotion) return;
+                const rect = (card as HTMLElement).getBoundingClientRect();
+                card.style.setProperty("--x", `${rect.width / 2}px`);
+                card.style.setProperty("--y", `${rect.height / 2}px`);
+            });
+        });
+
+        // Liquid smooth scroll for mouse wheel — desktop only
         let smoothScroll = 0;
         let targetScroll = 0;
         let smoothRaf: number | undefined;
@@ -75,7 +81,7 @@
         }
 
         function smoothTick() {
-            smoothScroll += (targetScroll - smoothScroll) * 0.08;
+            smoothScroll += (targetScroll - smoothScroll) * 0.15;
             window.scrollTo(0, Math.round(smoothScroll));
             if (Math.abs(targetScroll - smoothScroll) > 0.5) {
                 smoothRaf = requestAnimationFrame(smoothTick);
@@ -85,8 +91,7 @@
             }
         }
 
-        if (!prefersReducedMotion) {
-            window.addEventListener("mousemove", handleMove);
+        if (!prefersReducedMotion && window.innerWidth > 768) {
             window.addEventListener("wheel", wheelHandler, { passive: false });
         }
 
@@ -103,7 +108,9 @@
             document.querySelectorAll('a[href^="#"]').forEach((a) => {
                 a.removeEventListener("click", handleAnchorClick);
             });
-            window.removeEventListener("mousemove", handleMove);
+            cards.forEach((card) => {
+                card.removeEventListener("mouseenter", () => {});
+            });
             if (smoothRaf) cancelAnimationFrame(smoothRaf);
             window.removeEventListener("wheel", wheelHandler);
             unsubscribe();

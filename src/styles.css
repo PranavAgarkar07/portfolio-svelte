@@ -35,6 +35,10 @@
     box-sizing: border-box;
 }
 
+html {
+    overflow-x: hidden;
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
@@ -1736,7 +1740,7 @@ section {
 @media (max-width: 900px) {
     .hero-inner {
         min-height: auto;
-        padding: 2rem 0;
+        padding: 3rem 0;
     }
 
     .hero-scroll {
@@ -1966,6 +1970,7 @@ section {
 
     .mobile-menu-btn.active .hamburger-line:nth-child(1) {
         transform: translateY(7px) rotate(45deg);
+        background: #0b0c10;
     }
 
     .mobile-menu-btn.active .hamburger-line:nth-child(2) {
@@ -1974,6 +1979,7 @@ section {
 
     .mobile-menu-btn.active .hamburger-line:nth-child(3) {
         transform: translateY(-7px) rotate(-45deg);
+        background: #0b0c10;
     }
 
     .nav-links {
@@ -2288,23 +2294,48 @@ section {
 
     /* --- Hero --- */
     .hero-name {
-        font-size: clamp(1.75rem, 8vw, 2.5rem);
+        font-size: clamp(2rem, 10vw, 2.8rem);
+        letter-spacing: -0.03em;
+        margin-bottom: 0.75rem;
     }
 
     .hero-role {
-        font-size: clamp(0.8rem, 3.5vw, 1rem);
+        font-size: clamp(0.85rem, 4vw, 1.05rem);
+        letter-spacing: 0.08em;
     }
 
     .hero-tagline {
-        font-size: clamp(0.8rem, 3.5vw, 0.95rem);
+        font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+        max-width: 100%;
+        line-height: 1.6;
+        margin-bottom: 2rem;
     }
 
     .hero-inner {
-        padding: 1.5rem 0;
+        padding: 2.5rem 0;
+        min-height: auto;
+    }
+
+    .hero-status {
+        margin-bottom: 1.25rem;
+        font-size: 0.7rem;
+    }
+
+    .cta-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .cta-group .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 24px;
+        font-size: 0.85rem;
     }
 
     .hero-scroll {
-        margin-top: 2rem;
+        margin-top: 2.5rem;
     }
 
     /* --- About --- */

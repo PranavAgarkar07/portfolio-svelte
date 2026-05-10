@@ -28,6 +28,9 @@
         if (prefersReducedMotion) return;
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
+        if (window.innerWidth <= 768) {
+            ScrollTrigger.normalizeScroll(true);
+        }
         window.addEventListener("resize", () => ScrollTrigger.refresh());
 
         // ──────────────────────────────────────────────
@@ -44,65 +47,8 @@
             progressBar.style.width = self.progress * 100 + "%";
         }});
 
-        // ──────────────────────────────────────────────
-        // 2. HERO — SVG CORNER DRAW + MORPH
-        // ──────────────────────────────────────────────
-        const corners = document.querySelectorAll(".hero-corner svg path");
-        corners.forEach((path, i) => {
-            const p = path as SVGPathElement;
-            const length = p.getTotalLength();
-            p.style.strokeDasharray = String(length);
-            p.style.strokeDashoffset = String(length);
-            gsap.to(p, {
-                strokeDashoffset: 0, duration: 2, ease: "elastic.out(1.2, 0.6)", delay: 0.1 + i * 0.08,
-            });
-        });
-
-        // Corner brackets drift outward on scroll
-        gsap.to(".hero-corner--tl", { scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1 }, x: -10, y: -10, opacity: 0.3, ease: "power2.out" });
-        gsap.to(".hero-corner--tr", { scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1 }, x: 10, y: -10, opacity: 0.3, ease: "power2.out" });
-        gsap.to(".hero-corner--bl", { scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1 }, x: -10, y: 10, opacity: 0.3, ease: "power2.out" });
-        gsap.to(".hero-corner--br", { scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1 }, x: 10, y: 10, opacity: 0.3, ease: "power2.out" });
-
-        // ──────────────────────────────────────────────
-        // 3. HERO — CLIP-PATH TEXT REVEAL
-        // ──────────────────────────────────────────────
-        gsap.set(".hero-name", { clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)" });
-        gsap.set(".hero-role-block", { clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)" });
-        gsap.set(".hero-tagline", { clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)" });
-
-        const heroTimeline = gsap.timeline();
-        heroTimeline
-            .to(".hero-status", { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" })
-            .to(".hero-name", { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", duration: 1.2, ease: "power4.out" }, "-=0.3")
-            .to(".hero-role-block", { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", duration: 0.8, ease: "power3.out" }, "-=0.4")
-            .to(".hero-tagline", { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", duration: 0.8, ease: "power3.out" }, "-=0.4")
-            .from(".cta-group .btn", { y: 20, opacity: 0, stagger: 0.15, duration: 0.7, ease: "elastic.out(1, 0.7)", clearProps: "all" }, "-=0.3")
-            .to(".hero-scroll", { opacity: 1, duration: 0.8, ease: "power2.out" }, "-=0.3");
-
-        // ──────────────────────────────────────────────
-        // 4. HERO — ENTRANCE GLOW SWEEP
-        // ──────────────────────────────────────────────
-        const glow = document.createElement("div");
-        Object.assign(glow.style, {
-            position: "absolute", top: "0", left: "-100%", width: "100%", height: "100%",
-            background: "linear-gradient(90deg, transparent, rgba(255,68,0,0.04), transparent)",
-            pointerEvents: "none", zIndex: "0",
-        });
-        document.querySelector(".hero-inner")?.appendChild(glow);
-        gsap.to(glow, { left: "200%", duration: 2.5, delay: 1, ease: "power2.inOut" });
-
-        // ──────────────────────────────────────────────
-        // 5. HERO — PARALLAX ON SCROLL
-        // ──────────────────────────────────────────────
-        gsap.to(".hero-inner", {
-            scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1.5 },
-            y: 80, scale: 0.97, opacity: 0.5, ease: "power2.out",
-        });
-        gsap.to(".hero-background-pattern", {
-            scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1 },
-            opacity: 0.01, ease: "power1.out",
-        });
+        // Hero animations are now CSS-transition-driven in Hero.svelte
+        // (no GSAP hero animations needed — BlurText + heroReady handles reveal)
 
         // ──────────────────────────────────────────────
         // 6. PROJECTS — CARD PERSPECTIVE + STAGGER REVEAL
@@ -271,28 +217,37 @@
         });
 
         // ──────────────────────────────────────────────
-        // 14. MOBILE SAFETY — force visibility if ScrollTrigger failed
+        // 14. MOBILE SAFETY — recover stuck hidden elements
         // ──────────────────────────────────────────────
-        setTimeout(() => {
+        function forceVisibility() {
             ScrollTrigger.refresh();
-            const hiddenSelectors = [
+            const selectors = [
                 ".section-header", ".skill-category-card", ".skill-card", ".project-card",
                 ".about-visual-col", ".about-content-col", ".about-spec-row",
                 ".about-metric", ".contact-info", ".contact-form-container",
-                ".info-item", ".social-link"
+                ".info-item", ".social-link",
+                ".hero-status", ".hero-scroll"
             ];
-            document.querySelectorAll(hiddenSelectors.join(",")).forEach(el => {
-                const rect = el.getBoundingClientRect();
-                const inViewport = rect.top < window.innerHeight + 100 && rect.bottom > -100;
-                if (inViewport) {
+            document.querySelectorAll(selectors.join(",")).forEach(el => {
+                const computed = getComputedStyle(el);
+                if (parseFloat(computed.opacity) < 0.5) {
                     gsap.set(el, {
                         opacity: 1, y: 0, x: 0, scale: 1,
                         rotateY: 0, rotateX: 0,
                         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
                     });
                 }
-            });
-        }, 2000);
+});
+        gsap.set(".hero-name-text", {
+            clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+        });
+        }
+
+        const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
+        if (isMobile) {
+            setTimeout(forceVisibility, 5000);
+            window.addEventListener("touchstart", () => ScrollTrigger.refresh(), { once: true });
+        }
     });
 </script>
 
