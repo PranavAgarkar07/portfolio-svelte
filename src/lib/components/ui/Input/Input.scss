@@ -1,0 +1,170 @@
+@use '../../../styles' as *;
+
+.form-group {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .form-label {
+        font-family: $font-body;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $text-primary;
+        transition: color 0.1s ease;
+        cursor: pointer;
+    }
+
+    &:focus-within .form-label {
+        color: $accent;
+    }
+}
+
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-prefix, .input-suffix {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    color: $text-secondary;
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 1;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.input-prefix {
+    left: 0;
+}
+
+.input-suffix {
+    right: 0;
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+        color: $accent;
+    }
+}
+
+.form-input {
+    width: 100%;
+    background: transparent;
+    border: 2px solid $text-secondary;
+    color: $text-primary;
+    padding: 0.85rem 1rem;
+    font-family: $font-body;
+    font-size: 1rem;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
+    border-radius: 0;
+    box-sizing: border-box;
+
+    &:focus {
+        border-color: $accent;
+        background: rgba(0, 0, 0, 0.2);
+        box-shadow: 4px 4px 0px rgba(255, 68, 0, 0.15);
+        transform: translate(-2px, -2px);
+    }
+
+    &::placeholder {
+        color: $text-secondary;
+        opacity: 0.5;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &.has-error {
+        border-color: #ff4444;
+        box-shadow: 4px 4px 0px rgba(255, 68, 68, 0.15);
+
+        &:focus {
+            border-color: #ff4444;
+            box-shadow: 4px 4px 0px rgba(255, 68, 68, 0.25);
+        }
+    }
+
+    &.has-prefix {
+        padding-left: 44px;
+    }
+
+    &.has-suffix {
+        padding-right: 44px;
+    }
+}
+
+.form-hint {
+    font-family: $font-body;
+    font-size: 0.7rem;
+    color: $text-secondary;
+    opacity: 0.7;
+}
+
+.form-error-text {
+    color: #ff4444;
+    font-size: 0.75rem;
+    font-family: $font-body;
+}
+
+// Light mode
+:global(body.light-mode) {
+    .form-input {
+        background: transparent;
+        border-color: #000;
+        color: #000;
+
+        &:focus {
+            border-color: $light-accent;
+            box-shadow: 4px 4px 0px #000;
+            background: #fff;
+        }
+
+        &::placeholder {
+            color: #555;
+        }
+
+        &.has-error {
+            border-color: #ff4444;
+            box-shadow: 4px 4px 0px rgba(255, 68, 68, 0.15);
+        }
+    }
+
+    .form-group .form-label {
+        color: #111;
+    }
+
+    .form-group:focus-within .form-label {
+        color: $light-accent;
+    }
+
+    .input-prefix, .input-suffix {
+        color: #555;
+    }
+
+    .form-hint {
+        color: #555;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .form-input { transition: none; }
+}

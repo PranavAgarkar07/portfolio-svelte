@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { SectionHeader } from "$lib/components/ui";
     import DevLog from "$lib/components/DevLog.svelte";
 
     interface Props {
@@ -170,9 +171,7 @@
 </section>
 
 <section id="skills" class="section-container snap-section-content">
-    <div class="section-header fade-in">
-        <h2>Technical Proficiency</h2>
-    </div>
+    <SectionHeader title="Technical Proficiency" class="fade-in" />
     <div class="skills-wrapper">
         {#each skills as category}
             <div class="aero-card skill-category-card fade-in">

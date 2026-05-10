@@ -1,6 +1,8 @@
 <script lang="ts">
     import { theme } from "$lib/stores/theme";
     import { onMount } from "svelte";
+    import gsap from "gsap";
+    import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
     import "../styles.css";
     import "../light-mode.css";
 
@@ -11,11 +13,34 @@
             "(prefers-reduced-motion: reduce)",
         ).matches;
 
+        gsap.registerPlugin(ScrollToPlugin);
+
+        // Liquid smooth scroll for anchor links
+        function handleAnchorClick(e: MouseEvent) {
+            if (prefersReducedMotion) return;
+            const target = e.currentTarget as HTMLAnchorElement;
+            const href = target.getAttribute("href");
+            if (!href || !href.startsWith("#")) return;
+            const id = href.slice(1);
+            const el = document.getElementById(id);
+            if (!el) return;
+            e.preventDefault();
+            gsap.to(window, {
+                scrollTo: { y: el, offsetY: 80 },
+                duration: 1.2,
+                ease: "power3.inOut",
+            });
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach((a) => {
+            a.addEventListener("click", handleAnchorClick);
+        });
+
         const handleMove = (e: MouseEvent) => {
             if (prefersReducedMotion) return;
 
             const cards = document.querySelectorAll(
-                ".aero-card, .btn, .terminal-wrapper, .nav-links a, .theme-btn, .mobile-menu-btn",
+                ".aero-card, .btn, .terminal-wrapper, .nav-links a, .mobile-menu-btn",
             ) as NodeListOf<HTMLElement>;
             cards.forEach((card) => {
                 const rect = card.getBoundingClientRect();
@@ -26,8 +51,43 @@
             });
         };
 
+        // Liquid smooth scroll for mouse wheel
+        let smoothScroll = 0;
+        let targetScroll = 0;
+        let smoothRaf: number | undefined;
+        let wheelActive = false;
+
+        function wheelHandler(e: WheelEvent) {
+            if (prefersReducedMotion) return;
+            if (e.ctrlKey || e.metaKey) return;
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            if (max <= 0) return;
+            e.preventDefault();
+            if (!wheelActive) {
+                wheelActive = true;
+                smoothScroll = window.scrollY;
+                targetScroll = window.scrollY;
+            }
+            targetScroll = Math.max(0, Math.min(targetScroll + e.deltaY, max));
+            if (!smoothRaf) {
+                smoothRaf = requestAnimationFrame(smoothTick);
+            }
+        }
+
+        function smoothTick() {
+            smoothScroll += (targetScroll - smoothScroll) * 0.08;
+            window.scrollTo(0, Math.round(smoothScroll));
+            if (Math.abs(targetScroll - smoothScroll) > 0.5) {
+                smoothRaf = requestAnimationFrame(smoothTick);
+            } else {
+                wheelActive = false;
+                smoothRaf = undefined;
+            }
+        }
+
         if (!prefersReducedMotion) {
             window.addEventListener("mousemove", handleMove);
+            window.addEventListener("wheel", wheelHandler, { passive: false });
         }
 
         // Sync body class on mount (hydration fix)
@@ -40,7 +100,12 @@
         });
 
         return () => {
+            document.querySelectorAll('a[href^="#"]').forEach((a) => {
+                a.removeEventListener("click", handleAnchorClick);
+            });
             window.removeEventListener("mousemove", handleMove);
+            if (smoothRaf) cancelAnimationFrame(smoothRaf);
+            window.removeEventListener("wheel", wheelHandler);
             unsubscribe();
         };
     });

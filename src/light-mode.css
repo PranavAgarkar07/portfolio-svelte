@@ -76,20 +76,35 @@ body.light-mode .aero-card:hover {
 }
 
 /* Icon Toggle Logic */
-.sun-icon {
-    display: block;
+.ui-icon.sun-icon,
+.ui-icon.moon-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.moon-icon {
-    display: none;
+.ui-icon.sun-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-body.light-mode .sun-icon {
-    display: none;
+.ui-icon.moon-icon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-body.light-mode .moon-icon {
-    display: block;
+body.light-mode .ui-icon.sun-icon {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+}
+
+body.light-mode .ui-icon.moon-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
 }
 
 /* --- Visibility Enhancements (Text Colors Only) --- */
@@ -342,4 +357,8 @@ body.light-mode .about-spec-divider {
 
 body.light-mode .about-metrics {
     border-top-color: var(--accent);
+}
+
+body.light-mode .progress-fill {
+    background: linear-gradient(90deg, var(--accent), #ff6633);
 }

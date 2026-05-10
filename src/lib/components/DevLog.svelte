@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { Skeleton } from "$lib/components/ui";
     import type { DevLogResponse } from "$lib/types";
     let status = $state("Fetching latest commit...");
     let lastUpdate = $state("");
@@ -78,8 +79,8 @@
     <div class="panel-body">
         {#if loading}
             <div class="skeleton-group">
-                <div class="skeleton-line w-80"></div>
-                <div class="skeleton-line w-50"></div>
+                <Skeleton width="80%" />
+                <Skeleton width="50%" />
             </div>
         {:else}
             <div class="status-message">{status}</div>
@@ -200,28 +201,6 @@
     }
     :global(body.light-mode) .meta-value.source.cached {
         color: #cc8800;
-    }
-    .skeleton-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    .skeleton-line {
-        height: 0.65rem;
-        background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s ease-in-out infinite;
-        border-radius: 2px;
-    }
-    .skeleton-line.w-80 { width: 80%; }
-    .skeleton-line.w-50 { width: 50%; }
-    :global(body.light-mode) .skeleton-line {
-        background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-        background-size: 200% 100%;
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
     }
     .pulse-indicator {
         display: flex;

@@ -2,6 +2,7 @@
     import { theme } from "$lib/stores/theme";
     import { onMount } from "svelte";
     import { base } from "$app/paths";
+    import { Button, Icon } from "$lib/components/ui";
     interface Props {
         profile: {
             name: string;
@@ -13,20 +14,35 @@
     let mobileMenuOpen = $state(false);
     let activeSection = $state("");
     let scrollProgress = $state(0);
+    let headerHidden = $state(false);
+    let lastScrollY = $state(0);
+    let reachedTop = $state(true);
 
     function toggleTheme() {
         theme.toggle();
     }
 
     onMount(() => {
-        // Scroll Progress
         const handleScroll = () => {
             const winScroll =
                 document.body.scrollTop || document.documentElement.scrollTop;
             const height =
                 document.documentElement.scrollHeight -
                 document.documentElement.clientHeight;
-            scrollProgress = (winScroll / height) * 100;
+            scrollProgress = height > 0 ? (winScroll / height) * 100 : 0;
+            reachedTop = winScroll < 10;
+
+            // Header hide/show — desktop only
+            if (window.innerWidth > 768) {
+                const pastThreshold = winScroll > 100;
+                const scrolledDown = winScroll > lastScrollY;
+                if (scrolledDown && pastThreshold && !headerHidden) {
+                    headerHidden = true;
+                } else if (!scrolledDown && headerHidden) {
+                    headerHidden = false;
+                }
+            }
+            lastScrollY = winScroll;
         };
 
         // Active Section Observer
@@ -54,7 +70,15 @@
     });
 </script>
 
-<header class="aero-header">
+<div class="progress-bar" aria-hidden="true">
+    <div class="progress-fill" style="width: {scrollProgress}%"></div>
+</div>
+
+<header
+    class="aero-header"
+    class:header-hidden={headerHidden}
+    class:at-top={reachedTop}
+>
     <nav class="nav-container">
         <a href="{base}/" class="logo"
             >Pranav<span class="text-accent">.</span></a
@@ -94,70 +118,32 @@
                         mobileMenuOpen = false;
                     }}
                 >
-                    [ SWITCH THEME ]
+                    THEME
                 </button>
             </li>
         </ul>
 
-        <button
-            id="theme-toggle"
-            class="theme-btn desktop-only"
+        <Button
+            variant="icon"
+            class="desktop-only"
             onclick={toggleTheme}
             aria-label="Toggle Theme"
         >
-            <svg
-                class="sun-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <circle cx="12" cy="12" r="5"></circle>
-                <path d="M12 1v2"></path>
-                <path d="M12 21v2"></path>
-                <path d="M4.22 4.22l1.42 1.42"></path>
-                <path d="M18.36 18.36l1.42 1.42"></path>
-                <path d="M1 12h2"></path>
-                <path d="M21 12h2"></path>
-                <path d="M4.22 19.78l1.42-1.42"></path>
-                <path d="M18.36 5.64l1.42-1.42"></path>
-            </svg>
-            <svg
-                class="moon-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-                ></path>
-            </svg>
-        </button>
+            <Icon name="sun" size={20} class="sun-icon" />
+            <Icon name="moon" size={20} class="moon-icon" />
+        </Button>
 
         <button
             class="mobile-menu-btn"
+            class:active={mobileMenuOpen}
             onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
             aria-label="Toggle Navigation"
         >
-            <span class="btn-text"
-                >{mobileMenuOpen ? "[ CLOSE ]" : "[ MENU ]"}</span
-            >
+            <span class="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </span>
         </button>
     </nav>
-
-    <!-- Scroll Progress Signal -->
-    <div class="signal-line">
-        <div class="signal-track"></div>
-        <div class="signal-fill" style="width: {scrollProgress}%"></div>
-    </div>
 </header>

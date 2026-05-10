@@ -12,7 +12,7 @@
     import DevLog from "$lib/components/DevLog.svelte";
     import Footer from "$lib/components/Footer.svelte";
     import ContactForm from "$lib/components/ContactForm.svelte";
-    import Icon from "$lib/components/Icon.svelte";
+    import { Icon, SectionHeader, Card } from "$lib/components/ui";
 
     const { profile, about, skills, projects } = portfolioData;
 
@@ -346,14 +346,8 @@
     <Hero {profile} {about} {skills} />
 
     <section id="projects" class="section-container snap-section">
-        <div class="section-header fade-in">
-            <h2>
-                Featured Projects <span class="count-badge"
-                    >{projects.length}</span
-                >
-            </h2>
-        </div>
-        <div class="projects-grid">
+        <SectionHeader title="Featured Projects" count={projects.length} animate />
+        <div class="projects-grid" style="margin-top: 1.5rem">
             {#each projects as project, i}
                 <ProjectCard {project} index={i} />
             {/each}
@@ -370,12 +364,10 @@
 
             <div class="contact-grid">
                 <div class="contact-info">
-                    <div class="info-card">
+                    <Card>
                         <div class="info-item">
                             <div class="info-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                </svg>
+                                <Icon name="chat" size={20} />
                             </div>
                             <div class="info-content">
                                 <span class="info-title">Chat</span>
@@ -384,29 +376,14 @@
                         </div>
                         <div class="info-item">
                             <div class="info-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
+                                <Icon name="clock" size={20} />
                             </div>
                             <div class="info-content">
                                 <span class="info-title">Response Time</span>
                                 <span class="info-text">Within 24 hours</span>
                             </div>
                         </div>
-                        <div class="info-item">
-                            <div class="info-icon available">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
-                            </div>
-                            <div class="info-content">
-                                <span class="info-title">Status</span>
-                                <span class="info-text available-text">Available for new projects</span>
-                            </div>
-                        </div>
-                    </div>
+                    </Card>
 
                     <div class="social-section">
                         <span class="social-label">Connect</span>

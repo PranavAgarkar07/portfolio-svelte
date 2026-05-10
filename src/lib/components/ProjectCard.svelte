@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import Icon from "./Icon.svelte";
+    import { Badge, Tag, Icon } from "$lib/components/ui";
 
     interface Image {
         src: string;
@@ -72,10 +72,9 @@
         if (!carousel) return;
         const child = carousel.children[currentSlide] as HTMLElement;
         if (child)
-            child.scrollIntoView({
+            carousel.scrollTo({
+                left: child.offsetLeft,
                 behavior: "smooth",
-                inline: "start",
-                block: "nearest",
             });
     }
 
@@ -166,12 +165,9 @@
                     >PRJ {String(index + 1).padStart(2, "0")}</span
                 >
                 {#if project.isLive}
-                    <span class="live-badge">
-                        <span class="live-dot"></span>
-                        LIVE
-                    </span>
+                    <Badge variant="live">LIVE</Badge>
                 {:else}
-                    <span class="offline-badge">OFFLINE</span>
+                    <Badge variant="offline">OFFLINE</Badge>
                 {/if}
             </div>
             <h3 class="project-title">{project.name}</h3>
@@ -181,7 +177,7 @@
 
         <div class="card-tags">
             {#each project.tags as tag}
-                <span class="tag">{tag}</span>
+                <Tag>{tag}</Tag>
             {/each}
         </div>
 
@@ -550,37 +546,14 @@
         margin-left: 1px;
     }
 
-    .live-badge {
-        font-family: var(--font-body);
-        font-size: 0.65rem;
-        color: var(--accent);
-        letter-spacing: 1.5px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        /* Pill border for contrast against dark bg */
-        border: 1px solid rgba(255, 68, 0, 0.4);
-        background: rgba(255, 68, 0, 0.08);
-        padding: 2px 7px;
-    }
-
-    .live-dot {
-        width: 5px;
-        height: 5px;
+    :global(.project-card:hover .tag) {
         background: var(--accent);
-        border-radius: 50%;
-        box-shadow: 0 0 6px var(--accent);
-        animation: blink 1.2s step-end infinite;
+        color: #000;
     }
 
-    .offline-badge {
-        font-family: var(--font-body);
-        font-size: 0.65rem;
-        color: var(--text-secondary);
-        opacity: 0.5;
-        letter-spacing: 1.5px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 2px 7px;
+    :global(body.light-mode .project-card:hover .tag) {
+        background: rgba(200, 50, 0, 0.12);
+        color: var(--accent);
     }
 
     .project-title {
@@ -610,27 +583,6 @@
         gap: 0.4rem;
         position: relative;
         z-index: 1;
-    }
-
-    /* Brutalist tag: solid border, no radius, clear contrast */
-    .tag {
-        font-family: var(--font-body);
-        font-size: 0.68rem;
-        font-weight: 600;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        background: transparent;
-        padding: 3px 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition:
-            background 0.1s ease,
-            color 0.1s ease;
-    }
-
-    .project-card:hover .tag {
-        background: var(--accent);
-        color: #000;
     }
 
     .card-links {
@@ -755,10 +707,10 @@
         position: fixed;
         inset: 0;
         z-index: 9999;
-        padding: calc(var(--nav-height, 80px) + 1rem) 2rem 2rem;
-        background: rgba(3, 4, 5, 0.94);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        padding: 0.75rem;
+        background: rgba(3, 4, 5, 0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
     :global(.lightbox-content) {
@@ -766,7 +718,6 @@
         flex-direction: column;
         height: 100%;
         width: 100%;
-        max-width: 1400px;
         margin: 0 auto;
     }
 
@@ -817,8 +768,8 @@
     }
 
     :global(.lightbox-img) {
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
     }
 
@@ -869,11 +820,6 @@
 
         .card-tags {
             gap: 0.3rem;
-        }
-
-        .tag {
-            font-size: 0.65rem;
-            padding: 3px 7px;
         }
 
         .card-links {

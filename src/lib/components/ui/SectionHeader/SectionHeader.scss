@@ -1,0 +1,57 @@
+@use '../../../styles' as *;
+
+.section-header {
+    margin-bottom: 0.5rem;
+    position: relative;
+
+    h2 {
+        font-family: $font-heading;
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #fff;
+        border-left: 4px solid $accent;
+        padding-left: 1rem;
+        margin: 0;
+    }
+
+    .count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: $font-body;
+        font-size: 0.65rem;
+        color: $accent;
+        border: 1px solid $accent;
+        padding: 1px 7px;
+        margin-left: 8px;
+        vertical-align: middle;
+        line-height: 1;
+    }
+}
+
+// Light mode
+:global(body.light-mode) .section-header h2 {
+    color: #111;
+    border-color: $light-accent;
+}
+
+:global(body.light-mode) .section-header .count-badge {
+    color: $light-accent;
+    border-color: $light-accent;
+}
+
+// Clip reveal for animation
+.section-header.clip-reveal {
+    h2, .count-badge {
+        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+        transition: clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    &.visible {
+        h2, .count-badge {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+    }
+}

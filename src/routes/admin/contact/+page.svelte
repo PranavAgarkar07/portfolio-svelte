@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { Input, Button, Skeleton, Tag } from "$lib/components/ui";
 
     const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
@@ -91,19 +92,16 @@
                 <h1 class="key-title">CONTROL PANEL</h1>
                 <p class="key-subtitle">Authenticate to access message terminal</p>
                 <div class="key-field">
-                    <input
-                        class="key-input"
+                    <Input
                         type="password"
                         placeholder="ENTER ADMIN KEY"
                         bind:value={key}
-                        onkeydown={(e) => e.key === "Enter" && key && saveKey(key)}
-                        autofocus
+                        onkeydown={(e: KeyboardEvent) => e.key === "Enter" && key && saveKey(key)}
                     />
-                    <span class="key-cursor"></span>
                 </div>
-                <button class="btn-primary key-submit" onclick={() => key && saveKey(key)} disabled={!key}>
-                    Access
-                </button>
+                <div class="key-submit">
+                    <Button onclick={() => key && saveKey(key)} disabled={!key}>Access</Button>
+                </div>
             </div>
         </div>
     {:else}
@@ -113,7 +111,7 @@
                     <span class="panel-accent"></span>
                     <h1>CONTROL PANEL</h1>
                 </div>
-                <span class="key-link" role="button" tabindex="0" onclick={clearKey} onkeydown={(e) => e.key === "Enter" && clearKey()}>Change Key</span>
+                <Button variant="ghost" size="sm" onclick={clearKey}>Change Key</Button>
             </div>
 
             <div class="stats-bar">
@@ -129,9 +127,7 @@
 
             {#if loading}
                 <div class="loading-grid">
-                    <div class="shimmer-card"></div>
-                    <div class="shimmer-card"></div>
-                    <div class="shimmer-card"></div>
+                    <Skeleton variant="card" count={3} />
                 </div>
             {:else if error}
                 <div class="error-state">
@@ -170,7 +166,7 @@
                                         <div class="email-sub">{msg.email || msg.sender_email || ""}</div>
                                     </td>
                                     <td>
-                                        <span class="topic-badge">{msg.topic || "general"}</span>
+                                        <Tag variant="muted">{msg.topic || "general"}</Tag>
                                     </td>
                                     <td>
                                         <div class="msg-cell">
@@ -188,7 +184,7 @@
                                     </td>
                                     <td>
                                         {#if !msg.is_read}
-                                            <button class="mark-read-btn" onclick={() => markRead(msg.id)}>Mark Read</button>
+                                            <Button variant="ghost" size="sm" onclick={() => markRead(msg.id)}>Mark Read</Button>
                                         {/if}
                                     </td>
                                 </tr>
@@ -271,52 +267,8 @@
         width: 320px;
         max-width: 100%;
     }
-    .key-input {
-        width: 100%;
-        background: var(--bg-dark);
-        border: 1px solid rgba(255,255,255,0.08);
-        color: var(--text-primary);
-        padding: 0.85rem 1rem;
-        font-family: var(--font-body);
-        font-size: 0.8rem;
-        letter-spacing: 0.1em;
-        outline: none;
-        text-transform: uppercase;
-        transition: border-color 0.25s, box-shadow 0.25s;
-    }
-    .key-input:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 1px var(--accent), 0 0 20px var(--accent-glow);
-    }
-    .key-input::placeholder {
-        color: rgba(255,255,255,0.15);
-        letter-spacing: 0.15em;
-    }
-    .key-cursor {
-        display: none;
-    }
     .key-submit {
         margin-top: 0.25rem;
-    }
-
-    .btn-primary {
-        font-family: var(--font-body);
-        font-size: 0.75rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        background: var(--accent);
-        color: #fff;
-        border: none;
-        padding: 0.75rem 2rem;
-        cursor: pointer;
-        transition: opacity 0.2s, box-shadow 0.2s;
-    }
-    .btn-primary:hover:not(:disabled) {
-        box-shadow: 0 0 20px var(--accent-glow);
-    }
-    .btn-primary:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
     }
 
     /* ── Panel ── */
@@ -351,19 +303,6 @@
         color: var(--text-primary);
         font-weight: 600;
     }
-    .key-link {
-        color: var(--text-secondary);
-        font-size: 0.7rem;
-        cursor: pointer;
-        text-decoration: underline;
-        text-underline-offset: 3px;
-        transition: color 0.2s;
-        letter-spacing: 0.05em;
-    }
-    .key-link:hover {
-        color: var(--accent);
-    }
-
     /* ── Stats Bar ── */
     .stats-bar {
         display: flex;
@@ -495,18 +434,6 @@
         font-variant-numeric: tabular-nums;
     }
 
-    .topic-badge {
-        display: inline-block;
-        font-size: 0.6rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 2px 8px;
-        border: 1px solid rgba(255,255,255,0.08);
-        color: var(--text-secondary);
-        opacity: 0.7;
-        font-variant-numeric: tabular-nums;
-    }
-
     /* ── Badges ── */
     .badge {
         display: inline-block;
@@ -525,27 +452,6 @@
     .badge-read {
         color: rgba(255,255,255,0.3);
         border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    /* ── Mark Read Button ── */
-    .mark-read-btn {
-        font-size: 0.6rem;
-        font-family: var(--font-body);
-        background: transparent;
-        border: 1px solid rgba(255,255,255,0.1);
-        color: var(--text-secondary);
-        padding: 5px 12px;
-        cursor: pointer;
-        transition: all 0.25s;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        white-space: nowrap;
-    }
-    .mark-read-btn:hover {
-        border-color: var(--accent);
-        background: rgba(255,68,0,0.08);
-        color: var(--accent);
-        box-shadow: 0 0 12px rgba(255,68,0,0.15);
     }
 
     /* ── Empty State ── */
@@ -588,22 +494,10 @@
         flex-shrink: 0;
     }
 
-    /* ── Shimmer / Loading ── */
     .loading-grid {
         display: flex;
         flex-direction: column;
         gap: 2px;
-    }
-    .shimmer-card {
-        height: 3.5rem;
-        border-radius: 0;
-        background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s ease-in-out infinite;
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
     }
 
     /* ── Keyframes ── */
@@ -634,8 +528,8 @@
         .msg-row {
             animation: none;
         }
-        .shimmer-card {
-            animation: none;
+        .msg-row {
+            transition: none;
         }
         .empty-cursor {
             animation: none;
@@ -644,10 +538,7 @@
         .msg-row:hover {
             box-shadow: none;
         }
-        .mark-read-btn,
         .key-link,
-        .key-input,
-        .btn-primary,
         .msg-row {
             transition: none;
         }

@@ -1,0 +1,59 @@
+@use '../../../styles' as *;
+
+.aero-card {
+    background: $surface-dark;
+    padding: $card-padding;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    clip-path: polygon(20px 0, 100% 0,
+            100% calc(100% - 20px), calc(100% - 20px) 100%,
+            0 100%, 0 20px);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+    background: linear-gradient(160deg, #252e3a 0%, #171e28 100%);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    border-left: 3px solid rgba(255, 255, 255, 0.1);
+
+    &.card-interactive {
+        cursor: pointer;
+
+        &:hover {
+            border-color: $accent;
+            border-left-color: $accent;
+            box-shadow: 0 0 25px rgba(255, 51, 0, 0.2);
+            background-color: #263340;
+            transform: translateY(-2px);
+        }
+    }
+
+    &:focus-visible {
+        outline: 3px solid $accent;
+        outline-offset: 4px;
+    }
+}
+
+// Light mode
+:global(body.light-mode) .aero-card {
+    background: #f0f0f3;
+    border: none;
+    border-left: 3px solid #c8c8cc;
+    box-shadow:
+        8px 8px 16px rgba(0, 0, 0, 0.1),
+        -8px -8px 16px rgba(255, 255, 255, 0.8);
+
+    &.card-interactive:hover {
+        border-left-color: $light-accent;
+        background: #f0f0f3 !important;
+        box-shadow:
+            12px 12px 24px rgba(0, 0, 0, 0.12),
+            -8px -8px 16px rgba(255, 255, 255, 0.9),
+            inset 0 0 0 1px rgba(255, 68, 0, 0.1);
+        transform: translateY(-2px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aero-card {
+        transition: none;
+    }
+}

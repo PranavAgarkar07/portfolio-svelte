@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Icon from "./Icon.svelte";
+    import { Icon } from "$lib/components/ui";
 
     interface Props {
         profile: {

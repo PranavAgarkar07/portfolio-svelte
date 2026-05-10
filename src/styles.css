@@ -352,9 +352,22 @@ a {
     stroke-width: 2px;
 }
 
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    z-index: 10001;
+    background: transparent;
+}
 
-
-
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), #ff8833);
+    transition: width 0.1s linear;
+}
 
 .mobile-menu-btn {
     display: none;
@@ -1029,7 +1042,8 @@ section {
 }
 
 :global(body.light-mode) .available-text {
-    color: #008855;
+    color: #005c3a;
+    font-weight: 600;
 }
 
 /* Social Section */
@@ -1913,16 +1927,37 @@ section {
         /* Removed blur and shadow for flat look */
     }
 
-    .mobile-menu-btn .btn-text {
-        letter-spacing: 2px;
-        font-weight: 600;
+    .hamburger {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 20px;
+        height: 16px;
+    }
+
+    .hamburger-line {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: currentColor;
+        transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
     .mobile-menu-btn.active {
         background: var(--accent);
         color: #0b0c10;
-        /* Dark text on orange */
-        /* Removed glow */
+    }
+
+    .mobile-menu-btn.active .hamburger-line:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .mobile-menu-btn.active .hamburger-line:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-menu-btn.active .hamburger-line:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
     }
 
     .nav-links {
@@ -2288,6 +2323,14 @@ section {
         margin-bottom: 1.5rem;
     }
 
+    .contact-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .contact-description {
+        font-size: 0.85rem;
+    }
+
     .contact-container {
         padding: 0 1rem;
     }
@@ -2301,7 +2344,7 @@ section {
     }
 
     .contact-form-container {
-        padding: 1.25rem;
+        padding: 1rem;
     }
 
     .info-item {
@@ -2311,6 +2354,22 @@ section {
     .info-icon {
         width: 36px;
         height: 36px;
+    }
+
+    .info-title {
+        font-size: 0.65rem;
+    }
+
+    .info-text {
+        font-size: 0.8rem;
+    }
+
+    .social-section {
+        gap: 0.75rem;
+    }
+
+    .social-label {
+        font-size: 0.65rem;
     }
 
     /* --- Skills --- */

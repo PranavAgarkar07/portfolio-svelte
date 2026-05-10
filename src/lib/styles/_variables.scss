@@ -1,0 +1,36 @@
+// ============================================
+// Aerospace Brutalism — Design Tokens
+// Maps 1:1 with :root in src/styles.css
+// ============================================
+
+// --- Colors: Dark Mode (Orbital Night) ---
+$bg-dark: #030405;
+$surface-dark: #0e1116;
+$text-primary: #f0f2f5;
+$text-secondary: #94a3b8;
+$accent: #ff4400;
+$accent-glow: rgba(255, 68, 0, 0.4);
+$grid-line: rgba(255, 255, 255, 0.04);
+
+// --- Colors: Light Mode (Technical Manual) ---
+$light-bg-dark: #ffffff;
+$light-surface-dark: #f2f2f2;
+$light-text-primary: #111111;
+$light-text-secondary: #555555;
+$light-accent: #d93d00;
+$light-accent-glow: rgba(217, 61, 0, 0.15);
+$light-grid-line: rgba(0, 0, 0, 0.08);
+
+// --- Typography ---
+$font-heading: 'Clash Display', sans-serif;
+$font-body: 'Space Grotesk', sans-serif;
+
+// --- Metrics ---
+$nav-height: 80px;
+$radius: 0px;
+
+// --- Spacing ---
+$section-padding: 2rem;
+$card-padding: 2.5rem;
+$gap-md: 1rem;
+$gap-lg: 2rem;

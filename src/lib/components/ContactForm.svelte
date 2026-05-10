@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { Button, Input, Textarea } from "$lib/components/ui";
+
     const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api/contact";
 
     let name = $state("");
@@ -46,25 +48,15 @@
         }
     }
 
-    function handleClick(e: MouseEvent) {
-        const btn = e.currentTarget as HTMLButtonElement;
-        const rect = btn.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        btn.style.setProperty('--x', `${x}%`);
-        btn.style.setProperty('--y', `${y}%`);
-    }
 </script>
 
 <div class="contact-form">
     <div class="form-row">
         <div class="form-group" style="animation-delay: 0.05s">
-            <label for="cf-name" class="form-label">Name</label>
-            <input id="cf-name" type="text" class="form-input" placeholder="Your Name" bind:value={name} disabled={submitting} autocomplete="name" />
+            <Input label="Name" type="text" placeholder="Your Name" bind:value={name} disabled={submitting} autocomplete="name" />
         </div>
         <div class="form-group" style="animation-delay: 0.1s">
-            <label for="cf-email" class="form-label">Email</label>
-            <input id="cf-email" type="email" class="form-input" placeholder="Your Email" bind:value={email} disabled={submitting} autocomplete="email" />
+            <Input label="Email" type="email" placeholder="Your Email" bind:value={email} disabled={submitting} autocomplete="email" />
         </div>
     </div>
     <div class="form-group" style="animation-delay: 0.15s">
@@ -130,21 +122,17 @@
         </div>
     </div>
     <div class="form-group" style="animation-delay: 0.2s">
-        <label for="cf-message" class="form-label">Message</label>
-        <textarea id="cf-message" class="form-textarea" placeholder="Your Message" bind:value={message} rows="4" disabled={submitting} autocomplete="off"></textarea>
+        <Textarea label="Message" placeholder="Your Message" bind:value={message} rows={4} disabled={submitting} autocomplete="off" />
     </div>
-    <button class="btn btn-primary form-submit" onclick={(e) => { handleClick(e); handleSubmit(); }} disabled={submitting || success} style="animation-delay: 0.2s">
-        <span class="btn-ripple"></span>
-        <span class="btn-content">
-            {#if submitting}
-                <span class="btn-text">Sending</span><span class="btn-dots"><span>.</span><span>.</span><span>.</span></span>
-            {:else if success}
-                <span class="btn-icon">&#10003;</span> Sent
-            {:else}
-                Send Message <span class="btn-arrow">&rarr;</span>
-            {/if}
-        </span>
-    </button>
+    <Button variant="primary" size="lg" style="width: 100%" disabled={submitting || success} onclick={handleSubmit}>
+        {#if submitting}
+            Sending<span class="btn-dots"><span>.</span><span>.</span><span>.</span></span>
+        {:else if success}
+            &#10003; Sent
+        {:else}
+            Send Message
+        {/if}
+    </Button>
     {#if errorMsg}
         <div class="form-error" role="alert">{errorMsg}</div>
     {/if}
@@ -187,56 +175,7 @@
         transition: color 0.1s ease;
         cursor: pointer;
     }
-    .form-group:focus-within .form-label {
-        color: var(--accent);
-    }
-    .form-input,
-    .form-textarea {
-        width: 100%;
-        background: transparent;
-        border: 2px solid var(--text-secondary);
-        color: var(--text-primary);
-        padding: 0.85rem 1rem;
-        font-family: var(--font-body);
-        font-size: 1rem;
-        font-weight: 500;
-        outline: none;
-        transition: border-color 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
-        border-radius: 0;
-        box-sizing: border-box;
-    }
-    .form-input:focus,
-    .form-textarea:focus {
-        border-color: var(--accent);
-        background: rgba(0, 0, 0, 0.2);
-        box-shadow: 4px 4px 0px rgba(255, 68, 0, 0.15);
-        transform: translate(-2px, -2px);
-    }
-    .form-input::placeholder,
-    .form-textarea::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.5;
-    }
-    .form-textarea {
-        resize: vertical;
-        min-height: 120px;
-    }
-    :global(body.light-mode) .form-input,
-    :global(body.light-mode) .form-textarea {
-        background: transparent;
-        border-color: #000;
-        color: #000;
-    }
-    :global(body.light-mode) .form-input:focus,
-    :global(body.light-mode) .form-textarea:focus {
-        border-color: var(--accent);
-        box-shadow: 4px 4px 0px #000;
-        background: #fff;
-    }
-    :global(body.light-mode) .form-input::placeholder,
-    :global(body.light-mode) .form-textarea::placeholder {
-        color: #555;
-    }
+
 
     .topic-grid {
         display: grid;
@@ -395,120 +334,11 @@
         }
     }
 
-    .form-submit {
-        margin-top: 1rem;
-        width: 100%;
-        padding: 1.2rem;
-        font-size: 1rem;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        background: transparent;
-        color: var(--accent);
-        border: 2px solid var(--accent);
-        border-radius: 0;
-        box-shadow: 6px 6px 0px rgba(255, 68, 0, 0.15);
-        animation: formSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        z-index: 1;
-        transform-origin: center;
-        transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
-    }
-    .form-submit:hover:not(:disabled) {
-        transform: translate(-2px, -2px);
-        box-shadow: 8px 8px 0px rgba(255, 68, 0, 0.2);
-    }
-    .form-submit:active:not(:disabled) {
-        transform: scale(0.97) translate(1px, 1px);
-        box-shadow: 2px 2px 0px rgba(255, 68, 0, 0.2);
-        transition-duration: 0.08s;
-    }
-    .form-submit:active:not(:disabled) .btn-ripple {
-        animation: ripple 0.4s ease-out;
-    }
-    .form-submit:active:not(:disabled) .btn-ripple::after {
-        opacity: 1;
-        transform: scale(2.5);
-        transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-    }
-    .btn-ripple {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        pointer-events: none;
-        z-index: 0;
-    }
-    .btn-ripple::after {
-        content: '';
-        position: absolute;
-        top: var(--y, 50%);
-        left: var(--x, 50%);
-        width: 100px;
-        height: 100px;
-        background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-        transition: transform 0s, opacity 0s;
-    }
-    @keyframes ripple {
-        0% { transform: scale(0); }
-        50% { transform: scale(1); }
-        100% { transform: scale(1); }
-    }
-    :global(body.light-mode) .form-submit {
-        background: var(--accent);
-        color: #fff;
-        border-color: #b83200;
-        box-shadow: 6px 6px 0px rgba(0,0,0,0.08);
-    }
-    :global(body.light-mode) .form-submit:hover:not(:disabled) {
-        background: #c43500;
-        box-shadow: 8px 8px 0px rgba(0,0,0,0.12);
-    }
-    :global(body.light-mode) .form-submit:active:not(:disabled) {
-        box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-    }
-    :global(body.light-mode) .form-submit:disabled {
-        box-shadow: 4px 4px 0px rgba(0,0,0,0.06);
-    }
-    :global(body.light-mode) .form-submit:active:not(:disabled) .btn-ripple::after {
-        background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
-    }
-    .form-submit:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        box-shadow: 4px 4px 0px rgba(255, 68, 0, 0.1);
-        transform: translate(1px, 1px);
-    }
-    .btn-text {
-        display: inline;
-    }
     .btn-dots span {
         animation: dotPulse 1.4s ease-in-out infinite;
     }
     .btn-dots span:nth-child(2) { animation-delay: 0.2s; }
     .btn-dots span:nth-child(3) { animation-delay: 0.4s; }
-    .btn-icon {
-        display: inline-block;
-        font-weight: bold;
-    }
-    .btn-arrow {
-        display: inline-block;
-        font-family: monospace;
-        margin-left: 0.5rem;
-        transition: transform 0.2s ease;
-    }
-    .form-submit:hover:not(:disabled) .btn-arrow {
-        transform: translateX(6px);
-    }
-    .btn-content {
-        position: relative;
-        z-index: 1;
-    }
 
     .form-error {
         color: #ff4444;
@@ -547,29 +377,31 @@
         60% { transform: translateX(-4px); }
         80% { transform: translateX(4px); }
     }
-    @keyframes popIn {
-        from { transform: scale(0); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-    }
     @keyframes dotPulse {
         0%, 80%, 100% { opacity: 0; }
         40% { opacity: 1; }
     }
 
+    @media (max-width: 400px) {
+        .contact-form { gap: 1rem; }
+        .form-row { gap: 1rem; }
+        .topic-card { padding: 0.75rem 0.875rem; gap: 0.6rem; }
+        .topic-icon { width: 32px; height: 32px; }
+        .topic-icon :global(svg) { width: 16px; height: 16px; }
+        .topic-title { font-size: 0.7rem; }
+        .topic-desc { font-size: 0.6rem; }
+        .form-label { font-size: 0.6rem; }
+        .form-reply { font-size: 0.7rem; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .form-group,
-        .form-submit,
         .form-footer {
             animation: none;
         }
-        .btn-dots span,
-        .btn-icon,
-        .btn-arrow {
+        .btn-dots span {
             animation: none;
-            transition: none;
         }
-        .form-input,
-        .form-textarea,
         .topic-card,
         .topic-icon,
         .topic-indicator {
