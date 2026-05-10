@@ -61,7 +61,7 @@
 
 <div class="status-panel" class:offline={status === "System Offline"}>
     <div class="panel-header">
-        <span class="panel-label">SYS::STATUS</span>
+        <span class="panel-label">STATUS</span>
         <div class="pulse-indicator" class:loading class:online={!loading && status !== "System Offline"} class:offline={status === "System Offline"}>
             <span class="pulse-dot"></span>
             <span class="pulse-label">
@@ -107,7 +107,7 @@
         display: flex;
         flex-direction: column;
         width: 100%;
-        max-width: 480px;
+        max-width: 640px;
         background: #050505;
         border: 1px solid var(--grid-line);
         border-left: 3px solid var(--accent);
@@ -155,8 +155,8 @@
         gap: 0.5rem;
     }
     .status-message {
-        font-size: 0.75rem;
-        line-height: 1.5;
+        font-size: 0.85rem;
+        line-height: 1.6;
         color: var(--text-secondary);
         word-wrap: break-word;
     }

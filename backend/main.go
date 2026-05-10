@@ -503,19 +503,13 @@ func generateDevLog() (string, error) {
 	}
 	responsesMu.Unlock()
 
-	prompt := fmt.Sprintf(`You are a senior software engineer named Pranav writing a quick personal status update.
-Today is %s. Your recent GitHub activity:
+	prompt := fmt.Sprintf(`You are a senior software engineer named Pranav. A friend just asked "what have you been working on?" — answer naturally.
+
+Today is %s. Here's what you've pushed to GitHub recently:
 
 %s
 
-Examples of good responses (use these as tone & style reference):
-- "Just landed a full CI/CD overhaul — Dockerized the backend and cut deploy times in half."
-- "Spent the week refactoring the auth layer. Token validation is 40ms faster now."
-- "Dropped a new P2P transfer feature in BeamSync — QR pairing works on the first try."
-- "Been debugging a nasty race condition in the WebSocket handler. Found it — was a missing mutex unlock."
-
-Write ONE sentence (max 20 words) summarizing the work you've been doing recently. 
-Be specific about which project and what kind of work. Sound human, not robotic.
+Write ONE sentence (max 40 words) like you're telling a friend. Mention the project and what you actually did. Be casual, specific, and human.
 
 %s`, time.Now().Weekday().String(), events, diversityInstruction)
 
