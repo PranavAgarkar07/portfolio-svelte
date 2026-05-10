@@ -111,10 +111,12 @@
         gsap.utils.toArray(".project-card").forEach((card: any, i: number) => {
             const dir = i % 2 === 0 ? -1 : 1;
             gsap.set(card, { x: dir * 150, opacity: 0, rotateY: dir * 15, scale: 0.9 });
-            gsap.to(card, {
-                scrollTrigger: { trigger: card, start: "top 85%", end: "top 50%", scrub: 1.2 },
-                x: 0, opacity: 1, rotateY: 0, scale: 1,
-                ease: "elastic.out(1, 0.65)",
+            ScrollTrigger.create({
+                trigger: card as Element, start: "top 85%", once: true,
+                onEnter: () => { gsap.to(card, {
+                    x: 0, opacity: 1, rotateY: 0, scale: 1,
+                    ease: "elastic.out(1, 0.65)", duration: 0.8,
+                });}
             });
         });
 
@@ -122,11 +124,13 @@
         // 7. SKILLS — CASCADE WAVE REVEAL
         // ──────────────────────────────────────────────
         gsap.set(".skill-category-card", { y: 80, opacity: 0, scale: 0.92, rotateX: 10 });
-        gsap.to(".skill-category-card", {
-            scrollTrigger: { trigger: "#skills", start: "top 85%", end: "top 50%", scrub: 1.5 },
-            y: 0, opacity: 1, scale: 1, rotateX: 0,
-            stagger: { each: 0.15, from: "edges", ease: "power2.inOut" },
-            ease: "elastic.out(1, 0.55)",
+        ScrollTrigger.create({
+            trigger: "#skills", start: "top 85%", once: true,
+            onEnter: () => { gsap.to(".skill-category-card", {
+                y: 0, opacity: 1, scale: 1, rotateX: 0,
+                stagger: { each: 0.15, from: "edges", ease: "power2.inOut" },
+                ease: "elastic.out(1, 0.55)", duration: 0.9,
+            });}
         });
 
         // ──────────────────────────────────────────────
@@ -134,10 +138,12 @@
         // ──────────────────────────────────────────────
         gsap.utils.toArray(".skill-card").forEach((card: any, i: number) => {
             gsap.set(card, { y: 30, opacity: 0, scale: 0.85 });
-            gsap.to(card, {
-                scrollTrigger: { trigger: card, start: "top 92%", end: "top 75%", scrub: 1 },
-                y: 0, opacity: 1, scale: 1,
-                ease: "back.out(2)",
+            ScrollTrigger.create({
+                trigger: card as Element, start: "top 92%", once: true,
+                onEnter: () => { gsap.to(card, {
+                    y: 0, opacity: 1, scale: 1,
+                    ease: "back.out(2)", duration: 0.5,
+                });}
             });
         });
 
@@ -146,10 +152,12 @@
         // ──────────────────────────────────────────────
         gsap.utils.toArray(".section-header").forEach((header: any) => {
             gsap.set(header, { clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)" });
-            gsap.to(header, {
-                scrollTrigger: { trigger: header, start: "top 85%", end: "top 70%", scrub: 1 },
-                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-                ease: "power3.out",
+            ScrollTrigger.create({
+                trigger: header as Element, start: "top 85%", once: true,
+                onEnter: () => { gsap.to(header, {
+                    clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                    ease: "power3.out", duration: 0.7,
+                });}
             });
         });
 
@@ -157,25 +165,30 @@
         // 10. ABOUT — DEPTH LAYER REVEAL
         // ──────────────────────────────────────────────
         gsap.set(".about-visual-col", { x: -80, opacity: 0, rotateY: 8, scale: 0.95 });
-        gsap.to(".about-visual-col", {
-            scrollTrigger: { trigger: "#about", start: "top 80%", end: "top 45%", scrub: 1.3 },
-            x: 0, opacity: 1, rotateY: 0, scale: 1,
-            ease: "elastic.out(1, 0.55)",
-        });
         gsap.set(".about-content-col", { x: 80, opacity: 0, rotateY: -8, scale: 0.95 });
-        gsap.to(".about-content-col", {
-            scrollTrigger: { trigger: "#about", start: "top 80%", end: "top 45%", scrub: 1.3 },
-            x: 0, opacity: 1, rotateY: 0, scale: 1,
-            ease: "elastic.out(1, 0.55)",
+        ScrollTrigger.create({
+            trigger: "#about", start: "top 80%", once: true,
+            onEnter: () => {
+                gsap.to(".about-visual-col", {
+                    x: 0, opacity: 1, rotateY: 0, scale: 1,
+                    ease: "elastic.out(1, 0.55)", duration: 0.8,
+                });
+                gsap.to(".about-content-col", {
+                    x: 0, opacity: 1, rotateY: 0, scale: 1,
+                    ease: "elastic.out(1, 0.55)", duration: 0.8, delay: 0.1,
+                });
+            }
         });
 
         // About specs — sweep up
         gsap.utils.toArray(".about-spec-row").forEach((row: any, i: number) => {
             gsap.set(row, { y: 25, opacity: 0 });
-            gsap.to(row, {
-                scrollTrigger: { trigger: "#about", start: "top 80%", end: "top 60%", scrub: 1 },
-                y: 0, opacity: 1,
-                ease: "elastic.out(1, 0.5)",
+            ScrollTrigger.create({
+                trigger: row as Element, start: "top 80%", once: true,
+                onEnter: () => { gsap.to(row, {
+                    y: 0, opacity: 1,
+                    ease: "elastic.out(1, 0.5)", duration: 0.6,
+                });}
             });
         });
 
@@ -188,21 +201,28 @@
             if (isNaN(num)) return;
             const suffix = raw.replace(/[0-9.]/g, "");
             const display = el;
-            let obj = { val: 0 };
-            gsap.to(obj, {
-                val: num, duration: 2, ease: "elastic.out(1, 0.4)",
-                scrollTrigger: { trigger: el, start: "top 85%", end: "top 70%", scrub: 1.2 },
-                onUpdate: () => { display.textContent = Math.round(obj.val) + suffix; },
+            ScrollTrigger.create({
+                trigger: el, start: "top 85%", once: true,
+                onEnter: () => {
+                    let obj = { val: 0 };
+                    gsap.to(obj, {
+                        val: num, duration: 2, ease: "elastic.out(1, 0.4)",
+                        onUpdate: () => { display.textContent = Math.round(obj.val) + suffix; },
+                    });
+                }
             });
         });
 
         // About metrics — spring up
         gsap.utils.toArray(".about-metric").forEach((metric: any, i: number) => {
             gsap.set(metric, { y: 40, opacity: 0, scale: 0.85 });
-            gsap.to(metric, {
-                scrollTrigger: { trigger: "#about", start: "top 75%", end: "top 50%", scrub: 1.3 },
-                y: 0, opacity: 1, scale: 1,
-                ease: "elastic.out(1.2, 0.55)",
+            ScrollTrigger.create({
+                trigger: "#about", start: "top 75%", once: true,
+                onEnter: () => { gsap.to(metric, {
+                    y: 0, opacity: 1, scale: 1,
+                    ease: "elastic.out(1.2, 0.55)", duration: 0.7,
+                    delay: i * 0.1,
+                });}
             });
         });
 
@@ -210,25 +230,30 @@
         // 12. CONTACT — DUAL-SIDED REVEAL
         // ──────────────────────────────────────────────
         gsap.set(".contact-info", { x: -50, opacity: 0 });
-        gsap.to(".contact-info", {
-            scrollTrigger: { trigger: "#contact", start: "top 85%", end: "top 60%", scrub: 1.2 },
-            x: 0, opacity: 1,
-            ease: "elastic.out(1, 0.65)",
-        });
         gsap.set(".contact-form-container", { x: 50, opacity: 0 });
-        gsap.to(".contact-form-container", {
-            scrollTrigger: { trigger: "#contact", start: "top 85%", end: "top 60%", scrub: 1.2 },
-            x: 0, opacity: 1,
-            ease: "elastic.out(1, 0.65)",
+        ScrollTrigger.create({
+            trigger: "#contact", start: "top 85%", once: true,
+            onEnter: () => {
+                gsap.to(".contact-info", {
+                    x: 0, opacity: 1,
+                    ease: "elastic.out(1, 0.65)", duration: 0.8,
+                });
+                gsap.to(".contact-form-container", {
+                    x: 0, opacity: 1,
+                    ease: "elastic.out(1, 0.65)", duration: 0.8, delay: 0.15,
+                });
+            }
         });
 
         // Contact info items — staggered
         gsap.utils.toArray(".info-item").forEach((item: any, i: number) => {
             gsap.set(item, { y: 20, opacity: 0 });
-            gsap.to(item, {
-                scrollTrigger: { trigger: "#contact", start: "top 85%", end: "top 70%", scrub: 1 },
-                y: 0, opacity: 1,
-                ease: "back.out(1.7)",
+            ScrollTrigger.create({
+                trigger: "#contact", start: "top 85%", once: true,
+                onEnter: () => { gsap.to(item, {
+                    y: 0, opacity: 1,
+                    ease: "back.out(1.7)", duration: 0.5, delay: i * 0.06,
+                });}
             });
         });
 
@@ -237,10 +262,12 @@
         // ──────────────────────────────────────────────
         gsap.utils.toArray(".social-link").forEach((link: any, i: number) => {
             gsap.set(link, { y: 15, opacity: 0, scale: 0.8 });
-            gsap.to(link, {
-                scrollTrigger: { trigger: "#contact", start: "top 85%", end: "top 75%", scrub: 1 },
-                y: 0, opacity: 1, scale: 1,
-                ease: "elastic.out(1.2, 0.5)",
+            ScrollTrigger.create({
+                trigger: "#contact", start: "top 85%", once: true,
+                onEnter: () => { gsap.to(link, {
+                    y: 0, opacity: 1, scale: 1,
+                    ease: "elastic.out(1.2, 0.5)", duration: 0.6, delay: i * 0.05,
+                });}
             });
         });
 
