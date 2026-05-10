@@ -28,7 +28,6 @@
         if (prefersReducedMotion) return;
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
-        ScrollTrigger.normalizeScroll(true);
         window.addEventListener("resize", () => ScrollTrigger.refresh());
 
         // ──────────────────────────────────────────────
