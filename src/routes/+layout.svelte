@@ -3,6 +3,7 @@
     import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
     import gsap from "gsap";
+    import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
     import Lenis from "lenis";
     import { Lightbox } from "lightbox3";
     import "lightbox3/style.css";
@@ -24,6 +25,8 @@
         let lenis: Lenis | null = null;
 
         if (!prefersReducedMotion) {
+            gsap.registerPlugin(ScrollTrigger);
+
             lenis = new Lenis({
                 duration: 1.2,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -32,11 +35,23 @@
                 smoothWheel: true,
             });
 
+            lenis.on("scroll", ScrollTrigger.update);
+
             gsap.ticker.add((time) => {
                 lenis!.raf(time * 1000);
                 scrollY.set(lenis!.scroll);
             });
             gsap.ticker.lagSmoothing(0);
+        }
+
+        function getDocumentTop(el: HTMLElement): number {
+            let top = 0;
+            let current: HTMLElement | null = el;
+            while (current) {
+                top += current.offsetTop;
+                current = current.offsetParent as HTMLElement | null;
+            }
+            return top;
         }
 
         function handleAnchorClick(e: MouseEvent) {
@@ -49,7 +64,8 @@
             if (!el) return;
             e.preventDefault();
             if (lenis) {
-                lenis.scrollTo(el, { offset: -80, duration: 1.2 });
+                const targetY = getDocumentTop(el);
+                lenis.scrollTo(targetY, { duration: 1.2 });
             }
         }
 

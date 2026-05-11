@@ -29,13 +29,6 @@
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
 
-        // Smooth scroll normalization for all devices
-        ScrollTrigger.normalizeScroll({
-            type: "touch,wheel",
-            smoothTouch: false,
-            touchDirectionUnlock: true,
-        });
-
         window.addEventListener("resize", () => ScrollTrigger.refresh());
 
         // ──────────────────────────────────────────────
