@@ -156,22 +156,12 @@ body.light-mode .signal-track {
 }
 
 /* Theme Button Styles (Light Mode) */
-body.light-mode .theme-btn {
-    border-color: #111;
-    color: #111;
-    box-shadow: 4px 4px 0px #111;
+body.light-mode .theme-toggle {
+    color: var(--text-secondary);
 }
-
-body.light-mode .theme-btn:hover {
-    background: #111;
-    color: #fff;
-    box-shadow: 2px 2px 0px #111;
-    border-color: var(--accent);
-}
-
-body.light-mode .theme-btn:active {
-    transform: translate(4px, 4px);
-    box-shadow: none;
+body.light-mode .theme-toggle:hover {
+    color: var(--accent);
+    background: rgba(217, 61, 0, 0.06);
 }
 
 /* Mobile Menu Overrides — only for the fullscreen overlay */

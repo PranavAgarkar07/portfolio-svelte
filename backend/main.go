@@ -31,7 +31,7 @@ const (
 
 	QuotaFallback = "Deep in the code — pushing updates across multiple projects. Check back soon!"
 
-	OpenRouterModel = "google/gemma-2-9b-it:free"
+	OpenRouterModel = "google/gemma-4-31b-it:free"
 
 	maxFailures    = 3
 	breakerTimeout = 15 * time.Minute

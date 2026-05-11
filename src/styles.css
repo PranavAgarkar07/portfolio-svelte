@@ -386,43 +386,58 @@ a {
 
 
 /* Theme Toggle Button */
-.theme-btn {
+.theme-toggle {
     background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
+    border: none;
+    color: var(--text-secondary);
     cursor: pointer;
-    padding: 8px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.1s cubic-bezier(0, 0, 0.2, 1);
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     margin-left: 1rem;
-    box-shadow: 4px 4px 0px var(--accent);
-    /* Hard shadow causes visual shift, compensating: */
-    transform: translate(-2px, -2px);
+    position: relative;
+    transition: color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
 }
-
-.theme-btn:hover {
-    background: rgba(255, 68, 0, 0.15);
-    /* Subtle Tint */
+.theme-toggle:hover {
     color: var(--accent);
-    /* Move towards 0,0 relative to parent, which means +2 from idle */
-    transform: translate(0px, 0px);
-    box-shadow: 2px 2px 0px var(--accent);
+    background: rgba(255, 68, 0, 0.06);
 }
-
-.theme-btn:active {
-    /* Fully pressed */
-    transform: translate(2px, 2px);
-    box-shadow: none;
+.theme-toggle:active {
+    transform: scale(0.92);
 }
-
-.theme-btn svg {
-    width: 20px;
-    height: 20px;
-    stroke-width: 2px;
+.theme-toggle svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.5px;
+}
+.theme-toggle .sun-icon,
+.theme-toggle .moon-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.theme-toggle .sun-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+.theme-toggle .moon-icon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+}
+body.light-mode .theme-toggle .sun-icon {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+}
+body.light-mode .theme-toggle .moon-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
 }
 
 .progress-bar {
@@ -1981,22 +1996,13 @@ section {
     }
 
     /* Mobile Navigation (Tactical Overlay) */
-    .theme-btn {
-        /* Override/Update for mobile if needed */
+    .theme-toggle {
         margin-left: auto;
-        /* Push to right next to menu btn */
         margin-right: 10px;
-        /* Gap between theme and menu btn */
         padding: 0;
         width: 36px;
         height: 36px;
     }
-
-    .theme-btn svg {
-        width: 18px;
-        height: 18px;
-    }
-
 
     .mobile-menu-btn {
         display: block;
