@@ -37,7 +37,7 @@
 
 html {
     overflow-x: hidden;
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
 }
 

@@ -1,8 +1,9 @@
 <script lang="ts">
     import { theme } from "$lib/stores/theme";
+    import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
     import gsap from "gsap";
-    import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
+    import Lenis from "lenis";
     import { Lightbox } from "lightbox3";
     import "lightbox3/style.css";
     import "../styles.css";
@@ -20,9 +21,24 @@
             springClose: { stiffness: 300, damping: 30, mass: 1 },
         });
 
-        gsap.registerPlugin(ScrollToPlugin);
+        let lenis: Lenis | null = null;
 
-        // Liquid smooth scroll for anchor links
+        if (!prefersReducedMotion) {
+            lenis = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                orientation: "vertical",
+                gestureOrientation: "vertical",
+                smoothWheel: true,
+            });
+
+            gsap.ticker.add((time) => {
+                lenis!.raf(time * 1000);
+                scrollY.set(lenis!.scroll);
+            });
+            gsap.ticker.lagSmoothing(0);
+        }
+
         function handleAnchorClick(e: MouseEvent) {
             if (prefersReducedMotion) return;
             const target = e.currentTarget as HTMLAnchorElement;
@@ -32,26 +48,15 @@
             const el = document.getElementById(id);
             if (!el) return;
             e.preventDefault();
-            gsap.to(window, {
-                scrollTo: { y: el, offsetY: 80 },
-                duration: 1.2,
-                ease: "power3.inOut",
-            });
+            if (lenis) {
+                lenis.scrollTo(el, { offset: -80, duration: 1.2 });
+            }
         }
 
         document.querySelectorAll('a[href^="#"]').forEach((a) => {
             a.addEventListener("click", handleAnchorClick);
         });
 
-        const handleMove = (e: MouseEvent) => {
-            if (prefersReducedMotion) return;
-            // CRITICAL FIX: Don't query on every move - use CSS :hover instead
-            // The --x/--y vars are now set via CSS custom properties on hover
-            // This was causing forced reflows on every mouse movement (60fps)
-        };
-
-        // Replace JS mouse tracking with CSS :hover - much more performant
-        // The liquid button effect now uses CSS hover states instead
         const cards = document.querySelectorAll(
             ".aero-card, .btn, .terminal-wrapper, .nav-links a, .mobile-menu-btn",
         );
@@ -64,7 +69,6 @@
             });
         });
 
-        // Sync body class on mount (hydration fix)
         const unsubscribe = theme.subscribe((value) => {
             if (value === "light") {
                 document.body.classList.add("light-mode");
@@ -81,6 +85,7 @@
                 card.removeEventListener("mouseenter", () => {});
             });
             unsubscribe();
+            lenis?.destroy();
         };
     });
 </script>

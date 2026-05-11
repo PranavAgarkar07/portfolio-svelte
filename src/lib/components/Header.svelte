@@ -1,5 +1,6 @@
 <script lang="ts">
     import { theme } from "$lib/stores/theme";
+    import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
     import { base } from "$app/paths";
     interface Props {
@@ -23,20 +24,24 @@
     }
 
     onMount(() => {
-        const handleScroll = () => {
-            const winScroll =
-                document.body.scrollTop || document.documentElement.scrollTop;
+        const handleScroll = (winScroll: number) => {
             const height =
                 document.documentElement.scrollHeight -
                 document.documentElement.clientHeight;
             scrollProgress = height > 0 ? (winScroll / height) * 100 : 0;
             reachedTop = winScroll < 10;
 
-            // Desktop: smooth morph to floating past 120px
-            // Mobile: hide/show on scroll direction
             const isDesktop = window.innerWidth > 768;
-            detached = isDesktop && winScroll > 120;
-            if (!isDesktop) {
+
+            // Hysteresis: prevent rapid toggling near threshold
+            if (isDesktop) {
+                if (winScroll > 150) {
+                    detached = true;
+                } else if (winScroll < 80) {
+                    detached = false;
+                }
+            } else {
+                detached = false;
                 const scrolledDown = winScroll > lastScrollY;
                 if (scrolledDown && winScroll > 80) {
                     headerHidden = true;
@@ -46,6 +51,14 @@
             }
             lastScrollY = winScroll;
         };
+
+        const unsubScroll = scrollY.subscribe(handleScroll);
+
+        // Also keep native scroll as fallback
+        const onNativeScroll = () => {
+            handleScroll(window.scrollY);
+        };
+        window.addEventListener("scroll", onNativeScroll);
 
         // Active Section Observer
         const observer = new IntersectionObserver(
@@ -63,10 +76,9 @@
             observer.observe(section);
         });
 
-        window.addEventListener("scroll", handleScroll);
-
         return () => {
-            window.removeEventListener("scroll", handleScroll);
+            unsubScroll();
+            window.removeEventListener("scroll", onNativeScroll);
             observer.disconnect();
         };
     });
