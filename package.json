@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"gsap": "^3.15.0",
+		"lightbox3": "^1.1.0",
 		"perfect-arrows": "^0.3.7"
 	}
 }

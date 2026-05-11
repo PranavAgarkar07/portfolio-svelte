@@ -28,9 +28,14 @@
         if (prefersReducedMotion) return;
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
-        if (window.innerWidth <= 768) {
-            ScrollTrigger.normalizeScroll(true);
-        }
+
+        // Smooth scroll normalization for all devices
+        ScrollTrigger.normalizeScroll({
+            type: "touch,wheel",
+            smoothTouch: false,
+            touchDirectionUnlock: true,
+        });
+
         window.addEventListener("resize", () => ScrollTrigger.refresh());
 
         // ──────────────────────────────────────────────
@@ -46,9 +51,6 @@
         ScrollTrigger.create({ trigger: "body", start: "top top", end: "bottom bottom", onUpdate: self => {
             progressBar.style.width = self.progress * 100 + "%";
         }});
-
-        // Hero animations are now CSS-transition-driven in Hero.svelte
-        // (no GSAP hero animations needed — BlurText + heroReady handles reveal)
 
         // ──────────────────────────────────────────────
         // 6. PROJECTS — CARD PERSPECTIVE + STAGGER REVEAL

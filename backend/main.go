@@ -31,6 +31,8 @@ const (
 
 	QuotaFallback = "Deep in the code — pushing updates across multiple projects. Check back soon!"
 
+	OpenRouterModel = "google/gemma-2-9b-it:free"
+
 	maxFailures    = 3
 	breakerTimeout = 15 * time.Minute
 )
@@ -58,7 +60,7 @@ type Metrics struct {
 	mu           sync.Mutex
 	cacheHits    int64
 	cacheMisses  int64
-	geminiErrors int64
+	llmErrors    int64
 	totalLatency time.Duration
 	totalCalls   int64
 	startTime    time.Time
@@ -94,11 +96,11 @@ func main() {
 		slog.Info(".env file loaded successfully")
 	}
 
-	key := os.Getenv("GEMINI_API_KEY")
+	key := os.Getenv("OPENROUTER_API_KEY")
 	if len(key) > 10 {
-		slog.Info("API key loaded", "prefix", key[:4], "suffix", key[len(key)-4:])
+		slog.Info("OpenRouter API key loaded", "prefix", key[:4], "suffix", key[len(key)-4:])
 	} else {
-		slog.Warn("API key is empty or invalid")
+		slog.Warn("OpenRouter API key is empty or invalid")
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -218,7 +220,7 @@ func handleStatus(c *fiber.Ctx) error {
 			if err != nil {
 				slog.Error("Background refresh failed", "error", err)
 				metrics.mu.Lock()
-				metrics.geminiErrors++
+				metrics.llmErrors++
 				metrics.mu.Unlock()
 				return
 			}
@@ -243,7 +245,7 @@ func handleStatus(c *fiber.Ctx) error {
 	metrics.mu.Lock()
 	metrics.totalLatency += latency
 	if err != nil {
-		metrics.geminiErrors++
+		metrics.llmErrors++
 	}
 	metrics.mu.Unlock()
 
@@ -276,7 +278,7 @@ func handleMetrics(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"cache_hits":     metrics.cacheHits,
 		"cache_misses":   metrics.cacheMisses,
-		"gemini_errors":  metrics.geminiErrors,
+		"llm_errors":     metrics.llmErrors,
 		"total_requests": metrics.totalCalls,
 		"avg_latency_ms": avgLatency.Milliseconds(),
 		"uptime_seconds": int64(time.Since(metrics.startTime).Seconds()),
@@ -479,14 +481,14 @@ func generateDevLog() (string, error) {
 	if breaker.failures >= maxFailures {
 		if time.Since(breaker.lastFailure) < breakerTimeout {
 			breaker.mu.Unlock()
-			slog.Warn("Circuit breaker open — skipping Gemini call")
+			slog.Warn("Circuit breaker open — skipping OpenRouter call")
 			return QuotaFallback, nil
 		}
 		breaker.failures = 0
 	}
 	breaker.mu.Unlock()
 
-	apiKey := os.Getenv("GEMINI_API_KEY")
+	apiKey := os.Getenv("OPENROUTER_API_KEY")
 	if apiKey == "" {
 		return "System Error: Neural Link Disconnected (Missing API Key). Please configure the satellite uplink.", nil
 	}
@@ -513,7 +515,7 @@ Write ONE sentence (max 40 words) like you're telling a friend. Mention the proj
 
 %s`, time.Now().Weekday().String(), events, diversityInstruction)
 
-	summary, err := callGemini(apiKey, prompt)
+	summary, err := callOpenRouter(apiKey, prompt)
 	if err != nil {
 		errStr := err.Error()
 		if strings.Contains(errStr, "429") || strings.Contains(errStr, "RESOURCE_EXHAUSTED") || strings.Contains(errStr, "quota") {
@@ -521,7 +523,7 @@ Write ONE sentence (max 40 words) like you're telling a friend. Mention the proj
 			breaker.failures++
 			breaker.lastFailure = time.Now()
 			breaker.mu.Unlock()
-			slog.Warn("Gemini quota exhausted", "failures", breaker.failures)
+			slog.Warn("OpenRouter quota exhausted", "failures", breaker.failures)
 			return QuotaFallback, nil
 		}
 		return "", err
@@ -614,17 +616,15 @@ func fetchGitHubEvents() (string, error) {
 	return summaryBuilder.String(), nil
 }
 
-func callGemini(apiKey, text string) (string, error) {
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey
+func callOpenRouter(apiKey, text string) (string, error) {
+	url := "https://openrouter.ai/api/v1/chat/completions"
 
 	requestBody, _ := json.Marshal(map[string]interface{}{
-		"contents": []interface{}{
+		"model": OpenRouterModel,
+		"messages": []interface{}{
 			map[string]interface{}{
-				"parts": []interface{}{
-					map[string]interface{}{
-						"text": text,
-					},
-				},
+				"role":    "user",
+				"content": text,
 			},
 		},
 	})
@@ -638,6 +638,7 @@ func callGemini(apiKey, text string) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -648,7 +649,7 @@ func callGemini(apiKey, text string) (string, error) {
 
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("gemini api error: %s", string(body))
+		return "", fmt.Errorf("openrouter api error: %s", string(body))
 	}
 
 	var result map[string]interface{}
@@ -656,15 +657,11 @@ func callGemini(apiKey, text string) (string, error) {
 		return "", err
 	}
 
-	if candidates, ok := result["candidates"].([]interface{}); ok && len(candidates) > 0 {
-		if candidate, ok := candidates[0].(map[string]interface{}); ok {
-			if content, ok := candidate["content"].(map[string]interface{}); ok {
-				if parts, ok := content["parts"].([]interface{}); ok && len(parts) > 0 {
-					if part, ok := parts[0].(map[string]interface{}); ok {
-						if textVal, ok := part["text"].(string); ok {
-							return textVal, nil
-						}
-					}
+	if choices, ok := result["choices"].([]interface{}); ok && len(choices) > 0 {
+		if choice, ok := choices[0].(map[string]interface{}); ok {
+			if message, ok := choice["message"].(map[string]interface{}); ok {
+				if content, ok := message["content"].(string); ok {
+					return content, nil
 				}
 			}
 		}

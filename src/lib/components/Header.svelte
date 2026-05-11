@@ -17,6 +17,7 @@
     let headerHidden = $state(false);
     let lastScrollY = $state(0);
     let reachedTop = $state(true);
+    let detached = $state(false);
 
     function toggleTheme() {
         theme.toggle();
@@ -32,13 +33,15 @@
             scrollProgress = height > 0 ? (winScroll / height) * 100 : 0;
             reachedTop = winScroll < 10;
 
-            // Header hide/show — desktop only
-            if (window.innerWidth > 768) {
-                const pastThreshold = winScroll > 100;
+            // Desktop: smooth morph to floating past 120px
+            // Mobile: hide/show on scroll direction
+            const isDesktop = window.innerWidth > 768;
+            detached = isDesktop && winScroll > 120;
+            if (!isDesktop) {
                 const scrolledDown = winScroll > lastScrollY;
-                if (scrolledDown && pastThreshold && !headerHidden) {
+                if (scrolledDown && winScroll > 80) {
                     headerHidden = true;
-                } else if (!scrolledDown && headerHidden) {
+                } else if (!scrolledDown) {
                     headerHidden = false;
                 }
             }
@@ -78,6 +81,7 @@
     class="aero-header"
     class:header-hidden={headerHidden}
     class:at-top={reachedTop}
+    class:detached={detached}
 >
     <nav class="nav-container">
         <a href="{base}/" class="logo"

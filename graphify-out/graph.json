@@ -9,7 +9,7 @@
       "source_file": "svelte.config.js",
       "source_location": "L1",
       "id": "svelte_config_js",
-      "community": 5
+      "community": 4
     },
     {
       "label": "vite.config.ts",
@@ -17,7 +17,7 @@
       "source_file": "vite.config.ts",
       "source_location": "L1",
       "id": "vite_config_ts",
-      "community": 6
+      "community": 5
     },
     {
       "label": "app.d.ts",
@@ -25,6 +25,14 @@
       "source_file": "src/app.d.ts",
       "source_location": "L1",
       "id": "src_app_d_ts",
+      "community": 6
+    },
+    {
+      "label": "data.ts",
+      "file_type": "code",
+      "source_file": "src/lib/data.ts",
+      "source_location": "L1",
+      "id": "src_lib_data_ts",
       "community": 7
     },
     {
@@ -36,124 +44,12 @@
       "community": 8
     },
     {
-      "label": "Profile Data (Pranav Agarkar, Fullstack Developer)",
+      "label": "types.ts",
       "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_profile",
-      "community": 1
-    },
-    {
-      "label": "Tagline: Building Secure Scalable Applications",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_tagline",
-      "community": 1
-    },
-    {
-      "label": "About Bio (2nd Year CSE at Walchand Institute)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_about_bio",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L1",
+      "id": "src_lib_types_ts",
       "community": 9
-    },
-    {
-      "label": "TaskVault Lite (Secure Full-Stack Task Manager)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_taskvault_lite",
-      "community": 3
-    },
-    {
-      "label": "BeamSync (Offline P2P File Transfer)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_beamsync",
-      "community": 4
-    },
-    {
-      "label": "Core Stack Skills (Python, Django, Linux, React)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_skill_core_stack",
-      "community": 3
-    },
-    {
-      "label": "Proficient Skills (C, JavaScript, Git, HTML5/CSS3)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_skill_proficient",
-      "community": 10
-    },
-    {
-      "label": "In Orbit Skills (Go, Svelte, Docker)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_skill_in_orbit",
-      "community": 4
-    },
-    {
-      "label": "Social Links (GitHub, LinkedIn, Email, Resume)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_social_links",
-      "community": 11
-    },
-    {
-      "label": "Fullstack Developer Role (Profile)",
-      "file_type": "code",
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "data_ts_fullstack_role",
-      "community": 1
     },
     {
       "label": "theme.ts",
@@ -180,12 +76,20 @@
       "community": 2
     },
     {
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": "src/lib/components/ui/index.ts",
+      "source_location": "L1",
+      "id": "src_lib_components_ui_index_ts",
+      "community": 10
+    },
+    {
       "label": "+layout.ts",
       "file_type": "code",
       "source_file": "src/routes/+layout.ts",
       "source_location": "L1",
       "id": "src_routes_layout_ts",
-      "community": 12
+      "community": 11
     },
     {
       "label": "main.go",
@@ -199,7 +103,7 @@
       "label": "DevLogResponse",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L31",
+      "source_location": "L40",
       "id": "backend_devlogresponse",
       "community": 0
     },
@@ -207,15 +111,47 @@
       "label": "CachedData",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L37",
+      "source_location": "L46",
       "id": "backend_cacheddata",
+      "community": 0
+    },
+    {
+      "label": "CircuitBreaker",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L51",
+      "id": "backend_circuitbreaker",
+      "community": 0
+    },
+    {
+      "label": "Metrics",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L57",
+      "id": "backend_metrics",
+      "community": 0
+    },
+    {
+      "label": "ContactSubmission",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L67",
+      "id": "backend_contactsubmission",
+      "community": 0
+    },
+    {
+      "label": "init()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L84",
+      "id": "main_init",
       "community": 0
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L49",
+      "source_location": "L90",
       "id": "main_main",
       "community": 0
     },
@@ -223,84 +159,84 @@
       "label": "handleStatus()",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L90",
+      "source_location": "L187",
       "id": "main_handlestatus",
+      "community": 1
+    },
+    {
+      "label": "handleMetrics()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L269",
+      "id": "main_handlemetrics",
       "community": 0
+    },
+    {
+      "label": "handleSubmitContact()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L286",
+      "id": "main_handlesubmitcontact",
+      "community": 0
+    },
+    {
+      "label": "handleAdminContact()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L319",
+      "id": "main_handleadmincontact",
+      "community": 3
+    },
+    {
+      "label": "handleGetMessages()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L401",
+      "id": "main_handlegetmessages",
+      "community": 0
+    },
+    {
+      "label": "handleMarkRead()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L439",
+      "id": "main_handlemarkread",
+      "community": 0
+    },
+    {
+      "label": "htmlEscape()",
+      "file_type": "code",
+      "source_file": "backend/main.go",
+      "source_location": "L466",
+      "id": "main_htmlescape",
+      "community": 3
     },
     {
       "label": "generateDevLog()",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L132",
+      "source_location": "L477",
       "id": "main_generatedevlog",
-      "community": 0
+      "community": 1
     },
     {
       "label": "fetchGitHubEvents()",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L175",
+      "source_location": "L540",
       "id": "main_fetchgithubevents",
-      "community": 0
+      "community": 1
     },
     {
       "label": "callGemini()",
       "file_type": "code",
       "source_file": "backend/main.go",
-      "source_location": "L239",
+      "source_location": "L617",
       "id": "main_callgemini",
-      "community": 0
+      "community": 1
     }
   ],
   "links": [
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "data_ts_profile",
-      "_tgt": "data_ts_tagline",
-      "source": "data_ts_profile",
-      "target": "data_ts_tagline"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "data_ts_profile",
-      "_tgt": "data_ts_fullstack_role",
-      "source": "data_ts_profile",
-      "target": "data_ts_fullstack_role"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "data_ts_taskvault_lite",
-      "_tgt": "data_ts_skill_core_stack",
-      "source": "data_ts_taskvault_lite",
-      "target": "data_ts_skill_core_stack"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/lib/data.ts",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "data_ts_beamsync",
-      "_tgt": "data_ts_skill_in_orbit",
-      "source": "data_ts_beamsync",
-      "target": "data_ts_skill_in_orbit"
-    },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
@@ -341,7 +277,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L31",
+      "source_location": "L40",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "backend_devlogresponse",
@@ -353,7 +289,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L37",
+      "source_location": "L46",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "backend_cacheddata",
@@ -365,7 +301,55 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L49",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "backend_circuitbreaker",
+      "source": "backend_main_go",
+      "target": "backend_circuitbreaker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "backend_metrics",
+      "source": "backend_main_go",
+      "target": "backend_metrics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "backend_contactsubmission",
+      "source": "backend_main_go",
+      "target": "backend_contactsubmission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L84",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_init",
+      "source": "backend_main_go",
+      "target": "main_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L90",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "main_main",
@@ -377,7 +361,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L90",
+      "source_location": "L187",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "main_handlestatus",
@@ -389,7 +373,79 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L132",
+      "source_location": "L269",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_handlemetrics",
+      "source": "backend_main_go",
+      "target": "main_handlemetrics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L286",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_handlesubmitcontact",
+      "source": "backend_main_go",
+      "target": "main_handlesubmitcontact",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L319",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_handleadmincontact",
+      "source": "backend_main_go",
+      "target": "main_handleadmincontact",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L401",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_handlegetmessages",
+      "source": "backend_main_go",
+      "target": "main_handlegetmessages",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L439",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_handlemarkread",
+      "source": "backend_main_go",
+      "target": "main_handlemarkread",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L466",
+      "weight": 1.0,
+      "_src": "backend_main_go",
+      "_tgt": "main_htmlescape",
+      "source": "backend_main_go",
+      "target": "main_htmlescape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L477",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "main_generatedevlog",
@@ -401,7 +457,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L175",
+      "source_location": "L540",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "main_fetchgithubevents",
@@ -413,7 +469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L239",
+      "source_location": "L617",
       "weight": 1.0,
       "_src": "backend_main_go",
       "_tgt": "main_callgemini",
@@ -425,7 +481,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L105",
+      "source_location": "L217",
       "weight": 1.0,
       "_src": "main_handlestatus",
       "_tgt": "main_generatedevlog",
@@ -437,7 +493,19 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L139",
+      "source_location": "L389",
+      "weight": 1.0,
+      "_src": "main_handleadmincontact",
+      "_tgt": "main_htmlescape",
+      "source": "main_handleadmincontact",
+      "target": "main_htmlescape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.go",
+      "source_location": "L494",
       "weight": 1.0,
       "_src": "main_generatedevlog",
       "_tgt": "main_fetchgithubevents",
@@ -449,7 +517,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "backend/main.go",
-      "source_location": "L161",
+      "source_location": "L516",
       "weight": 1.0,
       "_src": "main_generatedevlog",
       "_tgt": "main_callgemini",

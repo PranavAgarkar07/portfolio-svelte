@@ -3,6 +3,8 @@
     import { onMount } from "svelte";
     import gsap from "gsap";
     import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
+    import { Lightbox } from "lightbox3";
+    import "lightbox3/style.css";
     import "../styles.css";
     import "../light-mode.css";
 
@@ -12,6 +14,11 @@
         const prefersReducedMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
+
+        Lightbox.init({
+            springOpen: { stiffness: 300, damping: 30, mass: 1 },
+            springClose: { stiffness: 300, damping: 30, mass: 1 },
+        });
 
         gsap.registerPlugin(ScrollToPlugin);
 
@@ -57,44 +64,6 @@
             });
         });
 
-        // Liquid smooth scroll for mouse wheel — desktop only
-        let smoothScroll = 0;
-        let targetScroll = 0;
-        let smoothRaf: number | undefined;
-        let wheelActive = false;
-
-        function wheelHandler(e: WheelEvent) {
-            if (prefersReducedMotion) return;
-            if (e.ctrlKey || e.metaKey) return;
-            const max = document.documentElement.scrollHeight - window.innerHeight;
-            if (max <= 0) return;
-            e.preventDefault();
-            if (!wheelActive) {
-                wheelActive = true;
-                smoothScroll = window.scrollY;
-                targetScroll = window.scrollY;
-            }
-            targetScroll = Math.max(0, Math.min(targetScroll + e.deltaY, max));
-            if (!smoothRaf) {
-                smoothRaf = requestAnimationFrame(smoothTick);
-            }
-        }
-
-        function smoothTick() {
-            smoothScroll += (targetScroll - smoothScroll) * 0.15;
-            window.scrollTo(0, Math.round(smoothScroll));
-            if (Math.abs(targetScroll - smoothScroll) > 0.5) {
-                smoothRaf = requestAnimationFrame(smoothTick);
-            } else {
-                wheelActive = false;
-                smoothRaf = undefined;
-            }
-        }
-
-        if (!prefersReducedMotion && window.innerWidth > 768) {
-            window.addEventListener("wheel", wheelHandler, { passive: false });
-        }
-
         // Sync body class on mount (hydration fix)
         const unsubscribe = theme.subscribe((value) => {
             if (value === "light") {
@@ -111,8 +80,6 @@
             cards.forEach((card) => {
                 card.removeEventListener("mouseenter", () => {});
             });
-            if (smoothRaf) cancelAnimationFrame(smoothRaf);
-            window.removeEventListener("wheel", wheelHandler);
             unsubscribe();
         };
     });

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+import { Lightbox } from "lightbox3";
     import { Badge, Tag, Icon } from "$lib/components/ui";
 
     interface Image {
@@ -21,11 +22,13 @@
 
     let { project, index }: Props = $props();
     let currentSlide = $state(0);
-    let lightboxOpen = $state(false);
     let carousel = $state<HTMLDivElement | null>(null);
     let cardEl = $state<HTMLElement | null>(null);
     let watermarkEl = $state<HTMLElement | null>(null);
     let reducedMotion = $state(false);
+
+    let galleryName = $derived(`project-${index}`);
+    let slideCount = $derived(project.images?.length ?? 0);
 
     onMount(() => {
         reducedMotion = window.matchMedia(
@@ -48,8 +51,6 @@
         watermarkEl.style.transition = "";
         watermarkEl.style.transform = "";
     }
-
-    let slideCount = $derived(project.images?.length ?? 0);
 
     function next() {
         if (slideCount < 2) return;
@@ -77,24 +78,7 @@
                 behavior: "smooth",
             });
     }
-
-    function openLightbox(i: number) {
-        currentSlide = i;
-        lightboxOpen = true;
-    }
-
-    function closeLightbox() {
-        lightboxOpen = false;
-    }
-
-    function onLightboxKeydown(e: KeyboardEvent) {
-        if (e.key === "Escape") closeLightbox();
-        if (e.key === "ArrowRight") next();
-        if (e.key === "ArrowLeft") prev();
-    }
 </script>
-
-<svelte:window onkeydown={lightboxOpen ? onLightboxKeydown : undefined} />
 
 <article
     class="project-card"
@@ -106,16 +90,17 @@
         {#if project.images && project.images.length > 0}
             <div class="carousel-track" bind:this={carousel}>
                 {#each project.images as img, i}
-                    <div
+                    <a
+                        href={img.src}
+                        data-lightbox={galleryName}
+                        data-caption={img.alt}
                         class="carousel-slide"
                         class:active={i === currentSlide}
-                        onclick={() => openLightbox(i)}
-                        onkeydown={(e) => {
-                            if (e.key === "Enter") openLightbox(i);
-                        }}
-                        role="button"
-                        tabindex="0"
                         aria-label="View {img.alt} full size"
+                        onclick={(e) => {
+                            e.preventDefault();
+                            Lightbox.open(img.src, e.currentTarget);
+                        }}
                     >
                         <img
                             src={img.src}
@@ -124,7 +109,7 @@
                             loading={i === 0 ? "eager" : "lazy"}
                             decoding="async"
                         />
-                    </div>
+                    </a>
                 {/each}
             </div>
 
@@ -203,66 +188,6 @@
     </div>
 </article>
 
-{#if lightboxOpen && project.images}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-        class="lightbox-overlay"
-        onclick={closeLightbox}
-        role="dialog"
-        aria-label="Image lightbox"
-        tabindex="-1"
-    >
-        <div class="lightbox-content">
-            <div class="lightbox-topbar">
-                {#if slideCount > 1}
-                    <span class="lightbox-counter"
-                        >{currentSlide + 1} / {slideCount}</span
-                    >
-                {:else}
-                    <span></span>
-                {/if}
-                <button
-                    class="lightbox-close"
-                    onclick={closeLightbox}
-                    aria-label="Close lightbox"
-                >
-                    <Icon name="close" size={18} />
-                </button>
-            </div>
-
-            <div class="lightbox-image-wrap" onclick={closeLightbox}>
-                {#if slideCount > 1}
-                    <button
-                        class="lightbox-arrow prev"
-                        onclick={(e) => { e.stopPropagation(); prev(); }}
-                        aria-label="Previous image"
-                    >
-                        <Icon name="chevron-left" size={20} />
-                    </button>
-                {/if}
-
-                <img
-                    src={project.images[currentSlide].src}
-                    alt={project.images[currentSlide].alt}
-                    class="lightbox-img"
-                    onclick={(e) => e.stopPropagation()}
-                />
-
-                {#if slideCount > 1}
-                    <button
-                        class="lightbox-arrow next"
-                        onclick={(e) => { e.stopPropagation(); next(); }}
-                        aria-label="Next image"
-                    >
-                        <Icon name="chevron-right" size={20} />
-                    </button>
-                {/if}
-            </div>
-        </div>
-    </div>
-{/if}
-
 <style>
     .project-card {
         position: relative;
@@ -319,6 +244,9 @@
         overflow: hidden;
         aspect-ratio: 4 / 3;
         height: auto;
+        display: block;
+        text-decoration: none;
+        color: inherit;
     }
 
     .carousel-img {
@@ -701,107 +629,6 @@
 
     :global(body.light-mode) .card-link:active {
         box-shadow: none;
-    }
-
-    /* Lightbox */
-    :global(.lightbox-overlay) {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        padding: 0.75rem;
-        background: rgba(3, 4, 5, 0.96);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-    }
-
-    :global(.lightbox-content) {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
-        margin: 0 auto;
-    }
-
-    :global(.lightbox-topbar) {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        flex-shrink: 0;
-    }
-
-    :global(.lightbox-counter) {
-        font-family: var(--font-body);
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        letter-spacing: 2px;
-    }
-
-    :global(.lightbox-close) {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: #fff;
-        width: 36px;
-        height: 36px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s ease;
-        flex-shrink: 0;
-    }
-
-    :global(.lightbox-close:hover) {
-        background: #fff;
-        color: #000;
-        border-color: #fff;
-    }
-
-    :global(.lightbox-image-wrap) {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #000;
-    }
-
-    :global(.lightbox-img) {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    :global(.lightbox-arrow) {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s ease;
-        z-index: 10;
-    }
-
-    :global(.lightbox-arrow:hover) {
-        background: #fff;
-        color: #000;
-    }
-
-    :global(.lightbox-arrow.prev) {
-        left: 8px;
-    }
-
-    :global(.lightbox-arrow.next) {
-        right: 8px;
     }
 
     @media (min-width: 768px) {

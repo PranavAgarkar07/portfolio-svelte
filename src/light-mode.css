@@ -75,6 +75,30 @@ body.light-mode .aero-card:hover {
     transform: translateY(-2px);
 }
 
+/* Primary Navbar (Light Mode) */
+body.light-mode .aero-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 3px solid #c8c8cc;
+}
+
+/* Floating Navbar (Light Mode) */
+body.light-mode .aero-header.detached {
+    background: #f0f0f3;
+    border: none;
+    border-left: 3px solid #c8c8cc;
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1),
+                -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+/* Form Container (Light Mode) */
+body.light-mode .contact-form-container {
+    background: #f0f0f3;
+    border: none;
+    border-left: 3px solid #c8c8cc;
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1),
+                -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
 /* Icon Toggle Logic */
 .ui-icon.sun-icon,
 .ui-icon.moon-icon {
@@ -150,10 +174,16 @@ body.light-mode .theme-btn:active {
     box-shadow: none;
 }
 
-/* Mobile Menu Overrides */
-body.light-mode .nav-links {
-    background: var(--bg-dark);
-    color: #111;
+/* Mobile Menu Overrides — only for the fullscreen overlay */
+@media (max-width: 768px) {
+    body.light-mode .nav-links {
+        background: var(--bg-dark);
+        color: #111;
+    }
+    body.light-mode .nav-links.active {
+        background: #ffffff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
 }
 
 /* Interactive Elements (Colors Only) */
