@@ -57,6 +57,15 @@
             &copy; {currentYear} Pranav Agarkar. All Rights Reserved.
         </p>
     </div>
+    <button
+        class="back-to-top"
+        onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        aria-label="Back to top"
+    >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 </footer>
 
 <style>
@@ -90,5 +99,38 @@
         border-top: 1px solid var(--grid-line);
         padding-top: 3rem;
         padding-bottom: 2rem;
+    }
+
+    .back-to-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-secondary);
+        cursor: pointer;
+        z-index: 999;
+        transition: all 0.2s ease;
+        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    }
+    .back-to-top:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(255,68,0,0.08);
+    }
+    :global(body.light-mode) .back-to-top {
+        background: #f0f0f3;
+        border-color: rgba(0,0,0,0.12);
+    }
+    :global(body.light-mode) .back-to-top:hover {
+        border-color: var(--accent);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .back-to-top { display: none; }
     }
 </style>

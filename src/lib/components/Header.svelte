@@ -23,6 +23,22 @@
         theme.toggle();
     }
 
+    $effect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = "hidden";
+            const handleEscape = (e: KeyboardEvent) => {
+                if (e.key === "Escape") mobileMenuOpen = false;
+            };
+            window.addEventListener("keydown", handleEscape);
+            return () => {
+                document.body.style.overflow = "";
+                window.removeEventListener("keydown", handleEscape);
+            };
+        } else {
+            document.body.style.overflow = "";
+        }
+    });
+
     onMount(() => {
         const handleScroll = (winScroll: number) => {
             const height =

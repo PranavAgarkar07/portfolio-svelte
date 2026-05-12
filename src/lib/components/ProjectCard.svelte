@@ -30,10 +30,17 @@ import { Lightbox } from "lightbox3";
     let galleryName = $derived(`project-${index}`);
     let slideCount = $derived(project.images?.length ?? 0);
 
+    function handleKeyDown(e: KeyboardEvent) {
+        if (e.key === 'ArrowLeft') prev();
+        if (e.key === 'ArrowRight') next();
+    }
+
     onMount(() => {
         reducedMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     });
 
     function handleMouseMove(e: MouseEvent) {
@@ -212,6 +219,11 @@ import { Lightbox } from "lightbox3";
         /* Brutalist: hard offset shadow in accent color */
         box-shadow: 6px 6px 0px var(--accent);
         background: #141e2a;
+    }
+
+    .project-card:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 4px;
     }
 
     .card-media {
@@ -563,6 +575,11 @@ import { Lightbox } from "lightbox3";
     .card-link:active {
         box-shadow: none;
         transform: translate(3px, 3px);
+    }
+
+    .card-link:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
     }
 
     .link-arrow-icon {

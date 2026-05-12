@@ -88,13 +88,9 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 0;
-    /* Behind content, in front of background */
-    /* High Visibility Grain */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
-    opacity: 0.09;
-    /* Reduced intensity */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.06;
     pointer-events: none;
-    /* Removing blend mode so it sits 'on top' like dust */
 }
 
 /* Background Grid Lines (CAD Blueprint) */
@@ -778,6 +774,15 @@ section {
     font-family: var(--font-body);
     font-size: 0.9rem;
     color: var(--text-secondary);
+}
+
+.skill-level-label {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
 }
 
 .skill-level-bar {
@@ -2167,7 +2172,44 @@ section {
     .nav-links a {
         font-size: 2rem;
         font-family: var(--font-heading);
-        /* Switch to heading font for impact */
+        transition: color 0.2s ease, opacity 0.2s ease;
+        opacity: 0.8;
+    }
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+        opacity: 1;
+        color: var(--accent);
+    }
+    .nav-links a::before {
+        content: '[';
+        margin-right: 8px;
+        opacity: 0;
+        color: var(--accent);
+        transition: opacity 0.2s ease;
+    }
+    .nav-links a::after {
+        content: ']';
+        margin-left: 8px;
+        opacity: 0;
+        color: var(--accent);
+        transition: opacity 0.2s ease;
+    }
+    .nav-links a:hover::before,
+    .nav-links a:hover::after,
+    .nav-links a:focus-visible::before,
+    .nav-links a:focus-visible::after {
+        opacity: 1;
+    }
+
+    /* Accent bar at top of mobile menu */
+    .nav-links.active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), transparent);
     }
 
     /* Hamburger Animation Removed */

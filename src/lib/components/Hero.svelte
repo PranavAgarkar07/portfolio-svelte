@@ -18,7 +18,7 @@
         };
         skills: Array<{
             category: string;
-            items: Array<{ name: string; icon: string; level: number }>;
+            items: Array<{ name: string; icon: string; level: string }>;
         }>;
     }
 
@@ -29,7 +29,59 @@
     let heroReady = $state(false);
 
     onMount(() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         requestAnimationFrame(() => { heroReady = true; });
+
+        // Ambient cursor glow
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection && !prefersReducedMotion) {
+            const glow = document.createElement('div');
+            glow.className = 'hero-ambient-glow';
+            heroSection.appendChild(glow);
+
+            const handleMove = (e: MouseEvent) => {
+                const rect = heroSection.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                glow.style.background = `radial-gradient(600px circle at ${x}% ${y}%, rgba(255,68,0,0.08), transparent 60%)`;
+            };
+
+            let rafId: number;
+            const throttledMove = (e: MouseEvent) => {
+                cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => handleMove(e));
+            };
+
+            window.addEventListener('mousemove', throttledMove);
+        }
+
+        // Parallax on about avatar
+        const aboutFrame = document.querySelector('.about-frame');
+        if (aboutFrame && !prefersReducedMotion) {
+            window.addEventListener('scroll', () => {
+                const rect = aboutFrame.getBoundingClientRect();
+                const center = rect.top + rect.height / 2;
+                const viewportCenter = window.innerHeight / 2;
+                const offset = (center - viewportCenter) / viewportCenter;
+                (aboutFrame as HTMLElement).style.transform = `translateY(${offset * -8}px)`;
+            }, { passive: true });
+        }
+
+        // Pulse CTA after idle
+        let pulseTimer: ReturnType<typeof setTimeout>;
+        function resetPulseTimer() {
+            clearTimeout(pulseTimer);
+            const btn = document.querySelector('.cta-group .btn-primary');
+            if (btn) btn.classList.remove('idle-pulse');
+            pulseTimer = setTimeout(() => {
+                const btn = document.querySelector('.cta-group .btn-primary');
+                if (btn) btn.classList.add('idle-pulse');
+            }, 5000);
+        }
+        resetPulseTimer();
+        ['scroll', 'mousemove', 'keydown'].forEach(ev => 
+            window.addEventListener(ev, resetPulseTimer, { passive: true })
+        );
     });
 </script>
 
@@ -83,7 +135,20 @@
                 </svg>
             </a>
         </div>
-    </div>
+
+        <div class="tech-marquee" class:hero-ready={heroReady}>
+            <span class="marquee-label">TECH STACK</span>
+            <div class="marquee-track">
+                <div class="marquee-content">
+                    {#each ['Python', 'Django', 'React', 'Go', 'Svelte', 'TypeScript', 'PostgreSQL', 'Docker', 'Linux'] as tech}
+                        <span class="marquee-item">
+                            <span class="marquee-dot"></span>
+                            {tech}
+                        </span>
+                    {/each}
+                </div>
+            </div>
+        </div>
 
     <div class="hero-scroll" class:hero-ready={heroReady}>
         <span class="hero-scroll-text">SCROLL</span>
@@ -147,12 +212,7 @@
                         <div class="skill-card">
                             <i class="{skill.icon} skill-icon"></i>
                             <span class="skill-name">{skill.name}</span>
-                            <div class="skill-level-bar">
-                                <div
-                                    class="fill"
-                                    style="width: {skill.level}%"
-                                ></div>
-                            </div>
+                            <span class="skill-level-label">{skill.level}</span>
                         </div>
                     {/each}
                 </div>
@@ -166,6 +226,20 @@
 </section>
 
 <style>
+    .about-frame {
+        transform-style: preserve-3d;
+        will-change: transform;
+    }
+    
+    :global(.hero-ambient-glow) {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        transition: opacity 0.3s ease;
+    }
+    
     .skills-footer {
         margin-top: 3rem;
         display: flex;
@@ -310,6 +384,69 @@
         transform: translateY(0);
     }
     
+    .tech-marquee {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 3rem;
+        width: 100%;
+        max-width: 600px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        transition-delay: 1.4s;
+    }
+    .tech-marquee.hero-ready {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .marquee-label {
+        font-family: var(--font-body);
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        flex-shrink: 0;
+        opacity: 0.5;
+    }
+    .marquee-track {
+        flex: 1;
+        overflow: hidden;
+        mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    }
+    .marquee-content {
+        display: flex;
+        gap: 0.5rem;
+        animation: marqueeScroll 20s linear infinite;
+        width: max-content;
+    }
+    .marquee-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-family: var(--font-body);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .marquee-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+    }
+    @keyframes marqueeScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .marquee-content { animation: none; }
+    }
+    
     .btn {
         padding: 16px 32px; font-size: 0.9rem; letter-spacing: 0.1em;
     }
@@ -318,13 +455,12 @@
     
     .hero-scroll {
         position: absolute;
-        bottom: 3rem;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 2.5rem;
+        right: 2rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         z-index: 1;
         opacity: 0;
         transition: opacity 0.8s ease;
@@ -351,6 +487,14 @@
     @keyframes scrollPulse {
         0%, 100% { opacity: 1; transform: scaleY(1); }
         50% { opacity: 0.5; transform: scaleY(0.6); }
+    }
+    
+    @keyframes idlePulse {
+        0%, 100% { box-shadow: 4px 4px 0px var(--accent); }
+        50% { box-shadow: 4px 4px 20px var(--accent-glow), 4px 4px 0px var(--accent); }
+    }
+    :global(.btn-primary.idle-pulse) {
+        animation: idlePulse 2s ease-in-out 3;
     }
     
     /* ─── LIGHT MODE ─── */

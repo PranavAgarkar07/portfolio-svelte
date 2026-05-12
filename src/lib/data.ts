@@ -5,7 +5,7 @@ export const portfolioData = {
   profile: {
     name: "Pranav Agarkar",
     role: "Fullstack Developer",
-    tagline: "Building secure, scalable applications from frontend to backend.",
+    tagline: "Fullstack developer specializing in Django, React, and Go. I build secure SaaS backends, encrypted systems, and modern web UIs.",
     location: "Solapur, India",
     status: "Open to Opportunities",
     socials: [
@@ -49,31 +49,31 @@ export const portfolioData = {
     {
       category: "Core Stack",
       items: [
-        { name: "Python", icon: "devicon-python-plain", level: 85 },
-        { name: "Django", icon: "devicon-django-plain", level: 90 },
-        { name: "Linux", icon: "devicon-linux-plain", level: 95 },
-        { name: "React", icon: "devicon-react-original colored", level: 70 },
+        { name: "Python", icon: "devicon-python-plain", level: "Expert" },
+        { name: "Django", icon: "devicon-django-plain", level: "Expert" },
+        { name: "Linux", icon: "devicon-linux-plain", level: "Expert" },
+        { name: "React", icon: "devicon-react-original colored", level: "Proficient" },
       ],
     },
     {
       category: "Proficient",
       items: [
-        { name: "C", icon: "devicon-c-plain colored", level: 80 },
+        { name: "C", icon: "devicon-c-plain colored", level: "Proficient" },
         {
           name: "JavaScript",
           icon: "devicon-javascript-plain colored",
-          level: 85,
+          level: "Proficient",
         },
-        { name: "Git", icon: "devicon-git-plain colored", level: 75 },
-        { name: "HTML5/CSS3", icon: "devicon-html5-plain colored", level: 95 },
+        { name: "Git", icon: "devicon-git-plain colored", level: "Proficient" },
+        { name: "HTML5/CSS3", icon: "devicon-html5-plain colored", level: "Expert" },
       ],
     },
     {
       category: "In Orbit",
       items: [
-        { name: "Go", icon: "devicon-go-original-wordmark colored", level: 65 },
-        { name: "Svelte", icon: "devicon-svelte-plain colored", level: 55 },
-        { name: "Docker", icon: "devicon-docker-plain colored", level: 50 },
+        { name: "Go", icon: "devicon-go-original-wordmark colored", level: "Proficient" },
+        { name: "Svelte", icon: "devicon-svelte-plain colored", level: "Proficient" },
+        { name: "Docker", icon: "devicon-docker-plain colored", level: "Familiar" },
       ],
     },
   ],
@@ -81,7 +81,7 @@ export const portfolioData = {
     {
       name: "TaskVault Lite",
       description:
-        "Secure full-stack task manager with JWT authentication, Google/GitHub OAuth, and Fernet encryption for sensitive data. Built with Django REST Framework and React.",
+        "Secure full-stack task manager with JWT authentication, Google/GitHub OAuth, and Fernet AES-128-CBC encryption for sensitive data. Handles 1,247 req/min API throughput with PostgreSQL SSL database. Built with Django REST Framework and React.",
       images: [
         {
           src: "images/taskvault/HomepageSS.webp",
@@ -118,7 +118,7 @@ export const portfolioData = {
     {
       name: "BeamSync",
       description:
-        "High-performance offline P2P file transfer system with a cyberpunk terminal UI. Features auto-IP detection, dynamic port scouting, and QR-based mobile sync—no internet required.",
+        "High-performance offline P2P file transfer system with a cyberpunk terminal UI. Features auto-IP discovery across local network, dynamic port scouting, QR-based mobile pairing, and AES-256-GCM encrypted transfers — no internet or server required. Built with Go and Wails.",
       images: [
         {
           src: "images/beamsync/appiconStartingpage.webp",

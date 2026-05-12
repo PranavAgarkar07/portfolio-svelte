@@ -49,6 +49,10 @@ body.light-mode .mobile-menu-btn.active {
     color: #fff;
 }
 
+body.light-mode .mobile-menu-btn.active .hamburger-line {
+    background: #fff;
+}
+
 /* Card Adjustments (Neumorphic/Soft UI Principles) */
 body.light-mode .aero-card {
     background: #f0f0f3;
@@ -84,8 +88,8 @@ body.light-mode .aero-header {
 /* Floating Navbar (Light Mode) */
 body.light-mode .aero-header.detached {
     background: #f0f0f3;
-    border: none;
-    border-left: 3px solid #c8c8cc;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-left: 3px solid var(--accent);
     box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1),
                 -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
