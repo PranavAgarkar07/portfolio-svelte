@@ -24,7 +24,9 @@
 
         let lenis: Lenis | null = null;
 
-        if (!prefersReducedMotion) {
+        const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+        if (!prefersReducedMotion && !isTouchDevice) {
             gsap.registerPlugin(ScrollTrigger);
 
             lenis = new Lenis({
