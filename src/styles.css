@@ -37,8 +37,8 @@
 
 html {
     overflow-x: hidden;
+    overflow-y: auto;
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -50,7 +50,6 @@ body {
     width: 100%;
     overflow-x: hidden;
     position: relative;
-    overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
