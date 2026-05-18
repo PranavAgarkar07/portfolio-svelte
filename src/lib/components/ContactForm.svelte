@@ -1,13 +1,14 @@
 <script lang="ts">
-
-
-    const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api/contact";
+    const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+    const API_URL = BASE_URL + "/api/contact";
+    const HEALTH_URL = BASE_URL + "/healthz";
 
     let name = $state("");
     let email = $state("");
     let topic = $state("general");
     let message = $state("");
     let submitting = $state(false);
+    let waking = $state(false);
     let success = $state(false);
     let errorMsg = $state("");
 
@@ -32,11 +33,37 @@
         return "";
     }
 
+    async function wakeServer(): Promise<boolean> {
+        waking = true;
+        for (let attempt = 0; attempt < 12; attempt++) {
+            try {
+                const ctrl = new AbortController();
+                const id = setTimeout(() => ctrl.abort(), 8000);
+                const res = await fetch(HEALTH_URL, { signal: ctrl.signal });
+                clearTimeout(id);
+                if (res.ok) return true;
+            } catch {
+                /* server still waking — retry */
+            }
+            await new Promise(r => setTimeout(r, 5000));
+        }
+        return false;
+    }
+
     async function handleSubmit() {
         const err = validate();
         if (err) { errorMsg = err; return; }
         submitting = true;
         errorMsg = "";
+
+        const serverAwake = await wakeServer();
+        waking = false;
+        if (!serverAwake) {
+            errorMsg = "Server is taking too long to wake up. Try emailing me directly at pranavagarkar8@gmail.com.";
+            submitting = false;
+            return;
+        }
+
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
@@ -190,13 +217,18 @@
 
         <button
             class="submit-btn"
-            class:sending={submitting}
+            class:sending={submitting || waking}
             class:done={success}
             onclick={handleSubmit}
-            disabled={submitting || success}
+            disabled={submitting || waking || success}
             type="button"
         >
-            {#if submitting}
+            {#if waking}
+                <span class="btn-content">
+                    <span class="btn-text">Waking server</span>
+                    <span class="btn-dots"><span>.</span><span>.</span><span>.</span></span>
+                </span>
+            {:else if submitting}
                 <span class="btn-content">
                     <span class="btn-text">Sending</span>
                     <span class="btn-dots"><span>.</span><span>.</span><span>.</span></span>
