@@ -46,7 +46,11 @@
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
 
-        window.addEventListener("resize", () => ScrollTrigger.refresh());
+        let resizeTimer: ReturnType<typeof setTimeout>;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+        });
 
         // ──────────────────────────────────────────────
         // 1. READING PROGRESS BAR
@@ -55,11 +59,12 @@
         Object.assign(progressBar.style, {
             position: "fixed", top: "0", left: "0", width: "0%", height: "2px",
             background: "linear-gradient(90deg, var(--accent), #ff8800, var(--accent))",
-            zIndex: "9999", pointerEvents: "none", transition: "width 0.1s linear",
+            zIndex: "9999", pointerEvents: "none", transformOrigin: "0 50%",
+            transition: "transform 0.1s linear",
         });
         document.body.prepend(progressBar);
         ScrollTrigger.create({ trigger: "body", start: "top top", end: "bottom bottom", onUpdate: self => {
-            progressBar.style.width = self.progress * 100 + "%";
+                progressBar.style.transform = `scaleX(${self.progress})`;
         }});
 
         // ──────────────────────────────────────────────
@@ -86,7 +91,7 @@
             onEnter: () => { gsap.to(".skill-category-card", {
                 y: 0, opacity: 1, scale: 1, rotateX: 0,
                 stagger: { each: 0.15, from: "edges", ease: "power2.inOut" },
-                ease: "elastic.out(1, 0.55)", duration: 0.9,
+                ease: "power3.out", duration: 0.7,
             });}
         });
 
@@ -114,7 +119,7 @@
                 trigger: card as Element, start: "top 88%", once: true,
                 onEnter: () => { gsap.to(card, {
                     x: 0, y: 0, opacity: 1, rotateX: 0, scale: 1,
-                    ease: "elastic.out(1, 0.55)", duration: 0.85, delay: i * 0.1,
+                    ease: "power3.out", duration: 0.65, delay: i * 0.1,
                 });}
             });
         });
@@ -143,11 +148,11 @@
             onEnter: () => {
                 gsap.to(".about-visual-col", {
                     x: 0, opacity: 1, rotateY: 0, scale: 1,
-                    ease: "elastic.out(1, 0.55)", duration: 0.8,
+                    ease: "power3.out", duration: 0.7,
                 });
                 gsap.to(".about-content-col", {
                     x: 0, opacity: 1, rotateY: 0, scale: 1,
-                    ease: "elastic.out(1, 0.55)", duration: 0.8, delay: 0.1,
+                    ease: "power3.out", duration: 0.7, delay: 0.1,
                 });
             }
         });
@@ -159,7 +164,7 @@
                 trigger: row as Element, start: "top 80%", once: true,
                 onEnter: () => { gsap.to(row, {
                     y: 0, opacity: 1,
-                    ease: "elastic.out(1, 0.5)", duration: 0.6,
+                    ease: "power3.out", duration: 0.5,
                 });}
             });
         });
@@ -178,7 +183,7 @@
                 onEnter: () => {
                     let obj = { val: 0 };
                     gsap.to(obj, {
-                        val: num, duration: 2, ease: "elastic.out(1, 0.4)",
+                        val: num, duration: 1.5, ease: "power3.out",
                         onUpdate: () => { display.textContent = Math.round(obj.val) + suffix; },
                     });
                 }
@@ -192,7 +197,7 @@
                 trigger: "#about", start: "top 75%", once: true,
                 onEnter: () => { gsap.to(metric, {
                     y: 0, opacity: 1, scale: 1,
-                    ease: "elastic.out(1.2, 0.55)", duration: 0.7,
+                    ease: "power3.out", duration: 0.6,
                     delay: i * 0.1,
                 });}
             });
@@ -208,11 +213,11 @@
             onEnter: () => {
                 gsap.to(".contact-info", {
                     x: 0, opacity: 1,
-                    ease: "elastic.out(1, 0.65)", duration: 0.8,
+                    ease: "power3.out", duration: 0.7,
                 });
                 gsap.to(".contact-form-container", {
                     x: 0, opacity: 1,
-                    ease: "elastic.out(1, 0.65)", duration: 0.8, delay: 0.15,
+                    ease: "power3.out", duration: 0.7, delay: 0.15,
                 });
             }
         });
@@ -238,7 +243,7 @@
                 trigger: "#contact", start: "top 85%", once: true,
                 onEnter: () => { gsap.to(link, {
                     y: 0, opacity: 1, scale: 1,
-                    ease: "elastic.out(1.2, 0.5)", duration: 0.6, delay: i * 0.05,
+                    ease: "power3.out", duration: 0.5, delay: i * 0.05,
                 });}
             });
         });
@@ -429,3 +434,21 @@
 </main>
 
 <Footer {profile} />
+
+<style>
+    :global(.project-card),
+    :global(.skill-category-card),
+    :global(.skill-card),
+    :global(.cert-card-wrap),
+    :global(.section-header),
+    :global(.about-visual-col),
+    :global(.about-content-col),
+    :global(.about-spec-row),
+    :global(.about-metric),
+    :global(.contact-info),
+    :global(.contact-form-container),
+    :global(.info-item),
+    :global(.social-link) {
+        will-change: transform, opacity;
+    }
+</style>

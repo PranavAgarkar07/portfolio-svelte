@@ -33,38 +33,59 @@
         requestAnimationFrame(() => { heroReady = true; });
 
         // Ambient cursor glow
+        let glowCleanup: (() => void) | null = null;
         const heroSection = document.querySelector('.hero-section');
         if (heroSection && !prefersReducedMotion) {
             const glow = document.createElement('div');
             glow.className = 'hero-ambient-glow';
+            glow.style.background = `radial-gradient(600px circle at 50% 50%, rgba(255,68,0,0.08), transparent 60%)`;
             heroSection.appendChild(glow);
 
-            const handleMove = (e: MouseEvent) => {
-                const rect = heroSection.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                glow.style.background = `radial-gradient(600px circle at ${x}% ${y}%, rgba(255,68,0,0.08), transparent 60%)`;
-            };
-
             let rafId: number;
-            const throttledMove = (e: MouseEvent) => {
+            const handleMove = (e: MouseEvent) => {
                 cancelAnimationFrame(rafId);
-                rafId = requestAnimationFrame(() => handleMove(e));
+                rafId = requestAnimationFrame(() => {
+                    const rect = heroSection.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    glow.style.backgroundPosition = `${x}% ${y}%`;
+                });
             };
 
-            window.addEventListener('mousemove', throttledMove);
+            window.addEventListener('mousemove', handleMove, { passive: true });
+            glowCleanup = () => {
+                window.removeEventListener('mousemove', handleMove);
+                glow.remove();
+            };
         }
 
-        // Parallax on about avatar
+        // Parallax on about avatar — pre-calculate rect, use passive scroll
         const aboutFrame = document.querySelector('.about-frame');
         if (aboutFrame && !prefersReducedMotion) {
-            window.addEventListener('scroll', () => {
-                const rect = aboutFrame.getBoundingClientRect();
+            const frameEl = aboutFrame as HTMLElement;
+            let rect = frameEl.getBoundingClientRect();
+            const updateRect = () => { rect = frameEl.getBoundingClientRect(); };
+            window.addEventListener('resize', updateRect, { passive: true });
+
+            const handleParallax = () => {
                 const center = rect.top + rect.height / 2;
                 const viewportCenter = window.innerHeight / 2;
                 const offset = (center - viewportCenter) / viewportCenter;
-                (aboutFrame as HTMLElement).style.transform = `translateY(${offset * -8}px)`;
-            }, { passive: true });
+                frameEl.style.transform = `translateY(${offset * -8}px)`;
+            };
+            window.addEventListener('scroll', handleParallax, { passive: true });
+
+            const parallaxCleanup = () => {
+                window.removeEventListener('scroll', handleParallax);
+                window.removeEventListener('resize', updateRect);
+            };
+
+            // Store for cleanup
+            const existingCleanup = glowCleanup;
+            glowCleanup = () => {
+                existingCleanup?.();
+                parallaxCleanup();
+            };
         }
 
         // Pulse CTA after idle
@@ -79,9 +100,16 @@
             }, 5000);
         }
         resetPulseTimer();
-        ['scroll', 'mousemove', 'keydown'].forEach(ev => 
+        const events = ['scroll', 'mousemove', 'keydown'];
+        events.forEach(ev =>
             window.addEventListener(ev, resetPulseTimer, { passive: true })
         );
+
+        return () => {
+            clearTimeout(pulseTimer);
+            events.forEach(ev => window.removeEventListener(ev, resetPulseTimer));
+            glowCleanup?.();
+        };
     });
 </script>
 
@@ -237,7 +265,8 @@
         width: 100%; height: 100%;
         pointer-events: none;
         z-index: 0;
-        transition: opacity 0.3s ease;
+        background-size: 200% 200%;
+        will-change: background-position;
     }
     
     .skills-footer {

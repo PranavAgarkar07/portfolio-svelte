@@ -18,8 +18,8 @@
         ).matches;
 
         Lightbox.init({
-            springOpen: { stiffness: 300, damping: 30, mass: 1 },
-            springClose: { stiffness: 300, damping: 30, mass: 1 },
+            springOpen: { stiffness: 500, damping: 40, mass: 0.8 },
+            springClose: { stiffness: 400, damping: 35, mass: 0.8 },
         });
 
         let lenis: Lenis | null = null;
@@ -43,7 +43,7 @@
                 lenis!.raf(time * 1000);
                 scrollY.set(lenis!.scroll);
             });
-            gsap.ticker.lagSmoothing(0);
+            gsap.ticker.lagSmoothing(33, 16);
         }
 
         function getDocumentTop(el: HTMLElement): number {
@@ -77,16 +77,19 @@
             a.addEventListener("click", handleAnchorClick);
         });
 
+        const cardListeners: Array<{ el: Element; handler: (e: Event) => void }> = [];
         const cards = document.querySelectorAll(
             ".aero-card, .btn, .terminal-wrapper, .nav-links a, .mobile-menu-btn",
         );
         cards.forEach((card) => {
-            card.addEventListener("mouseenter", (e) => {
+            const handler = (e: Event) => {
                 if (prefersReducedMotion) return;
-                const rect = (card as HTMLElement).getBoundingClientRect();
-                card.style.setProperty("--x", `${rect.width / 2}px`);
-                card.style.setProperty("--y", `${rect.height / 2}px`);
-            });
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                (card as HTMLElement).style.setProperty("--x", `${rect.width / 2}px`);
+                (card as HTMLElement).style.setProperty("--y", `${rect.height / 2}px`);
+            };
+            card.addEventListener("mouseenter", handler);
+            cardListeners.push({ el: card, handler });
         });
 
         const unsubscribe = theme.subscribe((value) => {
@@ -101,8 +104,8 @@
             document.querySelectorAll('a[href^="#"]').forEach((a) => {
                 a.removeEventListener("click", handleAnchorClick);
             });
-            cards.forEach((card) => {
-                card.removeEventListener("mouseenter", () => {});
+            cardListeners.forEach(({ el, handler }) => {
+                el.removeEventListener("mouseenter", handler);
             });
             unsubscribe();
             lenis?.destroy();
@@ -158,6 +161,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin="anonymous" />
+    <link rel="preconnect" href="https://sentinel-backend-4x3i.onrender.com" crossorigin="anonymous" />
 
     <!-- Fonts -->
     <link
@@ -173,6 +177,9 @@
         @font-face {
             font-display: swap;
         }
+    </style>
+    <style>
+        .lightbox3-overlay { --lb-image-border-radius: 0px; }
     </style>
 </svelte:head>
 

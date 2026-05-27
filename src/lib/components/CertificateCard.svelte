@@ -3,6 +3,7 @@
     import { Lightbox } from "lightbox3";
     import { Badge, Tag, Icon } from "$lib/components/ui";
     import type { Certificate } from "$lib/types";
+    import { certPlaceholders } from "$lib/cert-placeholders";
 
     let { certificate, index }: { certificate: Certificate; index: number } = $props();
 
@@ -20,9 +21,27 @@
         return `${month} ${parts[0]}`;
     }
 
+    function thumbUrl(fullUrl: string): string {
+        const name = fullUrl.split("/").pop() || "";
+        const base = name.replace(/\.\w+$/, "");
+        const parts = fullUrl.split("/");
+        parts.pop();
+        parts.push("thumbs", base + ".webp");
+        return parts.join("/");
+    }
+
+    function placeholderBg(fullUrl: string): string {
+        const name = fullUrl.split("/").pop() || "";
+        return certPlaceholders[name] || "";
+    }
+
     let cardEl = $state<HTMLElement | null>(null);
     let watermarkEl = $state<HTMLElement | null>(null);
     let reducedMotion = $state(false);
+
+    let fullUrl = $derived(certificate.image_url);
+    let thumb = $derived(thumbUrl(fullUrl));
+    let placeholderDataUri = $derived(placeholderBg(fullUrl));
 
     onMount(() => {
         reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -59,7 +78,7 @@
     {/if}
 
     {#if certificate.image_url}
-        <div class="cert-media">
+        <div class="cert-media" style={placeholderDataUri ? `background-image: url('${placeholderDataUri}')` : ""}>
             <div class="cert-media-border" aria-hidden="true"></div>
             <a
                 href={certificate.image_url}
@@ -72,11 +91,12 @@
                 }}
             >
                 <img
-                    src={certificate.image_url}
+                    src={thumb}
                     alt={certificate.title}
                     class="cert-img"
                     loading="lazy"
                     decoding="async"
+                    fetchpriority="low"
                 />
                 <div class="cert-image-overlay">
                     <div class="overlay-scanline" aria-hidden="true"></div>
@@ -210,7 +230,10 @@
     .cert-media {
         position: relative;
         overflow: hidden;
-        background: #070a0f;
+        background-color: #070a0f;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         aspect-ratio: 16 / 10;
     }
