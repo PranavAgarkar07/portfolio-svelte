@@ -4,7 +4,7 @@
     import Icon from '../Icon/Icon.svelte';
     import type { IconName } from '../Icon/Icon.svelte';
 
-    type InputType = 'text' | 'email' | 'tel' | 'number' | 'password' | 'search' | 'url' | 'date';
+    type InputType = 'text' | 'email' | 'tel' | 'number' | 'password' | 'search' | 'url' | 'date' | 'month';
 
     type Props = {
         label?: string;
@@ -43,7 +43,7 @@
     let hasValue = $derived(value !== '' && value !== undefined && value !== null);
 
     let autoPrefix = $derived<IconName | undefined>(
-        prefix ?? (type === 'email' ? 'envelope' : type === 'search' ? 'search' : type === 'date' ? 'calendar' : undefined)
+        prefix ?? (type === 'email' ? 'envelope' : type === 'search' ? 'search' : type === 'date' || type === 'month' ? 'calendar' : undefined)
     );
 
     function handleInput(e: Event) {

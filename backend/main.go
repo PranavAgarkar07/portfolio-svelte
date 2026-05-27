@@ -3,13 +3,16 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -20,7 +23,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 // --- Configuration ---
@@ -66,11 +69,28 @@ type Metrics struct {
 	startTime    time.Time
 }
 
-type ContactSubmission struct {
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Topic   string `json:"topic"`
-	Message string `json:"message"`
+	type ContactSubmission struct {
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Topic   string `json:"topic"`
+		Message string `json:"message"`
+	}
+
+type Certificate struct {
+	ID            int      `json:"id"`
+	Title         string   `json:"title"`
+	Issuer        string   `json:"issuer"`
+	Date          string   `json:"date"`
+	CredentialURL string   `json:"credential_url"`
+	ImageURL      string   `json:"image_url"`
+	Tags          []string `json:"tags"`
+	IsVerified    bool     `json:"is_verified"`
+	DisplayOrder  int      `json:"display_order"`
+	CreatedAt     string   `json:"created_at"`
+}
+
+type MemoryCert struct {
+	Certificate
 }
 
 var (
@@ -81,6 +101,10 @@ var (
 	responsesMu   sync.Mutex
 	metrics       Metrics
 	db            *sql.DB
+
+	memCerts    []MemoryCert
+	memCertsMu  sync.Mutex
+	memCertID   int
 )
 
 func init() {
@@ -131,6 +155,22 @@ func main() {
 				if _, err := db.Exec(migrateQuery); err != nil {
 					slog.Warn("Auto-migrate failed", "error", err)
 				}
+
+			certMigrate := `CREATE TABLE IF NOT EXISTS certificates (
+				id SERIAL PRIMARY KEY,
+				title TEXT NOT NULL,
+				issuer TEXT NOT NULL,
+				date TEXT DEFAULT '',
+				credential_url TEXT DEFAULT '',
+				image_url TEXT DEFAULT '',
+				tags TEXT[] DEFAULT '{}',
+				is_verified BOOLEAN DEFAULT FALSE,
+				display_order INT DEFAULT 0,
+				created_at TIMESTAMPTZ DEFAULT NOW()
+			)`
+			if _, err := db.Exec(certMigrate); err != nil {
+				slog.Warn("certificates auto-migrate failed", "error", err)
+			}
 			}
 		}
 	}
@@ -144,6 +184,7 @@ func main() {
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:4173",
+		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
@@ -172,6 +213,16 @@ func main() {
 	app.Get("/admin/contact", handleAdminContact)
 	app.Get("/api/contact/messages", handleGetMessages)
 	app.Patch("/api/contact/messages/:id/read", handleMarkRead)
+
+	app.Static("/static", "./static")
+
+	app.Get("/api/certificates", handleGetCertificates)
+	app.Get("/api/admin/certificates", handleAdminGetCertificates)
+	app.Post("/api/admin/certificates", handleAdminCreateCertificate)
+	app.Put("/api/admin/certificates/:id", handleAdminUpdateCertificate)
+	app.Delete("/api/admin/certificates/:id", handleAdminDeleteCertificate)
+	app.Put("/api/admin/certificates/reorder", handleAdminReorderCertificates)
+	app.Post("/api/admin/certificates/upload", handleAdminUploadImage)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -251,7 +302,7 @@ func handleStatus(c *fiber.Ctx) error {
 
 	if err != nil {
 		slog.Error("Live fetch failed", "error", err, "latency_ms", latency.Milliseconds(), "request_id", c.Locals("requestid"))
-		return c.Status(500).JSON(fiber.Map{"error": err.Error(), "summary": "System Update: Offline (Retrying...)"})
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error", "summary": "System Update: Offline (Retrying...)"})
 	}
 
 	newResp := DevLogResponse{
@@ -306,6 +357,10 @@ func handleSubmitContact(c *fiber.Ctx) error {
 
 	if len(strings.TrimSpace(sub.Message)) < 10 {
 		return c.Status(400).JSON(fiber.Map{"error": "message must be at least 10 characters"})
+	}
+
+	if len(sub.Topic) > 200 {
+		return c.Status(400).JSON(fiber.Map{"error": "topic too long (max 200 characters)"})
 	}
 
 	_, err := db.Exec("INSERT INTO contact_messages (name, email, topic, message) VALUES ($1, $2, $3, $4)",
@@ -463,6 +518,293 @@ func handleMarkRead(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"success": true})
+}
+
+// --- Certificate Handlers ---
+
+func handleGetCertificates(c *fiber.Ctx) error {
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	rows, err := db.Query("SELECT id, title, issuer, date, credential_url, image_url, tags, is_verified, display_order, created_at FROM certificates ORDER BY date DESC NULLS LAST, display_order ASC, id DESC")
+	if err != nil {
+		slog.Error("Failed to query certificates", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+	defer rows.Close()
+
+	certs := []Certificate{}
+	for rows.Next() {
+		var cert Certificate
+		var createdAt time.Time
+		if err := rows.Scan(&cert.ID, &cert.Title, &cert.Issuer, &cert.Date, &cert.CredentialURL, &cert.ImageURL, pq.Array(&cert.Tags), &cert.IsVerified, &cert.DisplayOrder, &createdAt); err != nil {
+			slog.Error("Failed to scan certificate row", "error", err)
+			continue
+		}
+		cert.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		certs = append(certs, cert)
+	}
+
+	return c.JSON(fiber.Map{"certificates": certs})
+}
+
+func adminCheck(c *fiber.Ctx) bool {
+	return c.Query("key") == os.Getenv("CONTACT_SECRET")
+}
+
+func handleAdminGetCertificates(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	return handleGetCertificates(c)
+}
+
+func handleAdminCreateCertificate(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	var input struct {
+		Title         string   `json:"title"`
+		Issuer        string   `json:"issuer"`
+		Date          string   `json:"date"`
+		CredentialURL string   `json:"credential_url"`
+		ImageURL      string   `json:"image_url"`
+		Tags          []string `json:"tags"`
+		IsVerified    bool     `json:"is_verified"`
+		DisplayOrder  int      `json:"display_order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	if strings.TrimSpace(input.Title) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "title is required"})
+	}
+	if strings.TrimSpace(input.Issuer) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "issuer is required"})
+	}
+
+	if input.Date != "" {
+		if _, err := time.Parse("2006-01-02", input.Date); err != nil {
+			if _, err2 := time.Parse("2006-01", input.Date); err2 != nil {
+				return c.Status(400).JSON(fiber.Map{"error": "date must be YYYY-MM-DD or YYYY-MM"})
+			}
+		}
+	}
+	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") {
+		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) URL"})
+	}
+	if input.CredentialURL != "" && !strings.HasPrefix(input.CredentialURL, "http://") && !strings.HasPrefix(input.CredentialURL, "https://") {
+		return c.Status(400).JSON(fiber.Map{"error": "credential_url must be a valid HTTP(S) URL"})
+	}
+
+	if input.Tags == nil {
+		input.Tags = []string{}
+	}
+
+	var id int
+	err := db.QueryRow(
+		"INSERT INTO certificates (title, issuer, date, credential_url, image_url, tags, is_verified, display_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
+		input.Title, input.Issuer, input.Date, input.CredentialURL, input.ImageURL, pq.Array(input.Tags), input.IsVerified, input.DisplayOrder,
+	).Scan(&id)
+	if err != nil {
+		slog.Error("Failed to insert certificate", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	return c.Status(201).JSON(fiber.Map{"success": true, "id": id})
+}
+
+func handleAdminUpdateCertificate(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	var input struct {
+		Title         string   `json:"title"`
+		Issuer        string   `json:"issuer"`
+		Date          string   `json:"date"`
+		CredentialURL string   `json:"credential_url"`
+		ImageURL      string   `json:"image_url"`
+		Tags          []string `json:"tags"`
+		IsVerified    bool     `json:"is_verified"`
+		DisplayOrder  int      `json:"display_order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	if input.Tags == nil {
+		input.Tags = []string{}
+	}
+
+	if input.Date != "" {
+		if _, err := time.Parse("2006-01-02", input.Date); err != nil {
+			if _, err2 := time.Parse("2006-01", input.Date); err2 != nil {
+				return c.Status(400).JSON(fiber.Map{"error": "date must be YYYY-MM-DD or YYYY-MM"})
+			}
+		}
+	}
+	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") {
+		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) URL"})
+	}
+	if input.CredentialURL != "" && !strings.HasPrefix(input.CredentialURL, "http://") && !strings.HasPrefix(input.CredentialURL, "https://") {
+		return c.Status(400).JSON(fiber.Map{"error": "credential_url must be a valid HTTP(S) URL"})
+	}
+
+	result, err := db.Exec(
+		"UPDATE certificates SET title=$1, issuer=$2, date=$3, credential_url=$4, image_url=$5, tags=$6, is_verified=$7, display_order=$8 WHERE id=$9",
+		input.Title, input.Issuer, input.Date, input.CredentialURL, input.ImageURL, pq.Array(input.Tags), input.IsVerified, input.DisplayOrder, id,
+	)
+	if err != nil {
+		slog.Error("Failed to update certificate", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "certificate not found"})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func handleAdminDeleteCertificate(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	result, err := db.Exec("DELETE FROM certificates WHERE id=$1", id)
+	if err != nil {
+		slog.Error("Failed to delete certificate", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "certificate not found"})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func handleAdminReorderCertificates(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	var input struct {
+		Order []int `json:"order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	for i, id := range input.Order {
+		if _, err := db.Exec("UPDATE certificates SET display_order=$1 WHERE id=$2", i, id); err != nil {
+			slog.Error("Failed to reorder certificate", "error", err)
+			return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+		}
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func handleAdminUploadImage(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "no image file provided"})
+	}
+
+	mimeType := file.Header.Get("Content-Type")
+	allowedMIME := map[string]bool{
+		"image/png":  true,
+		"image/jpeg": true,
+		"image/gif":  true,
+		"image/webp": true,
+	}
+	if !allowedMIME[mimeType] {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid MIME type, use PNG/JPG/GIF/WEBP"})
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	allowed := map[string]bool{".png": true, ".jpg": true, ".jpeg": true, ".gif": true, ".webp": true}
+	if !allowed[ext] {
+		return c.Status(400).JSON(fiber.Map{"error": "unsupported format, use PNG/JPG/JPEG/GIF/WEBP"})
+	}
+
+	if file.Size > 10<<20 {
+		return c.Status(400).JSON(fiber.Map{"error": "file too large, max 10MB"})
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to read file"})
+	}
+	defer src.Close()
+
+	sniff := make([]byte, 512)
+	if _, err := io.ReadFull(src, sniff); err != nil && err != io.ErrUnexpectedEOF {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to validate file"})
+	}
+	sniffMIME := http.DetectContentType(sniff)
+	if !allowedMIME[sniffMIME] {
+		return c.Status(400).JSON(fiber.Map{"error": "file content does not match image type"})
+	}
+
+	src.Seek(0, io.SeekStart)
+	data, err := io.ReadAll(src)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to read file data"})
+	}
+
+	hash := sha256.Sum256(data)
+	filename := hex.EncodeToString(hash[:8]) + ext
+	savePath := filepath.Join("static", "uploads", filename)
+
+	if err := os.WriteFile(savePath, data, 0644); err != nil {
+		slog.Error("Failed to save uploaded image", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
+	}
+
+	scheme := "http"
+	if c.Protocol() == "https" || strings.HasPrefix(c.Hostname(), "sentinel") {
+		scheme = "https"
+	}
+	url := fmt.Sprintf("%s://%s/static/uploads/%s", scheme, c.Hostname(), filename)
+
+	return c.JSON(fiber.Map{"url": url, "filename": filename})
 }
 
 func htmlEscape(s string) string {

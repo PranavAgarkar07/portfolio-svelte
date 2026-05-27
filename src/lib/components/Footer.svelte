@@ -25,6 +25,7 @@
             <h4>Navigation</h4>
             <a href="#about">About</a><br />
             <a href="#skills">Skills</a><br />
+            <a href="#certifications">Certifications</a><br />
             <a href="#projects">Projects</a><br />
         </div>
         <div class="footer-section social">

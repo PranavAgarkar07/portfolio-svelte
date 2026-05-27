@@ -68,6 +68,8 @@
             if (lenis) {
                 const targetY = getDocumentTop(el);
                 lenis.scrollTo(targetY, { duration: 1.2 });
+            } else {
+                el.scrollIntoView({ behavior: "smooth" });
             }
         }
 

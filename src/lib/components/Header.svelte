@@ -126,6 +126,11 @@
                 >
             </li>
             <li>
+                <a href="#certifications" onclick={() => (mobileMenuOpen = false)}
+                    >Certifications</a
+                >
+            </li>
+            <li>
                 <a
                     href="#projects"
                     class:active={activeSection === "projects"}

@@ -8,13 +8,20 @@
     import Header from "$lib/components/Header.svelte";
     import Hero from "$lib/components/Hero.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
+    import CertificateCard from "$lib/components/CertificateCard.svelte";
 
     import DevLog from "$lib/components/DevLog.svelte";
     import Footer from "$lib/components/Footer.svelte";
     import ContactForm from "$lib/components/ContactForm.svelte";
-    import { Icon, SectionHeader, Card } from "$lib/components/ui";
+    import { Icon, SectionHeader, Card, Skeleton } from "$lib/components/ui";
+    import type { Certificate } from "$lib/types";
 
     const { profile, about, skills, projects } = portfolioData;
+    const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+    let certificates = $state<Certificate[]>([]);
+    let certsLoading = $state(true);
+    let certsError = $state("");
 
     const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
     const pageTitle = `${profile.name} | ${profile.role}`;
@@ -25,6 +32,16 @@
 
     onMount(() => {
         const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (API_BASE) {
+            fetch(`${API_BASE}/api/certificates`)
+                .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
+                .then(data => { certificates = data.certificates ?? data ?? []; certsLoading = false; })
+                .catch(e => { certsError = String(e); certsLoading = false; });
+        } else {
+            certsLoading = false;
+        }
+
         if (prefersReducedMotion) return;
         gsap.registerPlugin(ScrollTrigger);
         gsap.defaults({ overwrite: "auto" });
@@ -83,6 +100,21 @@
                 onEnter: () => { gsap.to(card, {
                     y: 0, opacity: 1, scale: 1,
                     ease: "back.out(2)", duration: 0.5,
+                });}
+            });
+        });
+
+        // ──────────────────────────────────────────────
+        // CERTIFICATES — FILE DRAWER REVEAL
+        // ──────────────────────────────────────────────
+        gsap.utils.toArray(".cert-card-wrap").forEach((card: any, i: number) => {
+            const dir = i % 2 === 0 ? -1 : 1;
+            gsap.set(card, { x: dir * 80, y: 60, opacity: 0, rotateX: 5, scale: 0.95 });
+            ScrollTrigger.create({
+                trigger: card as Element, start: "top 88%", once: true,
+                onEnter: () => { gsap.to(card, {
+                    x: 0, y: 0, opacity: 1, rotateX: 0, scale: 1,
+                    ease: "elastic.out(1, 0.55)", duration: 0.85, delay: i * 0.1,
                 });}
             });
         });
@@ -220,7 +252,7 @@
                 ".section-header", ".skill-category-card", ".skill-card", ".project-card",
                 ".about-visual-col", ".about-content-col", ".about-spec-row",
                 ".about-metric", ".contact-info", ".contact-form-container",
-                ".info-item", ".social-link",
+                ".info-item", ".social-link", ".cert-card-wrap",
                 ".hero-status", ".hero-scroll"
             ];
             document.querySelectorAll(selectors.join(",")).forEach(el => {
@@ -240,7 +272,7 @@
 
         const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
         if (isMobile) {
-            setTimeout(forceVisibility, 5000);
+            setTimeout(forceVisibility, 1500);
             window.addEventListener("touchstart", () => ScrollTrigger.refresh(), { once: true });
         }
     });
@@ -301,6 +333,42 @@
                 <ProjectCard {project} index={i} />
             {/each}
         </div>
+    </section>
+
+    <section id="certifications" class="section-container snap-section">
+        <SectionHeader title="Certifications" count={certificates.length} animate />
+        {#if certsLoading}
+            <div class="certs-loading">
+                {#each { length: 3 } as _}
+                    <div class="cert-skeleton">
+                        <div class="cert-skeleton-media shimmer" />
+                        <div class="cert-skeleton-body">
+                            <div class="shimmer w-30" />
+                            <div class="shimmer w-80" />
+                            <div class="shimmer w-50" />
+                            <div class="cert-skeleton-tags">
+                                <div class="shimmer w-15" />
+                                <div class="shimmer w-20" />
+                                <div class="shimmer w-18" />
+                            </div>
+                            <div class="shimmer w-40" />
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        {:else if certsError}
+            <div class="certs-error">
+                <span class="certs-error-text">&#9888; Failed to load certificates</span>
+            </div>
+        {:else if certificates.length > 0}
+            <div class="certs-grid">
+                {#each certificates as cert, i}
+                    <div class="cert-card-wrap">
+                        <CertificateCard certificate={cert} index={i} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
     </section>
 
     <section id="contact" class="contact-section snap-section">

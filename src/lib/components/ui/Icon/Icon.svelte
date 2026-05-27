@@ -24,7 +24,8 @@
         | 'clock'
         | 'sun'
         | 'moon'
-        | 'check-circle';
+        | 'check-circle'
+        | 'verified';
 
     type Props = {
         name: IconName;
@@ -141,6 +142,9 @@
             <line x1="21" y1="12" x2="23" y2="12" />
             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        {:else if name === 'verified'}
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            <polyline points="9 12 11 14 15 10" style="stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round" />
         {:else if name === 'moon'}
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         {/if}
