@@ -89,6 +89,18 @@ type Certificate struct {
 	CreatedAt     string   `json:"created_at"`
 }
 
+type Badge struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	ImageURL      string `json:"image_url"`
+	CredentialURL string `json:"credential_url"`
+	Rarity        string `json:"rarity"`
+	Category      string `json:"category"`
+	Important     bool   `json:"important"`
+	DisplayOrder  int    `json:"display_order"`
+	CreatedAt     string `json:"created_at"`
+}
+
 type MemoryCert struct {
 	Certificate
 }
@@ -171,6 +183,23 @@ func main() {
 			if _, err := db.Exec(certMigrate); err != nil {
 				slog.Warn("certificates auto-migrate failed", "error", err)
 			}
+
+			badgeMigrate := `CREATE TABLE IF NOT EXISTS badges (
+				id SERIAL PRIMARY KEY,
+				name TEXT NOT NULL,
+				image_url TEXT DEFAULT '',
+				credential_url TEXT DEFAULT '',
+				rarity TEXT DEFAULT 'common',
+				category TEXT DEFAULT '',
+				important BOOLEAN DEFAULT false,
+				display_order INT DEFAULT 0,
+				created_at TIMESTAMPTZ DEFAULT NOW()
+			)`
+			if _, err := db.Exec(badgeMigrate); err != nil {
+				slog.Warn("badges auto-migrate failed", "error", err)
+			}
+			db.Exec("ALTER TABLE badges ADD COLUMN IF NOT EXISTS category TEXT DEFAULT ''")
+			db.Exec("ALTER TABLE badges ADD COLUMN IF NOT EXISTS important BOOLEAN DEFAULT false")
 			}
 		}
 	}
@@ -183,7 +212,7 @@ func main() {
 	app.Use(requestid.New())
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:4173",
+		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:5174, http://localhost:4173",
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
@@ -223,6 +252,13 @@ func main() {
 	app.Delete("/api/admin/certificates/:id", handleAdminDeleteCertificate)
 	app.Put("/api/admin/certificates/reorder", handleAdminReorderCertificates)
 	app.Post("/api/admin/certificates/upload", handleAdminUploadImage)
+
+	app.Get("/api/badges", handleGetBadges)
+	app.Get("/api/admin/badges", handleAdminGetBadges)
+	app.Post("/api/admin/badges", handleAdminCreateBadge)
+	app.Put("/api/admin/badges/:id", handleAdminUpdateBadge)
+	app.Delete("/api/admin/badges/:id", handleAdminDeleteBadge)
+	app.Put("/api/admin/badges/reorder", handleAdminReorderBadges)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -805,6 +841,202 @@ func handleAdminUploadImage(c *fiber.Ctx) error {
 	url := fmt.Sprintf("%s://%s/static/uploads/%s", scheme, c.Hostname(), filename)
 
 	return c.JSON(fiber.Map{"url": url, "filename": filename})
+}
+
+// --- Badge Handlers ---
+
+func handleGetBadges(c *fiber.Ctx) error {
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	rows, err := db.Query("SELECT id, name, image_url, credential_url, rarity, category, important, display_order, created_at FROM badges ORDER BY important DESC, display_order ASC, id DESC")
+	if err != nil {
+		slog.Error("Failed to query badges", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+	defer rows.Close()
+
+	badges := []Badge{}
+	for rows.Next() {
+		var b Badge
+		var createdAt time.Time
+		if err := rows.Scan(&b.ID, &b.Name, &b.ImageURL, &b.CredentialURL, &b.Rarity, &b.Category, &b.Important, &b.DisplayOrder, &createdAt); err != nil {
+			slog.Error("Failed to scan badge row", "error", err)
+			continue
+		}
+		b.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		badges = append(badges, b)
+	}
+
+	return c.JSON(fiber.Map{"badges": badges})
+}
+
+func handleAdminGetBadges(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	return handleGetBadges(c)
+}
+
+func handleAdminCreateBadge(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	var input struct {
+		Name          string `json:"name"`
+		ImageURL      string `json:"image_url"`
+		CredentialURL string `json:"credential_url"`
+		Rarity        string `json:"rarity"`
+		Category      string `json:"category"`
+		Important     bool   `json:"important"`
+		DisplayOrder  int    `json:"display_order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		slog.Error("Badge create body parse error", "error", err)
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	if strings.TrimSpace(input.Name) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "name is required"})
+	}
+
+	rarity := input.Rarity
+	if rarity != "rare" && rarity != "uncommon" {
+		rarity = "common"
+	}
+
+	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") {
+		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) URL"})
+	}
+
+	if input.DisplayOrder < 0 {
+		input.DisplayOrder = 0
+	}
+
+	var id int
+	err := db.QueryRow(
+		"INSERT INTO badges (name, image_url, credential_url, rarity, category, important, display_order) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+		input.Name, input.ImageURL, input.CredentialURL, rarity, input.Category, input.Important, input.DisplayOrder,
+	).Scan(&id)
+	if err != nil {
+		slog.Error("Failed to insert badge", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	return c.Status(201).JSON(fiber.Map{"success": true, "id": id})
+}
+
+func handleAdminUpdateBadge(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	var input struct {
+		Name          string `json:"name"`
+		ImageURL      string `json:"image_url"`
+		CredentialURL string `json:"credential_url"`
+		Rarity        string `json:"rarity"`
+		Category      string `json:"category"`
+		Important     bool   `json:"important"`
+		DisplayOrder  int    `json:"display_order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		slog.Error("Badge update body parse error", "error", err)
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	rarity := input.Rarity
+	if rarity != "rare" && rarity != "uncommon" {
+		rarity = "common"
+	}
+
+	if input.DisplayOrder < 0 {
+		input.DisplayOrder = 0
+	}
+
+	result, err := db.Exec(
+		"UPDATE badges SET name=$1, image_url=$2, credential_url=$3, rarity=$4, category=$5, important=$6, display_order=$7 WHERE id=$8",
+		input.Name, input.ImageURL, input.CredentialURL, rarity, input.Category, input.Important, input.DisplayOrder, id,
+	)
+	if err != nil {
+		slog.Error("Failed to update badge", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "badge not found"})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func handleAdminDeleteBadge(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	result, err := db.Exec("DELETE FROM badges WHERE id=$1", id)
+	if err != nil {
+		slog.Error("Failed to delete badge", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "badge not found"})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func handleAdminReorderBadges(c *fiber.Ctx) error {
+	if !adminCheck(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	var input struct {
+		Order []int `json:"order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	for i, id := range input.Order {
+		if _, err := db.Exec("UPDATE badges SET display_order=$1 WHERE id=$2", i, id); err != nil {
+			slog.Error("Failed to reorder badge", "error", err)
+			return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+		}
+	}
+
+	return c.JSON(fiber.Map{"success": true})
 }
 
 func htmlEscape(s string) string {

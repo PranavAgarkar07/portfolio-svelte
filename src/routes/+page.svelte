@@ -14,7 +14,7 @@
     import Footer from "$lib/components/Footer.svelte";
     import ContactForm from "$lib/components/ContactForm.svelte";
     import { Icon, SectionHeader, Card, Skeleton } from "$lib/components/ui";
-    import type { Certificate } from "$lib/types";
+    import type { Certificate, Badge } from "$lib/types";
 
     const { profile, about, skills, projects } = portfolioData;
     const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
@@ -22,6 +22,7 @@
     let certificates = $state<Certificate[]>([]);
     let certsLoading = $state(true);
     let certsError = $state("");
+    let badges = $state<Badge[]>([]);
 
     const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
     const pageTitle = `${profile.name} | ${profile.role}`;
@@ -38,6 +39,11 @@
                 .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
                 .then(data => { certificates = data.certificates ?? data ?? []; certsLoading = false; })
                 .catch(e => { certsError = String(e); certsLoading = false; });
+
+            fetch(`${API_BASE}/api/badges`)
+                .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
+                .then(data => { badges = data.badges ?? data ?? []; })
+                .catch(() => {});
         } else {
             certsLoading = false;
         }
@@ -329,7 +335,7 @@
 <Header {profile} />
 
 <main>
-    <Hero {profile} {about} {skills} />
+    <Hero {profile} {about} {skills} {badges} />
 
     <section id="projects" class="section-container snap-section">
         <SectionHeader title="Featured Projects" count={projects.length} animate />

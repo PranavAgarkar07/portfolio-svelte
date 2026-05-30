@@ -1,8 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { fade } from "svelte/transition";
     import { SectionHeader } from "$lib/components/ui";
     import DevLog from "$lib/components/DevLog.svelte";
     import BlurText from "./BlurText.svelte";
+    import type { Badge } from "$lib/types";
 
     interface Props {
         profile: {
@@ -20,13 +22,61 @@
             category: string;
             items: Array<{ name: string; icon: string; level: string }>;
         }>;
+        badges?: Badge[];
     }
 
-    let { profile, about, skills }: Props = $props();
+    let { profile, about, skills, badges = [] }: Props = $props();
 
     let nameParts = $derived(profile.name.split(" "));
 
+    let sortedBadges = $derived([...badges].sort((a, b) => a.display_order - b.display_order));
+
+    let importantBadges = $derived(sortedBadges.filter(b => b.important));
+    let nonImportantBadges = $derived(sortedBadges.filter(b => !b.important));
+
+    let showAllBadges = $state(false);
+
+    let displayBadges = $derived(showAllBadges ? sortedBadges : importantBadges);
+
+    let badgeGroups = $derived.by(() => {
+        const groups: Record<string, Badge[]> = {};
+        for (const b of displayBadges) {
+            const cat = b.category || "Achievements";
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(b);
+        }
+        return groups;
+    });
+
     let heroReady = $state(false);
+
+    let previewBadge: Badge | null = $state(null);
+
+    function togglePreview(badge: Badge) {
+        previewBadge = previewBadge?.id === badge.id ? null : badge;
+    }
+
+    function closePreview() {
+        previewBadge = null;
+    }
+
+    let allDisplayBadges = $derived.by(() => {
+        const flat: Badge[] = [];
+        for (const [, group] of Object.entries(badgeGroups)) {
+            flat.push(...group);
+        }
+        return flat;
+    });
+
+    let currentIndex = $derived(previewBadge ? allDisplayBadges.findIndex(b => b.id === previewBadge.id) : -1);
+
+    function prevBadge() {
+        if (currentIndex > 0) previewBadge = allDisplayBadges[currentIndex - 1];
+    }
+
+    function nextBadge() {
+        if (currentIndex < allDisplayBadges.length - 1) previewBadge = allDisplayBadges[currentIndex + 1];
+    }
 
     onMount(() => {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -217,6 +267,47 @@
                 <h2>About</h2>
             </div>
             <p class="about-bio">{about.bio}</p>
+            {#if badges.length > 0}
+                {#each Object.entries(badgeGroups) as [category, groupBadges]}
+                    <div class="about-badges">
+                        <div class="about-badges-header">
+                            <span class="about-badges-label">{category.toUpperCase()}</span>
+                            <span class="about-badges-count">{groupBadges.length}</span>
+                        </div>
+                        <div class="about-badges-grid">
+                            {#each groupBadges as badge, i}
+                                <button
+                                    class="badge-cell"
+                                    onclick={() => togglePreview(badge)}
+                                    style="--i: {i}"
+                                >
+                                    <span class="badge-cell-frame">
+                                        <img
+                                            src={badge.image_url}
+                                            alt={badge.name}
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                        <span class="badge-cell-dot" class:uncommon={badge.rarity === "uncommon"} class:rare={badge.rarity === "rare"}></span>
+                                    </span>
+                                    <span class="badge-cell-name">{badge.name}</span>
+                                </button>
+                            {/each}
+                        </div>
+                    </div>
+                {/each}
+                {#if nonImportantBadges.length > 0 && !showAllBadges}
+                    <button class="about-badges-more" onclick={() => showAllBadges = true}>
+                        <span class="more-text">SHOW MORE BADGES</span>
+                        <span class="more-count">+{nonImportantBadges.length}</span>
+                    </button>
+                {/if}
+                {#if showAllBadges && nonImportantBadges.length > 0}
+                    <button class="about-badges-more about-badges-less" onclick={() => showAllBadges = false}>
+                        <span class="more-text">SHOW LESS</span>
+                    </button>
+                {/if}
+            {/if}
             <div class="about-metrics">
                 {#each about.stats as stat}
                     <div class="about-metric">
@@ -228,6 +319,40 @@
         </div>
     </div>
 </section>
+
+{#if previewBadge}
+    {#key previewBadge.id}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="badge-preview-backdrop" onclick={closePreview} transition:fade={{ duration: 150 }}>
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="badge-preview-card" onclick={(e) => e.stopPropagation()}>
+                <button class="badge-preview-close" onclick={closePreview}>×</button>
+                <div class="badge-preview-nav">
+                    <button class="badge-prev" onclick={prevBadge} disabled={currentIndex <= 0} aria-label="Previous badge">‹</button>
+                    <div class="badge-preview-image">
+                        <img src={previewBadge.image_url} alt={previewBadge.name} />
+                    </div>
+                    <button class="badge-next" onclick={nextBadge} disabled={currentIndex >= allDisplayBadges.length - 1} aria-label="Next badge">›</button>
+                </div>
+                <div class="badge-preview-name">{previewBadge.name}</div>
+                <div class="badge-preview-meta">
+                    <span class="badge-preview-rarity" class:uncommon={previewBadge.rarity === 'uncommon'} class:rare={previewBadge.rarity === 'rare'}>
+                        {previewBadge.rarity}
+                    </span>
+                    {#if previewBadge.credential_url}
+                        <span class="badge-preview-dot"></span>
+                    {/if}
+                    {#if previewBadge.credential_url}
+                        <a href={previewBadge.credential_url} target="_blank" rel="noopener noreferrer">credential</a>
+                    {/if}
+                </div>
+                <div class="badge-preview-counter">{currentIndex + 1} / {allDisplayBadges.length}</div>
+            </div>
+        </div>
+    {/key}
+{/if}
+
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape') closePreview(); if (e.key === 'ArrowLeft') prevBadge(); if (e.key === 'ArrowRight') nextBadge(); }} />
 
 <section id="skills" class="section-container snap-section-content">
     <SectionHeader title="Technical Proficiency" class="fade-in" />

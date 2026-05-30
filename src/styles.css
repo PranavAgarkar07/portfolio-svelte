@@ -1935,6 +1935,390 @@ body.light-mode .cert-skeleton-media {
     text-transform: uppercase;
 }
 
+/* ─── Achievements — Mission Patch Collection ─── */
+.about-badges {
+    margin-bottom: 2rem;
+}
+
+.about-badges-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.about-badges-label {
+    font-family: var(--font-body);
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.5;
+}
+
+.about-badges-count {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--text-secondary);
+    opacity: 0.35;
+    margin-left: auto;
+}
+
+.about-badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 1rem;
+    justify-items: center;
+}
+
+/* ─── Badge Cell ─── */
+.badge-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0;
+    user-select: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    max-width: 96px;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: badgeFadeIn 0.4s ease-out forwards;
+    animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+@keyframes badgeFadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .badge-cell {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+}
+
+.badge-cell-frame {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    transition: transform 0.2s ease;
+}
+
+.badge-cell-frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.badge-cell:hover .badge-cell-frame {
+    transform: translateY(-3px);
+}
+.badge-cell:hover .badge-cell-frame img {
+    filter: drop-shadow(0 3px 12px rgba(0,0,0,0.45));
+    transform: scale(1.06);
+}
+.badge-cell:hover .badge-cell-name {
+    color: var(--text-primary);
+    opacity: 0.9;
+}
+
+/* Rarity — accent dot */
+.badge-cell-dot {
+    position: absolute;
+    bottom: -2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.06);
+    z-index: 2;
+}
+
+.badge-cell-dot.uncommon {
+    background: rgb(168, 141, 250);
+    border-color: rgba(168, 141, 250, 0.4);
+    box-shadow: 0 0 6px rgba(168, 141, 250, 0.3);
+}
+
+.badge-cell-dot.rare {
+    background: rgb(251, 191, 36);
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+/* Badge name */
+.badge-cell-name {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.3;
+    opacity: 0.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+/* ─── Badge Show More Button ─── */
+.about-badges-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.05em;
+}
+.about-badges-more:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.15);
+    color: var(--text-primary);
+}
+.about-badges-less {
+    border-style: solid;
+    border-color: rgba(255,255,255,0.05);
+}
+.about-badges-less:hover {
+    border-color: rgba(255,255,255,0.12);
+}
+.more-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 0;
+    background: var(--accent);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+/* ─── Badge Preview — Detail Overlay ─── */
+.badge-preview-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+}
+
+.badge-preview-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 2.5rem 2rem 1.75rem;
+    background: var(--surface-dark);
+    cursor: default;
+    max-width: 340px;
+    width: 85%;
+}
+
+.badge-preview-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.badge-preview-nav .badge-preview-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 180px;
+    height: 180px;
+    flex-shrink: 0;
+}
+
+.badge-preview-nav .badge-preview-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.badge-prev,
+.badge-next {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.3);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.3rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    font-family: inherit;
+    line-height: 1;
+}
+.badge-prev:hover:not(:disabled),
+.badge-next:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.badge-prev:disabled,
+.badge-next:disabled {
+    opacity: 0.15;
+    cursor: default;
+}
+
+.badge-preview-counter {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 0.05em;
+    margin-top: -0.75rem;
+}
+
+.badge-preview-name {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.badge-preview-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.badge-preview-meta .badge-preview-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.3;
+}
+
+.badge-preview-rarity {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+}
+
+.badge-preview-rarity.uncommon { color: rgb(168, 141, 250); }
+.badge-preview-rarity.rare { color: rgb(251, 191, 36); }
+
+.badge-preview-link {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    margin-top: 0.25rem;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
+    transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.badge-preview-link:hover {
+    background: var(--accent);
+    color: #000;
+    opacity: 1;
+}
+
+.badge-preview-close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+    line-height: 1;
+    z-index: 2;
+}
+
+.badge-preview-close:hover {
+    opacity: 0.8;
+}
+
+/* ─── Light mode ─── */
+:global(body.light-mode) .badge-cell-name {
+    color: #52525b;
+    opacity: 0.7;
+}
+:global(body.light-mode) .badge-cell:hover .badge-cell-name {
+    color: #09090b;
+    opacity: 1;
+}
+:global(body.light-mode) .badge-cell-frame img {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+}
+:global(body.light-mode) .badge-cell:hover .badge-cell-frame img {
+    filter: drop-shadow(0 3px 10px rgba(0,0,0,0.15));
+}
+:global(body.light-mode) .badge-preview-card {
+    background: #f5f5f7;
+}
+:global(body.light-mode) .badge-preview-name {
+    color: #09090b;
+}
+:global(body.light-mode) .badge-preview-rarity {
+    color: rgba(0,0,0,0.3);
+}
+:global(body.light-mode) .badge-preview-rarity.uncommon { color: rgb(126, 87, 194); }
+:global(body.light-mode) .badge-preview-rarity.rare { color: rgb(212, 150, 0); }
+
 /* =========================================
    Hero & About — Mobile Responsive
    ========================================= */
@@ -1960,6 +2344,24 @@ body.light-mode .cert-skeleton-media {
 
     .about-metrics {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .about-badges-grid {
+        grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+        gap: 0.7rem;
+    }
+    .badge-cell {
+        max-width: 76px;
+    }
+    .badge-cell-name {
+        font-size: 0.5rem;
+    }
+    .badge-preview-image {
+        width: 140px;
+        height: 140px;
+    }
+    .badge-preview-card {
+        padding: 2rem 1.5rem 1.5rem;
     }
 }
 
