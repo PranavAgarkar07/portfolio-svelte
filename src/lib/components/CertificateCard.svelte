@@ -510,60 +510,60 @@
     /* ── Light mode ── */
 
     :global(body.light-mode) .cert-card {
-        background: #edeff2;
-        border-color: rgba(0, 0, 0, 0.06);
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+        background: #fff;
+        border-color: var(--wire-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
     :global(body.light-mode) .cert-card:hover {
-        border-color: rgba(200, 50, 0, 0.2);
-        box-shadow: 0 4px 20px rgba(200, 50, 0, 0.06), 0 1px 6px rgba(0, 0, 0, 0.06);
-        background: #e8ebf0;
+        border-color: rgba(217, 65, 0, 0.2);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        background: #fff;
     }
 
     :global(body.light-mode) .cert-title {
-        color: #111;
+        color: #18181b;
     }
 
     :global(body.light-mode) .cert-link {
-        color: rgba(0, 0, 0, 0.4);
+        color: rgba(0, 0, 0, 0.35);
         border-color: rgba(0, 0, 0, 0.06);
     }
 
     :global(body.light-mode) .cert-link:hover {
         color: var(--accent);
-        border-color: rgba(200, 50, 0, 0.15);
-        background: rgba(200, 50, 0, 0.03);
+        border-color: rgba(217, 65, 0, 0.15);
+        background: rgba(217, 65, 0, 0.04);
     }
 
     :global(body.light-mode) .cert-links {
-        border-top-color: rgba(0, 0, 0, 0.04);
+        border-top-color: var(--grid-line);
     }
 
     :global(body.light-mode) .cert-media {
-        background: #d4d4d8;
+        background: #e8eaed;
     }
 
     :global(body.light-mode) .cert-number-watermark {
         -webkit-text-stroke: 1.5px var(--accent);
-        opacity: 0.12;
+        opacity: 0.08;
     }
 
     :global(body.light-mode) .cert-card:hover .cert-number-watermark {
-        opacity: 0.25;
+        opacity: 0.18;
     }
 
     :global(body.light-mode) .cert-details {
-        border-top-color: rgba(0, 0, 0, 0.06);
-        border-bottom-color: rgba(0, 0, 0, 0.06);
+        border-top-color: var(--grid-line);
+        border-bottom-color: var(--grid-line);
     }
 
     :global(body.light-mode) .cert-fingerprint {
-        color: rgba(0, 0, 0, 0.2);
+        color: rgba(0, 0, 0, 0.18);
     }
 
     :global(body.light-mode) .cert-ribbon span {
-        color: #000;
+        color: #18181b;
     }
 
     :global(body.light-mode) .overlay-scanline {
@@ -571,13 +571,13 @@
             0deg,
             transparent,
             transparent 2px,
-            rgba(200, 50, 0, 0.06) 2px,
-            rgba(200, 50, 0, 0.06) 4px
+            rgba(217, 65, 0, 0.05) 2px,
+            rgba(217, 65, 0, 0.05) 4px
         );
     }
 
     :global(body.light-mode) .cert-media-border {
-        border-color: rgba(0, 0, 0, 0.03);
+        border-color: var(--grid-line);
     }
 
     @media (prefers-reduced-motion: reduce) {

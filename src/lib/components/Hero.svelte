@@ -653,11 +653,11 @@
     
     /* ─── LIGHT MODE ─── */
     :global(body.light-mode) .hero-status-icon.available {
-        color: #008855;
-        filter: drop-shadow(0 0 4px rgba(0, 136, 85, 0.3));
+        color: #008f5e;
+        filter: drop-shadow(0 0 4px rgba(0, 143, 94, 0.25));
     }
     :global(body.light-mode) .hero-status-value.available {
-        color: #008855;
+        color: #008f5e;
     }
     
 </style>

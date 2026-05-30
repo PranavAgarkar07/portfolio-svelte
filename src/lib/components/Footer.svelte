@@ -125,8 +125,8 @@
         background: rgba(255,68,0,0.08);
     }
     :global(body.light-mode) .back-to-top {
-        background: #f0f0f3;
-        border-color: rgba(0,0,0,0.12);
+        background: var(--surface-dark);
+        border-color: var(--wire-color);
     }
     :global(body.light-mode) .back-to-top:hover {
         border-color: var(--accent);

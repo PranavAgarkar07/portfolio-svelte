@@ -2,38 +2,24 @@
 /* Usage: Add class="light-mode" to <body> */
 
 body.light-mode {
-    /* Colors: Laboratory Bright */
     --bg-dark: #ffffff;
-    /* Clean Paper White */
-    --surface-dark: #f2f2f2;
-    /* Light Grey Card */
-    --text-primary: #111111;
-    /* Ink Black */
-    --text-secondary: #555555;
-    /* Pencil Grey */
-
-    --accent: #d93d00;
-    /* Darker Safety Orange for WCAG contrast */
-    --accent-glow: rgba(217, 61, 0, 0.15);
-
-    --grid-line: rgba(0, 0, 0, 0.08);
-    /* Graph Paper Lines */
-    --wire-color: #e0e0e0;
-    --wire-active: #000000;
+    --surface-dark: #f4f5f7;
+    --text-primary: #18181b;
+    --text-secondary: #52525b;
+    --accent: #d94100;
+    --accent-glow: rgba(217, 65, 0, 0.12);
+    --grid-line: rgba(0, 0, 0, 0.06);
+    --wire-color: #e2e4e9;
+    --wire-active: #18181b;
 }
 
-/* Light Mode Overrides */
 body.light-mode .noise-overlay {
-    opacity: 0.18;
-    /* Visible "Paper Fiber" texture */
+    opacity: 0.12;
     mix-blend-mode: multiply;
-    /* Burns into the white background */
-    filter: contrast(150%) brightness(100%);
-    /* Sharpens granular details */
+    filter: contrast(120%) brightness(105%);
     z-index: 0;
 }
 
-/* Invert Nav Text for Contrast */
 body.light-mode .nav-links a {
     color: var(--text-primary);
 }
@@ -53,54 +39,40 @@ body.light-mode .mobile-menu-btn.active .hamburger-line {
     background: #fff;
 }
 
-/* Card Adjustments (Neumorphic/Soft UI Principles) */
+/* Cards */
 body.light-mode .aero-card {
-    background: #f0f0f3;
-    /* Soft grey surface */
-    border: none;
-    border-left: 3px solid #c8c8cc;
-    /* Subtle inactive strip */
-    /* Neumorphic shadow - light from top-left, shadow bottom-right */
-    box-shadow:
-        8px 8px 16px rgba(0, 0, 0, 0.1),
-        -8px -8px 16px rgba(255, 255, 255, 0.8);
+    background: var(--surface-dark);
+    border: 1px solid var(--wire-color);
+    border-left: 3px solid #c8cbcf;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 body.light-mode .aero-card:hover {
     border-left-color: var(--accent);
-    /* Ignite the strip */
-    background: #f0f0f3 !important;
-    background-color: #f0f0f3 !important;
-    /* Override dark mode hover */
-    box-shadow:
-        12px 12px 24px rgba(0, 0, 0, 0.12),
-        -8px -8px 16px rgba(255, 255, 255, 0.9),
-        inset 0 0 0 1px rgba(255, 68, 0, 0.1);
+    background: #fff !important;
+    background-color: #fff !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
     transform: translateY(-2px);
 }
 
-/* Primary Navbar (Light Mode) */
 body.light-mode .aero-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    border-left: 3px solid #c8c8cc;
+    border-bottom: 1px solid var(--grid-line);
+    border-left: 3px solid #c8cbcf;
 }
 
-/* Floating Navbar (Light Mode) */
 body.light-mode .aero-header.detached {
-    background: #f0f0f3;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--wire-color);
     border-left: 3px solid var(--accent);
-    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1),
-                -8px -8px 16px rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 
-/* Form Container (Light Mode) */
 body.light-mode .contact-form-container {
-    background: #f0f0f3;
-    border: none;
-    border-left: 3px solid #c8c8cc;
-    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1),
-                -8px -8px 16px rgba(255, 255, 255, 0.8);
+    background: var(--surface-dark);
+    border: 1px solid var(--wire-color);
+    border-left: 3px solid var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 /* Icon Toggle Logic */
@@ -135,72 +107,55 @@ body.light-mode .ui-icon.moon-icon {
     transform: rotate(0deg) scale(1);
 }
 
-/* --- Visibility Enhancements (Text Colors Only) --- */
-
 /* Headers & Titles */
 body.light-mode h1,
 body.light-mode h2,
 body.light-mode h3,
 body.light-mode h4,
 body.light-mode .logo {
-    color: #111 !important;
-    /* Force black overrides for hardcoded #fff */
-    border-color: #111;
+    color: #18181b !important;
+    border-color: var(--wire-active);
 }
 
 body.light-mode h2 {
     border-color: var(--accent);
 }
 
-/* Links & Text */
-
 /* Scroll Signal */
 body.light-mode .signal-track {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' fill='none' stroke='%23ccc' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 
-/* Theme Button Styles (Light Mode) */
 body.light-mode .theme-toggle {
     color: var(--text-secondary);
 }
 body.light-mode .theme-toggle:hover {
     color: var(--accent);
-    background: rgba(217, 61, 0, 0.06);
+    background: rgba(217, 65, 0, 0.06);
 }
 
-/* Mobile Menu Overrides — only for the fullscreen overlay */
 @media (max-width: 768px) {
     body.light-mode .nav-links {
         background: var(--bg-dark);
-        color: #111;
+        color: #18181b;
     }
     body.light-mode .nav-links.active {
         background: #ffffff;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid var(--grid-line);
     }
 }
 
-/* Interactive Elements (Colors Only) */
-/* Interactive Elements (Colors Only) */
-body.light-mode .aero-card:hover {
-    /* Main card hover */
-    border-color: var(--accent);
-    box-shadow: 0 0 20px rgba(255, 68, 0, 0.1);
-    background: #fff;
-}
-
-
-/* Button Styling (Light Mode) */
+/* Buttons */
 body.light-mode .btn {
-    border-color: #111;
-    color: #111;
-    box-shadow: 4px 4px 0px #111;
+    border-color: #18181b;
+    color: #18181b;
+    box-shadow: 4px 4px 0px #18181b;
 }
 
 body.light-mode .btn:hover {
-    background: #111;
+    background: #18181b;
     color: #fff;
-    box-shadow: 2px 2px 0px #111;
+    box-shadow: 2px 2px 0px #18181b;
     border-color: var(--accent);
 }
 
@@ -216,48 +171,46 @@ body.light-mode .btn-primary {
 }
 
 body.light-mode .btn-primary:hover {
-    background: #111;
+    background: #18181b;
     color: #fff !important;
-    border-color: #111;
+    border-color: #18181b;
 }
 
-/* Live Indicator (Light Mode) */
+/* Live Indicator */
 body.light-mode .live-indicator {
-    color: #00aa77;
-    /* Darker green for light bg */
-    border-color: #00aa77;
-    background: rgba(0, 170, 119, 0.1);
+    color: #008f5e;
+    border-color: #008f5e;
+    background: rgba(0, 143, 94, 0.08);
 }
 
 body.light-mode .pulse-dot {
-    background-color: #00aa77;
+    background-color: #008f5e;
 }
 
-/* Footer (Light Mode) */
+/* Footer */
 body.light-mode .aero-footer {
     background: var(--surface-dark);
-    border-top: 1px solid #111;
+    border-top: 1px solid var(--wire-color);
 }
 
 body.light-mode .signal-text {
-    color: #666;
-    /* Pencil grey instead of accent */
+    color: #71717a;
     font-weight: 500;
 }
 
 body.light-mode .signal-track-footer {
-    background: linear-gradient(90deg, #666 0%, transparent 100%);
+    background: linear-gradient(90deg, #71717a 0%, transparent 100%);
 }
 
 body.light-mode .aero-footer h3,
 body.light-mode .aero-footer h4,
 body.light-mode .footer-content p,
 body.light-mode .footer-bottom p {
-    color: #111;
+    color: #18181b;
 }
 
 body.light-mode .footer-section ul li a {
-    color: #333;
+    color: #52525b;
 }
 
 body.light-mode .footer-section ul li a:hover {
@@ -265,8 +218,7 @@ body.light-mode .footer-section ul li a:hover {
 }
 
 body.light-mode .social-icons a {
-    color: #555;
-    /* Pencil grey */
+    color: #71717a;
     border: none;
     box-shadow: none;
 }
@@ -282,46 +234,41 @@ body.light-mode .social-icons a:active {
     transform: translateY(0);
 }
 
-/* Proficiency Bar fix */
 body.light-mode .skill-level-bar {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.08);
 }
 
-/* DevLog (Light Mode Technical) */
+/* DevLog */
 body.light-mode .activity-card {
     background: #ffffff;
-    border: 2px solid #333;
-    /* High contrast dark border */
-    border-left: 4px solid #333;
-    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
-    /* Hard shadow */
+    border: 2px solid #d4d6da;
+    border-left: 4px solid #d4d6da;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-/* Keep the caution stripes, but make them dark/subtle */
 body.light-mode .activity-card::before {
     display: block;
     background: repeating-linear-gradient(45deg,
             transparent,
             transparent 10px,
-            rgba(0, 0, 0, 0.05) 10px,
-            /* Dark grey stripes */
-            rgba(0, 0, 0, 0.05) 20px);
+            rgba(0, 0, 0, 0.03) 10px,
+            rgba(0, 0, 0, 0.03) 20px);
 }
 
 body.light-mode .activity-card:hover {
     background: #ffffff;
-    border-color: #000;
+    border-color: #18181b;
     border-left-color: var(--accent);
-    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
 }
 
 body.light-mode .activity-card .card-header {
-    border-bottom: 1px dashed #ccc;
+    border-bottom: 1px dashed var(--wire-color);
 }
 
 body.light-mode .activity-card .status-dot {
-    background-color: #e0e0e0;
-    border: 1px solid #333;
+    background-color: #d4d6da;
+    border: 1px solid #a1a1aa;
 }
 
 body.light-mode .activity-card .status-dot.pulsing {
@@ -330,18 +277,18 @@ body.light-mode .activity-card .status-dot.pulsing {
 }
 
 body.light-mode .activity-card .meta {
-    background: #f0f0f0;
-    color: #333;
-    border: 1px solid #eee;
+    background: var(--surface-dark);
+    color: #52525b;
+    border: 1px solid var(--wire-color);
 }
 
 body.light-mode .activity-card .skeleton-text {
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.06);
 }
 
-/* Light Mode: Hero Overrides */
+/* Hero */
 body.light-mode .hero-status-dot.available {
-    background: #00aa77;
+    background: #008f5e;
 }
 
 body.light-mode .hero-status-value {
@@ -349,34 +296,34 @@ body.light-mode .hero-status-value {
 }
 
 body.light-mode .hero-status-value.available {
-    color: #00aa77;
+    color: #008f5e;
 }
 
 body.light-mode .hero-scroll-line line {
     stroke: var(--accent);
 }
 
-/* Light Mode: About Overrides */
+/* About */
 body.light-mode .about-frame {
-    border-color: rgba(0, 0, 0, 0.15);
+    border-color: var(--wire-color);
 }
 
 body.light-mode .about-frame-border {
-    border-color: rgba(0, 0, 0, 0.08);
+    border-color: var(--grid-line);
 }
 
 body.light-mode .about-frame-grid {
     background-image:
-        linear-gradient(rgba(217, 61, 0, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(217, 61, 0, 0.06) 1px, transparent 1px);
+        linear-gradient(rgba(217, 65, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217, 65, 0, 0.05) 1px, transparent 1px);
 }
 
 body.light-mode .about-specs {
-    border-color: rgba(0, 0, 0, 0.1);
+    border-color: var(--wire-color);
 }
 
 body.light-mode .about-spec-divider {
-    background: rgba(0, 0, 0, 0.08);
+    background: var(--grid-line);
 }
 
 body.light-mode .about-metrics {

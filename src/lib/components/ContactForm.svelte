@@ -600,7 +600,7 @@
 
     /* ---- Light Mode ---- */
     :global(body.light-mode) .input-shell {
-        border-bottom-color: rgba(0, 0, 0, 0.2);
+        border-bottom-color: rgba(0, 0, 0, 0.12);
     }
     :global(body.light-mode) .input-card:focus-within .input-shell {
         border-bottom-color: var(--accent);
@@ -610,19 +610,19 @@
     }
     :global(body.light-mode) .input-shell input::placeholder,
     :global(body.light-mode) .input-shell textarea::placeholder {
-        color: rgba(0, 0, 0, 0.35);
+        color: rgba(0, 0, 0, 0.3);
     }
     :global(body.light-mode) .topic-chip {
-        border-color: rgba(0, 0, 0, 0.2);
+        border-color: var(--wire-color);
         color: var(--text-secondary);
     }
     :global(body.light-mode) .topic-chip.active {
         border-color: var(--accent);
-        background: rgba(217, 61, 0, 0.06);
+        background: rgba(217, 65, 0, 0.06);
     }
     :global(body.light-mode) .topic-chip:hover:not(.active):not(:disabled) {
         border-color: var(--accent);
-        background: rgba(217, 61, 0, 0.04);
+        background: rgba(217, 65, 0, 0.04);
     }
     :global(body.light-mode) .submit-btn::before {
         background: var(--accent);
@@ -632,8 +632,8 @@
         color: #fff;
     }
     :global(body.light-mode) .form-error {
-        border-color: rgba(217, 61, 0, 0.3);
-        background: rgba(217, 61, 0, 0.04);
+        border-color: rgba(217, 65, 0, 0.25);
+        background: rgba(217, 65, 0, 0.04);
     }
     :global(body.light-mode) .form-reply {
         opacity: 0.5;
