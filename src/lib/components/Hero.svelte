@@ -53,6 +53,10 @@
 
     let previewBadge: Badge | null = $state(null);
 
+    function badgeImgUrl(url: string): string {
+        return url.startsWith("http") ? url : base + url;
+    }
+
     function togglePreview(badge: Badge) {
         previewBadge = previewBadge?.id === badge.id ? null : badge;
     }
@@ -284,7 +288,7 @@
                                 >
                                     <span class="badge-cell-frame">
                                         <img
-                                            src={base + badge.image_url}
+                                            src={badgeImgUrl(badge.image_url)}
                                             alt={badge.name}
                                             loading="lazy"
                                             decoding="async"
@@ -331,7 +335,7 @@
                 <div class="badge-preview-nav">
                     <button class="badge-prev" onclick={prevBadge} disabled={currentIndex <= 0} aria-label="Previous badge">‹</button>
                     <div class="badge-preview-image">
-                        <img src={base + previewBadge.image_url} alt={previewBadge.name} />
+                        <img src={badgeImgUrl(previewBadge.image_url)} alt={previewBadge.name} />
                     </div>
                     <button class="badge-next" onclick={nextBadge} disabled={currentIndex >= allDisplayBadges.length - 1} aria-label="Next badge">›</button>
                 </div>
