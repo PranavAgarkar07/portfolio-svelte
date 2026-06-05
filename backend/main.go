@@ -200,6 +200,9 @@ func main() {
 			}
 			db.Exec("ALTER TABLE badges ADD COLUMN IF NOT EXISTS category TEXT DEFAULT ''")
 			db.Exec("ALTER TABLE badges ADD COLUMN IF NOT EXISTS important BOOLEAN DEFAULT false")
+
+			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'https://sentinel-backend-4x3i.onrender.com/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
+			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'http://localhost:8080/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 			}
 		}
 	}
@@ -244,6 +247,7 @@ func main() {
 	app.Patch("/api/contact/messages/:id/read", handleMarkRead)
 
 	app.Static("/static", "./static")
+	app.Static("/badges", "./static/badges")
 
 	app.Get("/api/certificates", handleGetCertificates)
 	app.Get("/api/admin/certificates", handleAdminGetCertificates)
