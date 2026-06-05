@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { fade } from "svelte/transition";
     import { SectionHeader } from "$lib/components/ui";
+    import { base } from "$app/paths";
     import DevLog from "$lib/components/DevLog.svelte";
     import BlurText from "./BlurText.svelte";
     import type { Badge } from "$lib/types";
@@ -283,7 +284,7 @@
                                 >
                                     <span class="badge-cell-frame">
                                         <img
-                                            src={badge.image_url}
+                                            src={base + badge.image_url}
                                             alt={badge.name}
                                             loading="lazy"
                                             decoding="async"
@@ -330,7 +331,7 @@
                 <div class="badge-preview-nav">
                     <button class="badge-prev" onclick={prevBadge} disabled={currentIndex <= 0} aria-label="Previous badge">‹</button>
                     <div class="badge-preview-image">
-                        <img src={previewBadge.image_url} alt={previewBadge.name} />
+                        <img src={base + previewBadge.image_url} alt={previewBadge.name} />
                     </div>
                     <button class="badge-next" onclick={nextBadge} disabled={currentIndex >= allDisplayBadges.length - 1} aria-label="Next badge">›</button>
                 </div>
