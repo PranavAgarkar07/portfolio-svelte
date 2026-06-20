@@ -276,17 +276,17 @@ func main() {
 	app.Get("/api/certificates", handleGetCertificates)
 	app.Get("/api/admin/certificates", handleAdminGetCertificates)
 	app.Post("/api/admin/certificates", handleAdminCreateCertificate)
+	app.Put("/api/admin/certificates/reorder", handleAdminReorderCertificates)
 	app.Put("/api/admin/certificates/:id", handleAdminUpdateCertificate)
 	app.Delete("/api/admin/certificates/:id", handleAdminDeleteCertificate)
-	app.Put("/api/admin/certificates/reorder", handleAdminReorderCertificates)
 	app.Post("/api/admin/certificates/upload", handleAdminUploadImage)
 
 	app.Get("/api/badges", handleGetBadges)
 	app.Get("/api/admin/badges", handleAdminGetBadges)
 	app.Post("/api/admin/badges", handleAdminCreateBadge)
+	app.Put("/api/admin/badges/reorder", handleAdminReorderBadges)
 	app.Put("/api/admin/badges/:id", handleAdminUpdateBadge)
 	app.Delete("/api/admin/badges/:id", handleAdminDeleteBadge)
-	app.Put("/api/admin/badges/reorder", handleAdminReorderBadges)
 
 	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
 		slog.Info("Sentinel starting in Lambda mode")

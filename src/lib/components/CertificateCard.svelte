@@ -87,7 +87,7 @@
                 class="cert-image-link"
                 onclick={(e) => {
                     e.preventDefault();
-                    Lightbox.open(certificate.image_url, e.currentTarget);
+                    Lightbox.instance.open(certificate.image_url, e.currentTarget);
                 }}
             >
                 <img

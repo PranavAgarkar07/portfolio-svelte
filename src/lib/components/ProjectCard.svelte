@@ -106,7 +106,7 @@ import { Lightbox } from "lightbox3";
                         aria-label="View {img.alt} full size"
                         onclick={(e) => {
                             e.preventDefault();
-                            Lightbox.open(img.src, e.currentTarget);
+                            Lightbox.instance.open(img.src, e.currentTarget);
                         }}
                     >
                         <img
