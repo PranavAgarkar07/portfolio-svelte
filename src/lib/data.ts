@@ -81,7 +81,8 @@ export const portfolioData = {
     {
       name: "TaskVault Lite",
       description:
-        "Secure full-stack task manager with JWT authentication, Google/GitHub OAuth, and Fernet AES-128-CBC encryption for sensitive data. Handles 1,247 req/min API throughput with PostgreSQL SSL database. Built with Django REST Framework and React.",
+        "Secure full-stack task manager with JWT auth, OAuth, and AES-128-CBC encryption for sensitive data. Handles 1,247 req/min API throughput with PostgreSQL. Built with Django REST Framework and React.",
+      brandIcon: "lock",
       images: [
         {
           src: "images/taskvault/HomepageSS.webp",
@@ -118,7 +119,8 @@ export const portfolioData = {
     {
       name: "BeamSync",
       description:
-        "High-performance offline P2P file transfer system with a cyberpunk terminal UI. Features auto-IP discovery across local network, dynamic port scouting, QR-based mobile pairing, and AES-256-GCM encrypted transfers — no internet or server required. Built with Go and Wails.",
+        "Offline P2P file transfer system with a cyberpunk terminal UI. Auto-IP discovery, dynamic port scouting, QR-based mobile pairing, and AES-256-GCM encrypted transfers — no internet or server required. Built with Go and Wails.",
+      brandIcon: "zap",
       images: [
         {
           src: "images/beamsync/appiconStartingpage.webp",
@@ -155,7 +157,8 @@ export const portfolioData = {
     {
       name: "KisanRakshak",
       description:
-        "Farmer Distress Early Warning System — AI-powered platform for SDG 2 & 3 that computes a Crop Distress Index (CDI) across 10 Vidarbha districts. Uses ensemble ML (Random Forest, XGBoost, Logistic Regression) with SHAP explainability on price volatility, rainfall, NDVI, groundwater, debt, and historical data. Features real-time Leaflet heatmap, PDF distress reports, history replay via daily snapshots, and WebSocket-driven alerts. Built with a 5-layer architecture: React dashboard, Django ML API with Celery, Go ingestion with goroutine worker pool, TimescaleDB hypertables, and Bhashini API for Hindi/Marathi alert text.",
+        "Farmer Distress Early Warning System — computes a Crop Distress Index (CDI) across 10 Vidarbha districts with ensemble ML (Random Forest, XGBoost, Logistic Regression) and SHAP explainability. Features a real-time Leaflet heatmap, PDF distress reports, WebSocket alerts, 5-layer architecture (React + Django + Go + TimescaleDB + Bhashini API).",
+      brandIcon: "leaf",
       images: [
         {
           src: "images/kisanrakshak/01-dashboard.webp",
@@ -187,7 +190,8 @@ export const portfolioData = {
     {
       name: "BeamSync Mobile",
       description:
-        "Wireless file transfers between Android phone and BeamSync desktop server — no cables, no cloud, no sign-up. Scan a QR code to connect over local Wi-Fi, then browse, upload, and download files at full LAN speed with real-time progress tracking. Features Material Design 3 dark theme, QR pairing via CameraX + ML Kit, SAF/MediaStore file picker, transfer history with Gson persistence, and on-device hotspot detection. No internet or storage permissions required on Android 10+. Built with Kotlin, Jetpack Compose, and OkHttp.",
+        "Wireless file transfers between Android and BeamSync desktop — no cables, no cloud, no sign-up. Scan a QR code to connect over Wi-Fi, then browse, upload, and download files at full LAN speed. Material Design 3, CameraX + ML Kit QR pairing, SAF file picker. Built with Kotlin and Jetpack Compose.",
+      brandIcon: "smartphone",
       images: [
         {
           src: "images/beamsync-mobile/permissions.webp",

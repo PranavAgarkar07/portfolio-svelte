@@ -25,7 +25,11 @@
         | 'sun'
         | 'moon'
         | 'check-circle'
-        | 'verified';
+        | 'verified'
+        | 'lock'
+        | 'zap'
+        | 'leaf'
+        | 'smartphone';
 
     type Props = {
         name: IconName;
@@ -147,6 +151,17 @@
             <polyline points="9 12 11 14 15 10" style="stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round" />
         {:else if name === 'moon'}
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        {:else if name === 'lock'}
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        {:else if name === 'zap'}
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        {:else if name === 'leaf'}
+            <path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z" />
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+        {:else if name === 'smartphone'}
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+            <line x1="12" y1="18" x2="12.01" y2="18" />
         {/if}
     </svg>
 </span>
