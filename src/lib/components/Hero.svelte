@@ -275,29 +275,31 @@
             {#if badges.length > 0}
                 {#each Object.entries(badgeGroups) as [category, groupBadges]}
                     <div class="about-badges">
-                        <div class="about-badges-header">
-                            <span class="about-badges-label">{category.toUpperCase()}</span>
-                            <span class="about-badges-count">{groupBadges.length}</span>
-                        </div>
-                        <div class="about-badges-grid">
-                            {#each groupBadges as badge, i}
-                                <button
-                                    class="badge-cell"
-                                    onclick={() => togglePreview(badge)}
-                                    style="--i: {i}"
-                                >
-                                    <span class="badge-cell-frame">
-                                        <img
-                                            src={badgeImgUrl(badge.image_url)}
-                                            alt={badge.name}
-                                            loading="lazy"
-                                            decoding="async"
-                                        />
-                                        <span class="badge-cell-dot" class:uncommon={badge.rarity === "uncommon"} class:rare={badge.rarity === "rare"}></span>
-                                    </span>
-                                    <span class="badge-cell-name">{badge.name}</span>
-                                </button>
-                            {/each}
+                        <div class="about-badges-category">
+                            <div class="about-badges-header">
+                                <span class="about-badges-label">{category.toUpperCase()}</span>
+                                <span class="about-badges-count">{groupBadges.length}</span>
+                            </div>
+                            <div class="about-badges-grid">
+                                {#each groupBadges as badge, i}
+                                    <button
+                                        class="badge-cell"
+                                        onclick={() => togglePreview(badge)}
+                                        style="--i: {i}"
+                                    >
+                                        <span class="badge-cell-frame">
+                                            <img
+                                                src={badgeImgUrl(badge.image_url)}
+                                                alt={badge.name}
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                            <span class="badge-cell-dot" class:uncommon={badge.rarity === "uncommon"} class:rare={badge.rarity === "rare"}></span>
+                                        </span>
+                                        <span class="badge-cell-name">{badge.name}</span>
+                                    </button>
+                                {/each}
+                            </div>
                         </div>
                     </div>
                 {/each}

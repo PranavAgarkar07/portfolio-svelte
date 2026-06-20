@@ -1959,14 +1959,33 @@ body.light-mode .cert-skeleton-media {
 
 /* ─── Achievements — Mission Patch Collection ─── */
 .about-badges {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.about-badges-category {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid var(--accent);
+    background: rgba(255, 255, 255, 0.015);
+    padding: 1rem 1.25rem 1.25rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.about-badges:last-child .about-badges-category:last-child {
+    margin-bottom: 0;
+}
+
+.about-badges-category:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.025);
 }
 
 .about-badges-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .about-badges-label {
@@ -2362,6 +2381,18 @@ body.light-mode .cert-skeleton-media {
     background: rgba(0,0,0,0.04);
     border-color: rgba(0,0,0,0.15);
     color: #18181b;
+}
+
+:global(body.light-mode) .about-badges-category {
+    border-color: rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.6);
+}
+:global(body.light-mode) .about-badges-category:hover {
+    border-color: rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.8);
+}
+:global(body.light-mode) .about-badges-header {
+    border-bottom-color: rgba(0, 0, 0, 0.05);
 }
 
 /* =========================================

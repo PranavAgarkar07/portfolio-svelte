@@ -30,6 +30,22 @@
         display_order: 0,
     });
 
+    let dragId = $state<number | null>(null);
+    let dragCategory = $state<string | null>(null);
+
+    let badgeGroups = $derived.by(() => {
+        const groups: Record<string, Badge[]> = {};
+        const sorted = [...badges].sort((a, b) => a.display_order - b.display_order);
+        for (const b of sorted) {
+            const cat = b.category || "Uncategorized";
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(b);
+        }
+        return groups;
+    });
+
+    let categoryOrder = $derived(Object.keys(badgeGroups));
+
     function toNum(v: unknown, fallback = 0): number {
         const n = typeof v === "string" ? parseInt(v, 10) : Number(v);
         return isNaN(n) ? fallback : n;
@@ -205,6 +221,85 @@
         uncommon: "#a78bfa",
         rare: "#fbbf24",
     };
+
+    function handleDragStart(e: DragEvent, id: number, cat: string) {
+        dragId = id;
+        dragCategory = cat;
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", String(id));
+        }
+    }
+
+    function handleDragOver(e: DragEvent) {
+        e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = "move";
+        }
+    }
+
+    function handleDrop(e: DragEvent, targetId: number, cat: string) {
+        e.preventDefault();
+        if (dragId === null || dragCategory !== cat) {
+            dragId = null;
+            dragCategory = null;
+            return;
+        }
+
+        const group = badgeGroups[cat];
+        if (!group) return;
+
+        const fromIdx = group.findIndex(b => b.id === dragId);
+        const toIdx = group.findIndex(b => b.id === targetId);
+        if (fromIdx === -1 || toIdx === -1) return;
+
+        const reordered = [...group];
+        const [moved] = reordered.splice(fromIdx, 1);
+        reordered.splice(toIdx, 0, moved);
+
+        performReorder(reordered);
+        dragId = null;
+        dragCategory = null;
+    }
+
+    function handleDropAtEnd(e: DragEvent, cat: string) {
+        e.preventDefault();
+        if (dragId === null || dragCategory !== cat) {
+            dragId = null;
+            dragCategory = null;
+            return;
+        }
+
+        const group = badgeGroups[cat];
+        if (!group) return;
+
+        const fromIdx = group.findIndex(b => b.id === dragId);
+        if (fromIdx === -1) return;
+
+        const reordered = [...group];
+        const [moved] = reordered.splice(fromIdx, 1);
+        reordered.push(moved);
+
+        performReorder(reordered);
+        dragId = null;
+        dragCategory = null;
+    }
+
+    async function performReorder(reordered: Badge[]) {
+        const order = reordered.map(b => b.id);
+        try {
+            const res = await fetch(`${BASE}/api/admin/badges/reorder?key=${encodeURIComponent(storedKey)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ order }),
+            });
+            if (!res.ok) throw new Error(`Reorder failed: HTTP ${res.status}`);
+            flash("Order updated.");
+            await loadBadges();
+        } catch (e: any) {
+            error = e.message || "Reorder failed";
+        }
+    }
 </script>
 
 <div class="terminal-container">
@@ -322,45 +417,74 @@
                         <p>No badges yet. Add your first one above.</p>
                     </div>
                 {:else}
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Badge</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Rarity</th>
-                                <th>Imp</th>
-                                <th>Order</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each badges as b}
-                                <tr>
-                                    <td>
-                                        {#if b.image_url}
-                                            <img src={badgeImgUrl(b.image_url)} alt={b.name} class="badge-thumb" />
-                                        {/if}
-                                    </td>
-                                    <td class="cell-name">{b.name}</td>
-                                    <td class="cell-date">{b.category || "—"}</td>
-                                    <td>
-                                        <span class="rarity-badge" style="color: {rarityColors[b.rarity] || 'var(--accent)'}">
-                                            {b.rarity}
-                                        </span>
-                                    </td>
-                                    <td class="cell-imp">{b.important ? "★" : "—"}</td>
-                                    <td>{b.display_order}</td>
-                                    <td class="cell-date">{formatDate(b.created_at)}</td>
-                                    <td class="cell-actions">
-                                        <button class="action-btn" onclick={() => editBadge(b)}>Edit</button>
-                                        <button class="action-btn action-delete" onclick={() => deleteBadge(b.id)}>Delete</button>
-                                    </td>
-                                </tr>
-                            {/each}
-                        </tbody>
-                    </table>
+                    <div class="category-sections">
+                        {#each categoryOrder as cat}
+                            {@const group = badgeGroups[cat]}
+                            <div class="category-section">
+                                <div class="category-section-header">
+                                    <span class="category-section-label">{cat.toUpperCase()}</span>
+                                    <span class="category-section-count">{group.length}</span>
+                                </div>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Badge</th>
+                                            <th>Name</th>
+                                            <th>Rarity</th>
+                                            <th>Imp</th>
+                                            <th>Order</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {#each group as b, i}
+                                            <tr
+                                                class="drag-row"
+                                                class:dragging={dragId === b.id}
+                                                draggable="true"
+                                                ondragstart={(e) => handleDragStart(e, b.id, cat)}
+                                                ondragover={handleDragOver}
+                                                ondrop={(e) => handleDrop(e, b.id, cat)}
+                                                role="button"
+                                                tabindex="0"
+                                            >
+                                                <td class="cell-drag">
+                                                    <span class="drag-handle">⠿</span>
+                                                </td>
+                                                <td>
+                                                    {#if b.image_url}
+                                                        <img src={badgeImgUrl(b.image_url)} alt={b.name} class="badge-thumb" />
+                                                    {/if}
+                                                </td>
+                                                <td class="cell-name">{b.name}</td>
+                                                <td>
+                                                    <span class="rarity-badge" style="color: {rarityColors[b.rarity] || 'var(--accent)'}">
+                                                        {b.rarity}
+                                                    </span>
+                                                </td>
+                                                <td class="cell-imp">{b.important ? "★" : "—"}</td>
+                                                <td>{b.display_order}</td>
+                                                <td class="cell-date">{formatDate(b.created_at)}</td>
+                                                <td class="cell-actions">
+                                                    <button class="action-btn" onclick={() => editBadge(b)}>Edit</button>
+                                                    <button class="action-btn action-delete" onclick={() => deleteBadge(b.id)}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        {/each}
+                                        <tr
+                                            class="drop-end-zone"
+                                            ondragover={handleDragOver}
+                                            ondrop={(e) => handleDropAtEnd(e, cat)}
+                                        >
+                                            <td colspan="8"><span class="drop-end-hint">Drop here to move to end</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        {/each}
+                    </div>
                 {/if}
             </div>
         </div>
@@ -544,8 +668,103 @@
         margin-bottom: 1rem;
     }
 
+    .category-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .category-section {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-left: 3px solid var(--accent);
+        background: rgba(255, 255, 255, 0.015);
+        overflow: hidden;
+    }
+
+    .category-section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .category-section-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        color: var(--accent);
+    }
+
+    .category-section-count {
+        font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+        font-size: 0.6rem;
+        color: #71717a;
+        margin-left: auto;
+    }
+
+    .drag-row {
+        cursor: grab;
+        user-select: none;
+        transition: opacity 0.15s ease, background 0.15s ease;
+    }
+
+    .drag-row:active {
+        cursor: grabbing;
+    }
+
+    .drag-row.dragging {
+        opacity: 0.4;
+        background: rgba(255, 68, 0, 0.05);
+    }
+
+    .drag-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .cell-drag {
+        width: 30px;
+        padding: 0.75rem 0.25rem;
+        text-align: center;
+    }
+
+    .drag-handle {
+        display: inline-block;
+        color: #52525b;
+        font-size: 1rem;
+        line-height: 1;
+        letter-spacing: 2px;
+        cursor: grab;
+    }
+
+    .drag-row:hover .drag-handle {
+        color: var(--accent);
+    }
+
+    .drop-end-zone td {
+        padding: 0.4rem 1rem;
+        border-bottom: none;
+    }
+
+    .drop-end-hint {
+        display: block;
+        text-align: center;
+        font-size: 0.65rem;
+        color: #52525b;
+        padding: 0.25rem;
+        border: 1px dashed rgba(255, 255, 255, 0.06);
+        transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .drop-end-zone:hover .drop-end-hint,
+    .drop-end-zone[dragover="true"] .drop-end-hint {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
     .table-wrapper {
-        border: 1px solid rgba(255,255,255,0.06);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         overflow-x: auto;
     }
     .data-table {
