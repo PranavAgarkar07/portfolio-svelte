@@ -17,6 +17,35 @@
             "(prefers-reduced-motion: reduce)",
         ).matches;
 
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/portfolio-svelte/service-worker.js");
+        }
+
+        if ("web-vital" in navigator === false && "PerformanceObserver" in window) {
+            try {
+                new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        if (entry.entryType === "largest-contentful-paint") {
+                            console.log("LCP:", entry.startTime);
+                        }
+                        if (entry.entryType === "layout-shift" && !entry.hadRecentInput) {
+                            console.log("CLS:", entry.value);
+                        }
+                        if (entry.entryType === "first-input") {
+                            console.log("FID:", entry.processingStart - entry.startTime);
+                        }
+                    }
+                }).observe({ type: "largest-contentful-paint", buffered: true });
+                new PerformanceObserver((list) => {
+                    let cls = 0;
+                    for (const entry of list.getEntries()) {
+                        if (!entry.hadRecentInput) cls += entry.value;
+                    }
+                    console.log("CLS total:", cls);
+                }).observe({ type: "layout-shift", buffered: true });
+            } catch {}
+        }
+
         Lightbox.init({
             springOpen: { stiffness: 500, damping: 40, mass: 0.8 },
             springClose: { stiffness: 400, damping: 35, mass: 0.8 },
@@ -159,7 +188,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com" crossorigin="anonymous" />
