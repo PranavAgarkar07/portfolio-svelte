@@ -12,7 +12,6 @@ import { Lightbox } from "lightbox3";
         project: {
             name: string;
             description: string;
-            brandIcon?: string;
             tags: string[];
             isLive: boolean;
             images?: Image[];
@@ -120,12 +119,6 @@ import { Lightbox } from "lightbox3";
                     </a>
                 {/each}
             </div>
-
-            {#if project.brandIcon}
-                <div class="brand-icon-badge" aria-hidden="true">
-                    <Icon name={project.brandIcon as any} size={22} />
-                </div>
-            {/if}
 
             {#if slideCount > 1}
                 <button
@@ -238,23 +231,6 @@ import { Lightbox } from "lightbox3";
         overflow: hidden;
         background: #070a0f;
         border-bottom: 2px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .brand-icon-badge {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        z-index: 10;
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--accent);
-        color: #000;
-        border: 2px solid rgba(0, 0, 0, 0.3);
-        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
-        pointer-events: none;
     }
 
     .project-card:hover .card-media {
