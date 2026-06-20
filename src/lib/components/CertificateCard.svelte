@@ -22,10 +22,16 @@
     }
 
     function thumbUrl(fullUrl: string): string {
+        if (fullUrl.includes("amazonaws.com") || fullUrl.includes("http://localhost")) {
+            return fullUrl;
+        }
         const name = fullUrl.split("/").pop() || "";
         const base = name.replace(/\.\w+$/, "");
         const parts = fullUrl.split("/");
         parts.pop();
+        if (parts[parts.length - 1] === "uploads") {
+            parts.pop();
+        }
         parts.push("thumbs", base + ".webp");
         return parts.join("/");
     }
@@ -97,6 +103,12 @@
                     loading="lazy"
                     decoding="async"
                     fetchpriority="low"
+                    onerror={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        if (img.src !== certificate.image_url) {
+                            img.src = certificate.image_url;
+                        }
+                    }}
                 />
                 <div class="cert-image-overlay">
                     <div class="overlay-scanline" aria-hidden="true"></div>
