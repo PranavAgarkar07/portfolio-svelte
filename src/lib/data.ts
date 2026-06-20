@@ -152,5 +152,69 @@ export const portfolioData = {
         },
       ],
     },
+    {
+      name: "KisanRakshak",
+      description:
+        "Farmer Distress Early Warning System — AI-powered platform for SDG 2 & 3 that computes a Crop Distress Index (CDI) across 10 Vidarbha districts. Uses ensemble ML (Random Forest, XGBoost, Logistic Regression) with SHAP explainability on price volatility, rainfall, NDVI, groundwater, debt, and historical data. Features real-time Leaflet heatmap, PDF distress reports, history replay via daily snapshots, and WebSocket-driven alerts. Built with a 5-layer architecture: React dashboard, Django ML API with Celery, Go ingestion with goroutine worker pool, TimescaleDB hypertables, and Bhashini API for Hindi/Marathi alert text.",
+      images: [
+        {
+          src: "images/kisanrakshak/01-dashboard.webp",
+          alt: "KisanRakshak CDI heatmap dashboard showing all 10 Vidarbha districts ranked by Crop Distress Index",
+        },
+        {
+          src: "images/kisanrakshak/02-district-detail.webp",
+          alt: "District detail view with SHAP waterfall chart explaining feature contributions to CDI score",
+        },
+        {
+          src: "images/kisanrakshak/03-notifications.webp",
+          alt: "Alert notification panel with PDF distress report generation and CDI threshold-based severity levels",
+        },
+        {
+          src: "images/kisanrakshak/06-dashboard-full.webp",
+          alt: "Full dashboard overview with CDI trend chart, district ranking table, and alert timeline",
+        },
+      ],
+      tags: ["React", "TypeScript", "Django", "Python", "Go", "XGBoost", "AI/ML", "TimescaleDB"],
+      isLive: false,
+      links: [
+        {
+          label: "GitHub",
+          url: "https://github.com/PranavAgarkar07/KisanRakshak",
+          icon: "github",
+        },
+      ],
+    },
+    {
+      name: "BeamSync Mobile",
+      description:
+        "Wireless file transfers between Android phone and BeamSync desktop server — no cables, no cloud, no sign-up. Scan a QR code to connect over local Wi-Fi, then browse, upload, and download files at full LAN speed with real-time progress tracking. Features Material Design 3 dark theme, QR pairing via CameraX + ML Kit, SAF/MediaStore file picker, transfer history with Gson persistence, and on-device hotspot detection. No internet or storage permissions required on Android 10+. Built with Kotlin, Jetpack Compose, and OkHttp.",
+      images: [
+        {
+          src: "images/beamsync-mobile/permissions.webp",
+          alt: "BeamSync Mobile permissions screen with camera and Wi-Fi status indicators",
+        },
+        {
+          src: "images/beamsync-mobile/homescreen.webp",
+          alt: "BeamSync Mobile home screen with Receive and Send action cards",
+        },
+        {
+          src: "images/beamsync-mobile/uploadscreen.webp",
+          alt: "BeamSync Mobile upload screen showing file selection and transfer progress",
+        },
+        {
+          src: "images/beamsync-mobile/history.webp",
+          alt: "BeamSync Mobile transfer history with timestamps and status indicators",
+        },
+      ],
+      tags: ["Kotlin", "Jetpack Compose", "Android", "Material Design 3", "OkHttp", "CameraX"],
+      isLive: false,
+      links: [
+        {
+          label: "GitHub",
+          url: "https://github.com/PranavAgarkar07/BeamSyncMobile",
+          icon: "github",
+        },
+      ],
+    },
   ],
 };
