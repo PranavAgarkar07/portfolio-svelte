@@ -18,6 +18,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-lambda-go/lambda"
+	fiberadapter "github.com/awslabs/aws-lambda-go-api-proxy/fiber"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -38,6 +43,9 @@ const (
 
 	maxFailures    = 3
 	breakerTimeout = 15 * time.Minute
+
+	S3Bucket = "portfolio-uploads-sentinel"
+	S3Region = "ap-south-1"
 )
 
 // --- Structs ---
@@ -113,6 +121,7 @@ var (
 	responsesMu   sync.Mutex
 	metrics       Metrics
 	db            *sql.DB
+	s3Client      *s3.Client
 
 	memCerts    []MemoryCert
 	memCertsMu  sync.Mutex
@@ -203,11 +212,24 @@ func main() {
 
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'https://sentinel-backend-4x3i.onrender.com/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'http://localhost:8080/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
+
+			db.Exec(`UPDATE certificates SET image_url = REPLACE(image_url, 'https://sentinel-backend-4x3i.onrender.com/static/', 'https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/') WHERE image_url LIKE '%sentinel-backend%'`)
+			db.Exec(`UPDATE certificates SET image_url = REPLACE(image_url, 'http://localhost:8080/static/', 'https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/') WHERE image_url LIKE '%localhost%'`)
 			}
 		}
 	}
 	if db != nil {
 		defer db.Close()
+	}
+
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
+		cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(S3Region))
+		if err != nil {
+			slog.Warn("Failed to load AWS config", "error", err)
+		} else {
+			s3Client = s3.NewFromConfig(cfg)
+			slog.Info("S3 client initialized")
+		}
 	}
 
 	app := fiber.New()
@@ -246,8 +268,10 @@ func main() {
 	app.Get("/api/contact/messages", handleGetMessages)
 	app.Patch("/api/contact/messages/:id/read", handleMarkRead)
 
-	app.Static("/static", "./static")
-	app.Static("/badges", "./static/badges")
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") == "" {
+		app.Static("/static", "./static")
+		app.Static("/badges", "./static/badges")
+	}
 
 	app.Get("/api/certificates", handleGetCertificates)
 	app.Get("/api/admin/certificates", handleAdminGetCertificates)
@@ -264,14 +288,20 @@ func main() {
 	app.Delete("/api/admin/badges/:id", handleAdminDeleteBadge)
 	app.Put("/api/admin/badges/reorder", handleAdminReorderBadges)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	slog.Info("Sentinel starting", "port", port)
-	if err := app.Listen(":" + port); err != nil {
-		slog.Error("Server failed to start", "error", err)
-		os.Exit(1)
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
+		slog.Info("Sentinel starting in Lambda mode")
+		adapter := fiberadapter.New(app)
+		lambda.Start(adapter.ProxyV2)
+	} else {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		slog.Info("Sentinel starting", "port", port)
+		if err := app.Listen(":" + port); err != nil {
+			slog.Error("Server failed to start", "error", err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -831,8 +861,23 @@ func handleAdminUploadImage(c *fiber.Ctx) error {
 
 	hash := sha256.Sum256(data)
 	filename := hex.EncodeToString(hash[:8]) + ext
-	savePath := filepath.Join("static", "uploads", filename)
 
+	if s3Client != nil {
+		_, err := s3Client.PutObject(context.Background(), &s3.PutObjectInput{
+			Bucket:      aws.String(S3Bucket),
+			Key:         aws.String("static/uploads/" + filename),
+			Body:        bytes.NewReader(data),
+			ContentType: aws.String(mimeType),
+		})
+		if err != nil {
+			slog.Error("Failed to upload to S3", "error", err)
+			return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
+		}
+		url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/uploads/%s", S3Bucket, S3Region, filename)
+		return c.JSON(fiber.Map{"url": url, "filename": filename})
+	}
+
+	savePath := filepath.Join("static", "uploads", filename)
 	if err := os.WriteFile(savePath, data, 0644); err != nil {
 		slog.Error("Failed to save uploaded image", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
