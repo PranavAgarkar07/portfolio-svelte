@@ -63,6 +63,11 @@
         }
     }
 
+    function toNum(v: unknown, fallback = 0): number {
+        const n = typeof v === "string" ? parseInt(v, 10) : Number(v);
+        return isNaN(n) ? fallback : n;
+    }
+
     async function saveCert() {
         if (!form.title.trim() || !form.issuer.trim()) return;
 
@@ -74,7 +79,7 @@
             image_url: form.image_url,
             tags: form.tags ? form.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
             is_verified: form.is_verified,
-            display_order: form.display_order || certs.length,
+            display_order: toNum(form.display_order, certs.length),
         };
 
         try {
