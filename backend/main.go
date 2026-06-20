@@ -667,8 +667,8 @@ func handleAdminCreateCertificate(c *fiber.Ctx) error {
 			}
 		}
 	}
-	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") {
-		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) URL"})
+	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") && !strings.HasPrefix(input.ImageURL, "/") {
+		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) or relative URL"})
 	}
 	if input.CredentialURL != "" && !strings.HasPrefix(input.CredentialURL, "http://") && !strings.HasPrefix(input.CredentialURL, "https://") {
 		return c.Status(400).JSON(fiber.Map{"error": "credential_url must be a valid HTTP(S) URL"})
@@ -730,8 +730,8 @@ func handleAdminUpdateCertificate(c *fiber.Ctx) error {
 			}
 		}
 	}
-	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") {
-		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) URL"})
+	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") && !strings.HasPrefix(input.ImageURL, "/") {
+		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) or relative URL"})
 	}
 	if input.CredentialURL != "" && !strings.HasPrefix(input.CredentialURL, "http://") && !strings.HasPrefix(input.CredentialURL, "https://") {
 		return c.Status(400).JSON(fiber.Map{"error": "credential_url must be a valid HTTP(S) URL"})
@@ -960,8 +960,8 @@ func handleAdminCreateBadge(c *fiber.Ctx) error {
 		rarity = "common"
 	}
 
-	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") {
-		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) URL"})
+	if input.ImageURL != "" && !strings.HasPrefix(input.ImageURL, "http://") && !strings.HasPrefix(input.ImageURL, "https://") && !strings.HasPrefix(input.ImageURL, "/") {
+		return c.Status(400).JSON(fiber.Map{"error": "image_url must be a valid HTTP(S) or relative URL"})
 	}
 
 	if input.DisplayOrder < 0 {

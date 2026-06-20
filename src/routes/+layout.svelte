@@ -161,7 +161,8 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin="anonymous" />
-    <link rel="preconnect" href="https://sentinel-backend-4x3i.onrender.com" crossorigin="anonymous" />
+    <link rel="preconnect" href="https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com" crossorigin="anonymous" />
+    <link rel="preconnect" href="https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com" crossorigin="anonymous" />
 
     <!-- Fonts -->
     <link

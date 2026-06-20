@@ -1,9 +1,14 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { base } from "$app/paths";
     import { Input, Button, Skeleton } from "$lib/components/ui";
     import type { Badge } from "$lib/types";
 
     const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+    function badgeImgUrl(url: string): string {
+        return url.startsWith("http") ? url : base + url;
+    }
 
     let key = $state("");
     let storedKey = $state("");
@@ -335,7 +340,7 @@
                                 <tr>
                                     <td>
                                         {#if b.image_url}
-                                            <img src={b.image_url} alt={b.name} class="badge-thumb" />
+                                            <img src={badgeImgUrl(b.image_url)} alt={b.name} class="badge-thumb" />
                                         {/if}
                                     </td>
                                     <td class="cell-name">{b.name}</td>
