@@ -5,7 +5,8 @@ export const portfolioData = {
   profile: {
     name: "Pranav Agarkar",
     role: "Fullstack Developer",
-    tagline: "Fullstack developer specializing in Django, React, and Go. I build secure SaaS backends, encrypted systems, and modern web UIs.",
+    tagline:
+      "Fullstack developer specializing in Django, React, and Go. I build secure SaaS backends, encrypted systems, and modern web UIs.",
     location: "Solapur, India",
     status: "Open to Opportunities",
     socials: [
@@ -52,7 +53,11 @@ export const portfolioData = {
         { name: "Python", icon: "devicon-python-plain", level: "Expert" },
         { name: "Django", icon: "devicon-django-plain", level: "Expert" },
         { name: "Linux", icon: "devicon-linux-plain", level: "Expert" },
-        { name: "React", icon: "devicon-react-original colored", level: "Proficient" },
+        {
+          name: "React",
+          icon: "devicon-react-original colored",
+          level: "Proficient",
+        },
       ],
     },
     {
@@ -65,15 +70,31 @@ export const portfolioData = {
           level: "Proficient",
         },
         { name: "Git", icon: "devicon-git-plain colored", level: "Proficient" },
-        { name: "HTML5/CSS3", icon: "devicon-html5-plain colored", level: "Expert" },
+        {
+          name: "HTML5/CSS3",
+          icon: "devicon-html5-plain colored",
+          level: "Expert",
+        },
       ],
     },
     {
       category: "In Orbit",
       items: [
-        { name: "Go", icon: "devicon-go-original-wordmark colored", level: "Proficient" },
-        { name: "Svelte", icon: "devicon-svelte-plain colored", level: "Proficient" },
-        { name: "Docker", icon: "devicon-docker-plain colored", level: "Familiar" },
+        {
+          name: "Go",
+          icon: "devicon-go-original-wordmark colored",
+          level: "Proficient",
+        },
+        {
+          name: "Svelte",
+          icon: "devicon-svelte-plain colored",
+          level: "Proficient",
+        },
+        {
+          name: "Docker",
+          icon: "devicon-docker-plain colored",
+          level: "Familiar",
+        },
       ],
     },
   ],
@@ -155,7 +176,7 @@ export const portfolioData = {
     {
       name: "KisanRakshak",
       description:
-        "Farmer Distress Early Warning System — AI-powered platform for SDG 2 & 3 that computes a Crop Distress Index (CDI) across 10 Vidarbha districts. Uses ensemble ML (Random Forest, XGBoost, Logistic Regression) with SHAP explainability on price volatility, rainfall, NDVI, groundwater, debt, and historical data. Features real-time Leaflet heatmap, PDF distress reports, history replay via daily snapshots, and WebSocket-driven alerts. Built with a 5-layer architecture: React dashboard, Django ML API with Celery, Go ingestion with goroutine worker pool, TimescaleDB hypertables, and Bhashini API for Hindi/Marathi alert text.",
+        "AI platform for SDG 2 & 3 that predicts farmer distress using ML on rainfall, crop health, prices, groundwater, debt, and historical data. Features explainable risk scores, real-time heatmaps, PDF reports, historical analysis, and instant multilingual alerts. Built with React, Django, Go, TimescaleDB, Celery, and Bhashini API.",
       images: [
         {
           src: "images/kisanrakshak/01-dashboard.webp",
@@ -174,7 +195,16 @@ export const portfolioData = {
           alt: "Full dashboard overview with CDI trend chart, district ranking table, and alert timeline",
         },
       ],
-      tags: ["React", "TypeScript", "Django", "Python", "Go", "XGBoost", "AI/ML", "TimescaleDB"],
+      tags: [
+        "React",
+        "TypeScript",
+        "Django",
+        "Python",
+        "Go",
+        "XGBoost",
+        "AI/ML",
+        "TimescaleDB",
+      ],
       isLive: false,
       links: [
         {
@@ -187,7 +217,7 @@ export const portfolioData = {
     {
       name: "BeamSync Mobile",
       description:
-        "Wireless file transfers between Android phone and BeamSync desktop server — no cables, no cloud, no sign-up. Scan a QR code to connect over local Wi-Fi, then browse, upload, and download files at full LAN speed with real-time progress tracking. Features Material Design 3 dark theme, QR pairing via CameraX + ML Kit, SAF/MediaStore file picker, transfer history with Gson persistence, and on-device hotspot detection. No internet or storage permissions required on Android 10+. Built with Kotlin, Jetpack Compose, and OkHttp.",
+        "Wireless file transfer between Android and desktop over local Wi-Fi—no cables, cloud, or sign-up. Connect via QR code and transfer files at LAN speed with real-time progress tracking. Features Material Design 3 UI, transfer history, hotspot detection, and secure local transfers. Built with Kotlin, Jetpack Compose, CameraX, ML Kit, and OkHttp.",
       images: [
         {
           src: "images/beamsync-mobile/permissions.webp",
@@ -206,7 +236,14 @@ export const portfolioData = {
           alt: "BeamSync Mobile transfer history with timestamps and status indicators",
         },
       ],
-      tags: ["Kotlin", "Jetpack Compose", "Android", "Material Design 3", "OkHttp", "CameraX"],
+      tags: [
+        "Kotlin",
+        "Jetpack Compose",
+        "Android",
+        "Material Design 3",
+        "OkHttp",
+        "CameraX",
+      ],
       isLive: false,
       links: [
         {
