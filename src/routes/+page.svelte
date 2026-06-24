@@ -116,33 +116,23 @@
         });
 
         // ──────────────────────────────────────────────
-        // CERTIFICATES — FILE DRAWER REVEAL
+        // CERTIFICATES — FILE DRAWER REVEAL (batched: 1 trigger instead of 13)
         // ──────────────────────────────────────────────
-        gsap.utils.toArray(".cert-card-wrap").forEach((card: any, i: number) => {
-            const dir = i % 2 === 0 ? -1 : 1;
-            gsap.set(card, { x: dir * 80, y: 60, opacity: 0, rotateX: 5, scale: 0.95 });
+        const certCards = gsap.utils.toArray(".cert-card-wrap");
+        if (certCards.length > 0) {
+            const dirs = certCards.map((_: any, i: number) => i % 2 === 0 ? -1 : 1);
+            gsap.set(certCards, { x: (i: number) => dirs[i] * 80, y: 60, opacity: 0, rotateX: 5, scale: 0.95 });
             ScrollTrigger.create({
-                trigger: card as Element, start: "top 88%", once: true,
-                onEnter: () => { gsap.to(card, {
+                trigger: "#certifications", start: "top 85%", once: true,
+                onEnter: () => { gsap.to(certCards, {
                     x: 0, y: 0, opacity: 1, rotateX: 0, scale: 1,
-                    ease: "power3.out", duration: 0.65, delay: i * 0.1,
+                    stagger: 0.06, ease: "power3.out", duration: 0.65,
                 });}
             });
-        });
+        }
 
-        // ──────────────────────────────────────────────
-        // 9. SECTION HEADERS — REVEAL WIPE
-        // ──────────────────────────────────────────────
-        gsap.utils.toArray(".section-header").forEach((header: any) => {
-            gsap.set(header, { clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)" });
-            ScrollTrigger.create({
-                trigger: header as Element, start: "top 85%", once: true,
-                onEnter: () => { gsap.to(header, {
-                    clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-                    ease: "power3.out", duration: 0.7,
-                });}
-            });
-        });
+        // Handled by motion.div whileInView in SectionHeader.svelte
+        // (GSAP version removed to avoid duplicate clip-path animation)
 
         // ──────────────────────────────────────────────
         // 10. ABOUT — DEPTH LAYER REVEAL

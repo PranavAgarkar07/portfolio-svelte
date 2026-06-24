@@ -328,35 +328,35 @@
 </section>
 
 {#if previewBadge}
-    {#key previewBadge.id}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="badge-preview-backdrop" onclick={closePreview} transition:fade={{ duration: 150 }}>
         <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="badge-preview-backdrop" onclick={closePreview} transition:fade={{ duration: 150 }}>
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="badge-preview-card" onclick={(e) => e.stopPropagation()}>
-                <button class="badge-preview-close" onclick={closePreview}>×</button>
-                <div class="badge-preview-nav">
-                    <button class="badge-prev" onclick={prevBadge} disabled={currentIndex <= 0} aria-label="Previous badge">‹</button>
-                    <div class="badge-preview-image">
+        <div class="badge-preview-card" onclick={(e) => e.stopPropagation()}>
+            <button class="badge-preview-close" onclick={closePreview}>×</button>
+            <div class="badge-preview-nav">
+                <button class="badge-prev" onclick={prevBadge} disabled={currentIndex <= 0} aria-label="Previous badge">‹</button>
+                <div class="badge-preview-image">
+                    {#key previewBadge.id}
                         <img src={badgeImgUrl(previewBadge.image_url)} alt={previewBadge.name} />
-                    </div>
-                    <button class="badge-next" onclick={nextBadge} disabled={currentIndex >= allDisplayBadges.length - 1} aria-label="Next badge">›</button>
+                    {/key}
                 </div>
-                <div class="badge-preview-name">{previewBadge.name}</div>
-                <div class="badge-preview-meta">
-                    <span class="badge-preview-rarity" class:uncommon={previewBadge.rarity === 'uncommon'} class:rare={previewBadge.rarity === 'rare'}>
-                        {previewBadge.rarity}
-                    </span>
-                    {#if previewBadge.credential_url}
-                        <span class="badge-preview-dot"></span>
-                    {/if}
-                    {#if previewBadge.credential_url}
-                        <a href={previewBadge.credential_url} target="_blank" rel="noopener noreferrer">credential</a>
-                    {/if}
-                </div>
-                <div class="badge-preview-counter">{currentIndex + 1} / {allDisplayBadges.length}</div>
+                <button class="badge-next" onclick={nextBadge} disabled={currentIndex >= allDisplayBadges.length - 1} aria-label="Next badge">›</button>
             </div>
+            <div class="badge-preview-name">{previewBadge.name}</div>
+            <div class="badge-preview-meta">
+                <span class="badge-preview-rarity" class:uncommon={previewBadge.rarity === 'uncommon'} class:rare={previewBadge.rarity === 'rare'}>
+                    {previewBadge.rarity}
+                </span>
+                {#if previewBadge.credential_url}
+                    <span class="badge-preview-dot"></span>
+                {/if}
+                {#if previewBadge.credential_url}
+                    <a href={previewBadge.credential_url} target="_blank" rel="noopener noreferrer">credential</a>
+                {/if}
+            </div>
+            <div class="badge-preview-counter">{currentIndex + 1} / {allDisplayBadges.length}</div>
         </div>
-    {/key}
+    </div>
 {/if}
 
 <svelte:window onkeydown={(e) => { if (e.key === 'Escape') closePreview(); if (e.key === 'ArrowLeft') prevBadge(); if (e.key === 'ArrowRight') nextBadge(); }} />
