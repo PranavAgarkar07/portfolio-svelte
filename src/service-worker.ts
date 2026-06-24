@@ -8,8 +8,8 @@ const sw = self as unknown as ServiceWorkerGlobalScope;
 const CACHE = "portfolio-v1";
 
 const ASSETS = [
-	"/",
-	"/showcase",
+	"./",
+	"./showcase",
 ];
 
 const IGNORED_PATTERNS = [
