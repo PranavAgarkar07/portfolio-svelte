@@ -54,7 +54,9 @@
     let previewBadge: Badge | null = $state(null);
 
     function badgeImgUrl(url: string): string {
-        return url.startsWith("http") ? url : base + url;
+        if (url.startsWith("http")) return url;
+        const webp = url.replace(/\.png$/, ".webp");
+        return base + webp;
     }
 
     function togglePreview(badge: Badge) {
@@ -183,6 +185,8 @@
             <span class="hero-status-value" class:available={profile.status.includes("Open")}>{profile.status}</span>
             <span class="hero-status-divider" aria-hidden="true">//</span>
             <span class="hero-status-role">{profile.role}</span>
+            <span class="hero-status-divider" aria-hidden="true">//</span>
+            <span class="hero-status-exp">2+ Years</span>
         </div>
 
         <h1 class="hero-name" class:hero-ready={heroReady}>
@@ -373,6 +377,9 @@
                             <i class="{skill.icon} skill-icon"></i>
                             <span class="skill-name">{skill.name}</span>
                             <span class="skill-level-label">{skill.level}</span>
+                            {#if skill.projects && skill.projects.length > 0}
+                                <span class="skill-projects">{skill.projects.slice(0, 2).join(" · ")}</span>
+                            {/if}
                         </div>
                     {/each}
                 </div>
@@ -470,6 +477,14 @@
     .hero-status-role {
         color: var(--text-secondary);
         font-weight: 400;
+    }
+    
+    .hero-status-exp {
+        font-family: var(--font-heading);
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--accent);
+        letter-spacing: 0.08em;
     }
     
     .hero-name {
@@ -658,6 +673,182 @@
         animation: idlePulse 2s ease-in-out 3;
     }
     
+    /* ─── BADGE PREVIEW ─── */
+
+    .badge-preview-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .badge-preview-card {
+        background: #0d1117;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 480px;
+        width: 90vw;
+        position: relative;
+    }
+
+    .badge-preview-close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease, color 0.15s ease;
+        z-index: 1;
+    }
+
+    .badge-preview-close:hover {
+        background: rgba(255, 68, 0, 0.15);
+        color: var(--accent);
+    }
+
+    .badge-preview-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .badge-prev,
+    .badge-next {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.4rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .badge-prev:hover:not(:disabled),
+    .badge-next:hover:not(:disabled) {
+        background: rgba(255, 68, 0, 0.1);
+        color: var(--accent);
+        border-color: rgba(255, 68, 0, 0.2);
+    }
+
+    .badge-prev:disabled,
+    .badge-next:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
+
+    .badge-preview-image {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1;
+        background: #070a0f;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .badge-preview-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .badge-preview-name {
+        font-family: var(--font-heading);
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-align: center;
+        margin-bottom: 0.4rem;
+    }
+
+    .badge-preview-meta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .badge-preview-rarity {
+        font-family: var(--font-body);
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .badge-preview-rarity.uncommon {
+        color: #60a5fa;
+        border-color: rgba(96, 165, 250, 0.2);
+        background: rgba(96, 165, 250, 0.06);
+    }
+
+    .badge-preview-rarity.rare {
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.2);
+        background: rgba(245, 158, 11, 0.06);
+    }
+
+    .badge-preview-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-preview-meta a {
+        font-family: var(--font-body);
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        text-decoration: none;
+        transition: opacity 0.15s ease;
+    }
+
+    .badge-preview-meta a:hover {
+        opacity: 0.7;
+    }
+
+    .badge-preview-counter {
+        font-family: var(--font-body);
+        font-size: 0.5rem;
+        color: rgba(255, 255, 255, 0.25);
+        text-align: center;
+        letter-spacing: 0.15em;
+    }
+
     /* ─── LIGHT MODE ─── */
     :global(body.light-mode) .hero-status-icon.available {
         color: #008f5e;
@@ -666,5 +857,60 @@
     :global(body.light-mode) .hero-status-value.available {
         color: #008f5e;
     }
-    
+
+    :global(body.light-mode) .badge-preview-card {
+        background: #fff;
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    :global(body.light-mode) .badge-preview-close {
+        color: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    :global(body.light-mode) .badge-preview-close:hover {
+        background: rgba(217, 65, 0, 0.08);
+        color: var(--light-accent, #d94100);
+    }
+
+    :global(body.light-mode) .badge-prev,
+    :global(body.light-mode) .badge-next {
+        border-color: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.03);
+        color: rgba(0, 0, 0, 0.5);
+    }
+
+    :global(body.light-mode) .badge-prev:hover:not(:disabled),
+    :global(body.light-mode) .badge-next:hover:not(:disabled) {
+        background: rgba(217, 65, 0, 0.06);
+        color: var(--light-accent, #d94100);
+        border-color: rgba(217, 65, 0, 0.15);
+    }
+
+    :global(body.light-mode) .badge-preview-image {
+        background: #f4f4f5;
+    }
+
+    :global(body.light-mode) .badge-preview-name {
+        color: #18181b;
+    }
+
+    :global(body.light-mode) .badge-preview-rarity {
+        color: rgba(0, 0, 0, 0.4);
+        border-color: rgba(0, 0, 0, 0.06);
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    :global(body.light-mode) .badge-preview-rarity.uncommon {
+        color: #2563eb;
+        border-color: rgba(37, 99, 235, 0.15);
+        background: rgba(37, 99, 235, 0.04);
+    }
+
+    :global(body.light-mode) .badge-preview-rarity.rare {
+        color: #d97706;
+        border-color: rgba(217, 119, 6, 0.15);
+        background: rgba(217, 119, 6, 0.04);
+    }
+
 </style>

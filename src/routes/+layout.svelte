@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { base } from "$app/paths";
     import { theme } from "$lib/stores/theme";
     import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
@@ -35,7 +36,7 @@
         ).matches;
 
         if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/portfolio-svelte/service-worker.js");
+            navigator.serviceWorker.register(`${base}/service-worker.js`);
         }
 
         if ("web-vital" in navigator === false && "PerformanceObserver" in window) {
@@ -212,9 +213,7 @@
 
     <!-- Prevent FOIT on icon fonts -->
     <style>
-        @font-face {
-            font-display: swap;
-        }
+        @font-face { font-family: "devicon"; font-display: swap; }
     </style>
     <style>
         .lightbox3-overlay { --lb-image-border-radius: 0px; }

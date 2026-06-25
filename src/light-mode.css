@@ -7,7 +7,7 @@ body.light-mode {
     --surface-raised: #ffffff;
     --text-primary: #202024;
     --text-secondary: #4a4a52;
-    --text-muted: #8b8b93;
+    --text-muted: #6e6e76;
     --accent: #d94100;
     --accent-hover: #e03d00;
     --accent-glow: rgba(217, 65, 0, 0.12);
@@ -79,38 +79,6 @@ body.light-mode .contact-form-container {
     border: 1px solid var(--wire-color);
     border-left: 3px solid var(--accent);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-
-/* Icon Toggle Logic */
-.ui-icon.sun-icon,
-.ui-icon.moon-icon {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ui-icon.sun-icon {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.ui-icon.moon-icon {
-    opacity: 0;
-    transform: rotate(90deg) scale(0.5);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-body.light-mode .ui-icon.sun-icon {
-    opacity: 0;
-    transform: rotate(-90deg) scale(0.5);
-}
-
-body.light-mode .ui-icon.moon-icon {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
 }
 
 /* Headers & Titles */
@@ -337,5 +305,5 @@ body.light-mode .about-metrics {
 }
 
 body.light-mode .progress-fill {
-    background: linear-gradient(90deg, var(--accent), #ff6633);
+    background: var(--accent);
 }

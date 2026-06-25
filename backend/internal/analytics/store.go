@@ -3,6 +3,7 @@ package analytics
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 )
 
@@ -38,13 +39,22 @@ func InsertEvents(db *sql.DB, events []EventPayload) error {
 func GetDashboardStats(db *sql.DB, since time.Time) DashboardStats {
 	var ds DashboardStats
 
-	db.QueryRow(`SELECT COUNT(*) FROM sessions`).Scan(&ds.TotalViews)
-	db.QueryRow(`SELECT COUNT(DISTINCT ip_hash) FROM sessions WHERE created_at >= $1`, since).Scan(&ds.UniqueVisitors)
-	db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'click' AND target = 'resume_pdf' AND ts >= $1`, since).Scan(&ds.ResumeDownloads)
-	db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'form' AND target = 'form_submit' AND ts >= $1`, since).Scan(&ds.FormSubmissions)
-
-	_ = db.QueryRow(`SELECT COALESCE(AVG(NULLIF(value, '')::numeric), 0) FROM events WHERE type = 'timing' AND target = 'session_duration' AND ts >= $1`,
-		since).Scan(&ds.AvgTimeOnSite)
+	if err := db.QueryRow(`SELECT COUNT(*) FROM sessions`).Scan(&ds.TotalViews); err != nil {
+		slog.Error("analytics: failed to count total views", "error", err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(DISTINCT ip_hash) FROM sessions WHERE created_at >= $1`, since).Scan(&ds.UniqueVisitors); err != nil {
+		slog.Error("analytics: failed to count unique visitors", "error", err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'click' AND target = 'resume_pdf' AND ts >= $1`, since).Scan(&ds.ResumeDownloads); err != nil {
+		slog.Error("analytics: failed to count resume downloads", "error", err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'form' AND target = 'form_submit' AND ts >= $1`, since).Scan(&ds.FormSubmissions); err != nil {
+		slog.Error("analytics: failed to count form submissions", "error", err)
+	}
+	if err := db.QueryRow(`SELECT COALESCE(AVG(NULLIF(value, '')::numeric), 0) FROM events WHERE type = 'timing' AND target = 'session_duration' AND ts >= $1`,
+		since).Scan(&ds.AvgTimeOnSite); err != nil {
+		slog.Error("analytics: failed to compute avg time on site", "error", err)
+	}
 
 	ds.TopReferrers = GetReferrerBreakdown(db, since)
 	ds.TopTargets = GetTopTargets(db, since, 20)
@@ -59,13 +69,15 @@ func GetTopTargets(db *sql.DB, since time.Time, limit int) []TargetCount {
 		since, limit,
 	)
 	if err != nil {
-		return nil
+		slog.Error("analytics: failed to query top targets", "error", err)
+		return []TargetCount{}
 	}
 	defer rows.Close()
-	var out []TargetCount
+	out := []TargetCount{}
 	for rows.Next() {
 		var tc TargetCount
 		if err := rows.Scan(&tc.Target, &tc.Count); err != nil {
+			slog.Error("analytics: failed to scan target row", "error", err)
 			continue
 		}
 		out = append(out, tc)
@@ -79,13 +91,15 @@ func GetCountryBreakdown(db *sql.DB, since time.Time) []CountryCount {
 		since,
 	)
 	if err != nil {
-		return nil
+		slog.Error("analytics: failed to query country breakdown", "error", err)
+		return []CountryCount{}
 	}
 	defer rows.Close()
-	var out []CountryCount
+	out := []CountryCount{}
 	for rows.Next() {
 		var cc CountryCount
 		if err := rows.Scan(&cc.Country, &cc.Count); err != nil {
+			slog.Error("analytics: failed to scan country row", "error", err)
 			continue
 		}
 		out = append(out, cc)
@@ -99,16 +113,36 @@ func GetReferrerBreakdown(db *sql.DB, since time.Time) []ReferrerCount {
 		since,
 	)
 	if err != nil {
-		return nil
+		slog.Error("analytics: failed to query referrer breakdown", "error", err)
+		return []ReferrerCount{}
 	}
 	defer rows.Close()
-	var out []ReferrerCount
+	out := []ReferrerCount{}
 	for rows.Next() {
 		var rc ReferrerCount
 		if err := rows.Scan(&rc.Referrer, &rc.Count); err != nil {
+			slog.Error("analytics: failed to scan referrer row", "error", err)
 			continue
 		}
 		out = append(out, rc)
 	}
 	return out
+}
+
+const dataRetentionDays = 90
+
+func CleanupOldData(db *sql.DB) {
+	cutoff := time.Now().AddDate(0, 0, -dataRetentionDays)
+	result, err := db.Exec(`DELETE FROM events WHERE ts < $1`, cutoff)
+	if err != nil {
+		slog.Error("analytics: failed to cleanup old events", "error", err)
+	} else if n, _ := result.RowsAffected(); n > 0 {
+		slog.Info("analytics: cleaned up old events", "count", n)
+	}
+	result, err = db.Exec(`DELETE FROM sessions WHERE created_at < $1`, cutoff)
+	if err != nil {
+		slog.Error("analytics: failed to cleanup old sessions", "error", err)
+	} else if n, _ := result.RowsAffected(); n > 0 {
+		slog.Info("analytics: cleaned up old sessions", "count", n)
+	}
 }

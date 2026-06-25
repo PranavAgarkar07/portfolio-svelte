@@ -44,7 +44,7 @@
     </div>
 </nav>
 
-<div class="admin-page">
+<div class="admin-page" id="main-content">
     {@render children()}
 </div>
 

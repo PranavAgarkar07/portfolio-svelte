@@ -8,6 +8,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/gif"
+	"image/jpeg"
+	_ "image/png"
 	"io"
 	"log/slog"
 	"net/http"
@@ -29,6 +33,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
 	"github.com/lib/pq"
+	"golang.org/x/image/draw"
+	"portfolio-backend/internal/analytics"
 )
 
 // --- Configuration ---
@@ -91,6 +97,7 @@ type Certificate struct {
 	Date          string   `json:"date"`
 	CredentialURL string   `json:"credential_url"`
 	ImageURL      string   `json:"image_url"`
+	ThumbURL      string   `json:"thumb_url"`
 	Tags          []string `json:"tags"`
 	IsVerified    bool     `json:"is_verified"`
 	DisplayOrder  int      `json:"display_order"`
@@ -210,6 +217,38 @@ func main() {
 			db.Exec("ALTER TABLE badges ADD COLUMN IF NOT EXISTS category TEXT DEFAULT ''")
 			db.Exec("ALTER TABLE badges ADD COLUMN IF NOT EXISTS important BOOLEAN DEFAULT false")
 
+			analyticsMigrations := []string{
+				`CREATE TABLE IF NOT EXISTS sessions (
+					id TEXT PRIMARY KEY,
+					ip_hash TEXT NOT NULL,
+					country TEXT DEFAULT '',
+					city TEXT DEFAULT '',
+					referrer TEXT DEFAULT '',
+					device TEXT DEFAULT '',
+					os TEXT DEFAULT '',
+					browser TEXT DEFAULT '',
+					theme TEXT DEFAULT '',
+					created_at TIMESTAMPTZ DEFAULT NOW()
+				)`,
+				`CREATE TABLE IF NOT EXISTS events (
+					id SERIAL PRIMARY KEY,
+					session_id TEXT NOT NULL,
+					type TEXT NOT NULL,
+					target TEXT DEFAULT '',
+					value TEXT DEFAULT '',
+					ts TIMESTAMPTZ DEFAULT NOW()
+				)`,
+				`CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts)`,
+				`CREATE INDEX IF NOT EXISTS idx_events_type_target ON events(type, target)`,
+				`CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at)`,
+				`CREATE INDEX IF NOT EXISTS idx_sessions_ip ON sessions(ip_hash)`,
+			}
+			for _, m := range analyticsMigrations {
+				if _, err := db.Exec(m); err != nil {
+					slog.Warn("analytics migration failed", "error", err)
+				}
+			}
+
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'https://sentinel-backend-4x3i.onrender.com/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'http://localhost:8080/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 
@@ -239,7 +278,7 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:5174, http://localhost:4173",
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowHeaders: "Origin, Content-Type, Accept, X-Analytics-Key",
 	}))
 
 	app.Use(limiter.New(limiter.Config{
@@ -267,6 +306,14 @@ func main() {
 	app.Get("/admin/contact", handleAdminContact)
 	app.Get("/api/contact/messages", handleGetMessages)
 	app.Patch("/api/contact/messages/:id/read", handleMarkRead)
+
+	if db != nil {
+		analyticsSecret := os.Getenv("ANALYTICS_SECRET")
+		if analyticsSecret == "" {
+			analyticsSecret = os.Getenv("CONTACT_SECRET")
+		}
+		analytics.RegisterRoutes(app, db, analyticsSecret)
+	}
 
 	if os.Getenv("AWS_LAMBDA_RUNTIME_API") == "" {
 		app.Static("/static", "./static")
@@ -613,10 +660,27 @@ func handleGetCertificates(c *fiber.Ctx) error {
 			continue
 		}
 		cert.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		cert.ThumbURL = deriveThumbURL(cert.ImageURL)
 		certs = append(certs, cert)
 	}
 
 	return c.JSON(fiber.Map{"certificates": certs})
+}
+
+func deriveThumbURL(imageURL string) string {
+	idx := strings.Index(imageURL, "/static/")
+	if idx < 0 {
+		return ""
+	}
+	afterStatic := imageURL[idx+8:]
+	if strings.HasPrefix(afterStatic, "thumbs/") {
+		return ""
+	}
+	baseURL := imageURL[:idx+8]
+	filename := filepath.Base(afterStatic)
+	ext := filepath.Ext(filename)
+	base := strings.TrimSuffix(filename, ext)
+	return baseURL + "thumbs/" + base + "_thumb.jpg"
 }
 
 func adminCheck(c *fiber.Ctx) bool {
@@ -862,8 +926,36 @@ func handleAdminUploadImage(c *fiber.Ctx) error {
 	hash := sha256.Sum256(data)
 	filename := hex.EncodeToString(hash[:8]) + ext
 
+	// --- Generate thumbnail ---
+	var thumbData []byte
+	var thumbFilename string
+	img, _, decodeErr := image.Decode(bytes.NewReader(data))
+	if decodeErr == nil {
+		const maxThumbWidth = 640
+		bounds := img.Bounds()
+		w := bounds.Dx()
+		h := bounds.Dy()
+
+		thumbW := w
+		thumbH := h
+		if w > maxThumbWidth {
+			thumbW = maxThumbWidth
+			thumbH = h * maxThumbWidth / w
+		}
+
+		thumb := image.NewRGBA(image.Rect(0, 0, thumbW, thumbH))
+		draw.BiLinear.Scale(thumb, thumb.Bounds(), img, bounds, draw.Over, nil)
+
+		var thumbBuf bytes.Buffer
+		if err := jpeg.Encode(&thumbBuf, thumb, &jpeg.Options{Quality: 70}); err == nil {
+			thumbData = thumbBuf.Bytes()
+			thumbFilename = strings.TrimSuffix(filename, ext) + "_thumb.jpg"
+		}
+	}
+
+	// --- Upload original + thumbnail ---
 	if s3Client != nil {
-		_, err := s3Client.PutObject(context.Background(), &s3.PutObjectInput{
+		_, err = s3Client.PutObject(context.Background(), &s3.PutObjectInput{
 			Bucket:      aws.String(S3Bucket),
 			Key:         aws.String("static/uploads/" + filename),
 			Body:        bytes.NewReader(data),
@@ -873,14 +965,39 @@ func handleAdminUploadImage(c *fiber.Ctx) error {
 			slog.Error("Failed to upload to S3", "error", err)
 			return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
 		}
+
 		url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/uploads/%s", S3Bucket, S3Region, filename)
-		return c.JSON(fiber.Map{"url": url, "filename": filename})
+		result := fiber.Map{"url": url, "filename": filename}
+		if thumbData != nil {
+			_, err = s3Client.PutObject(context.Background(), &s3.PutObjectInput{
+				Bucket:      aws.String(S3Bucket),
+				Key:         aws.String("static/thumbs/" + thumbFilename),
+				Body:        bytes.NewReader(thumbData),
+				ContentType: aws.String("image/jpeg"),
+			})
+			if err != nil {
+				slog.Error("Failed to upload thumbnail to S3", "error", err)
+			} else {
+				thumbURL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/thumbs/%s", S3Bucket, S3Region, thumbFilename)
+				result["thumbUrl"] = thumbURL
+			}
+		}
+		return c.JSON(result)
 	}
 
+	// Local filesystem upload
 	savePath := filepath.Join("static", "uploads", filename)
 	if err := os.WriteFile(savePath, data, 0644); err != nil {
 		slog.Error("Failed to save uploaded image", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
+	}
+
+	if thumbData != nil {
+		thumbSavePath := filepath.Join("static", "thumbs", thumbFilename)
+		os.MkdirAll(filepath.Dir(thumbSavePath), 0755)
+		if err := os.WriteFile(thumbSavePath, thumbData, 0644); err != nil {
+			slog.Error("Failed to save thumbnail", "error", err)
+		}
 	}
 
 	scheme := "http"
@@ -888,8 +1005,12 @@ func handleAdminUploadImage(c *fiber.Ctx) error {
 		scheme = "https"
 	}
 	url := fmt.Sprintf("%s://%s/static/uploads/%s", scheme, c.Hostname(), filename)
-
-	return c.JSON(fiber.Map{"url": url, "filename": filename})
+	result := fiber.Map{"url": url, "filename": filename}
+	if thumbData != nil {
+		thumbURL := fmt.Sprintf("%s://%s/static/thumbs/%s", scheme, c.Hostname(), thumbFilename)
+		result["thumbUrl"] = thumbURL
+	}
+	return c.JSON(result)
 }
 
 // --- Badge Handlers ---

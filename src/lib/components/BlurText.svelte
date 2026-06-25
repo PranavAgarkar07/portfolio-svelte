@@ -32,7 +32,7 @@
         animateBy === "words" ? text.split(" ") : text.split(""),
     );
 
-    const yOffset = direction === "top" ? "-30px" : "30px";
+    const yOffset = $derived(direction === "top" ? "-30px" : "30px");
 </script>
 
 <p bind:this={el} class={className}>

@@ -6,7 +6,7 @@ export const portfolioData = {
     name: "Pranav Agarkar",
     role: "Fullstack Developer",
     tagline:
-      "Fullstack developer specializing in Django, React, and Go. I build secure SaaS backends, encrypted systems, and modern web UIs.",
+      "Building secure, high-throughput backends with Django and Go. 2+ years of full-stack experience turning complex problems into production-ready systems.",
     location: "Solapur, India",
     status: "Open to Opportunities",
     socials: [
@@ -50,13 +50,24 @@ export const portfolioData = {
     {
       category: "Core Stack",
       items: [
-        { name: "Python", icon: "devicon-python-plain", level: "Expert" },
-        { name: "Django", icon: "devicon-django-plain", level: "Expert" },
+        {
+          name: "Python",
+          icon: "devicon-python-plain",
+          level: "Expert",
+          projects: ["TaskVault Lite", "KisanRakshak"],
+        },
+        {
+          name: "Django",
+          icon: "devicon-django-plain",
+          level: "Expert",
+          projects: ["TaskVault Lite", "KisanRakshak"],
+        },
         { name: "Linux", icon: "devicon-linux-plain", level: "Expert" },
         {
           name: "React",
           icon: "devicon-react-original colored",
           level: "Proficient",
+          projects: ["TaskVault Lite", "KisanRakshak"],
         },
       ],
     },
@@ -68,17 +79,13 @@ export const portfolioData = {
           name: "JavaScript",
           icon: "devicon-javascript-plain colored",
           level: "Proficient",
+          projects: ["TaskVault Lite", "KisanRakshak"],
         },
         { name: "Git", icon: "devicon-git-plain colored", level: "Proficient" },
         {
           name: "HTML5/CSS3",
           icon: "devicon-html5-plain colored",
           level: "Expert",
-        },
-        {
-          name: "Rust",
-          icon: "devicon-rust-plain",
-          level: "Familiar",
         },
       ],
     },
@@ -89,11 +96,13 @@ export const portfolioData = {
           name: "Go",
           icon: "devicon-go-original-wordmark colored",
           level: "Proficient",
+          projects: ["BeamSync", "KisanRakshak"],
         },
         {
           name: "Svelte",
           icon: "devicon-svelte-plain colored",
           level: "Proficient",
+          projects: ["BeamSync", "Portfolio"],
         },
         {
           name: "Docker",
@@ -110,6 +119,11 @@ export const portfolioData = {
           icon: "devicon-kubernetes-plain colored",
           level: "Familiar",
         },
+        {
+          name: "Rust",
+          icon: "devicon-rust-plain",
+          level: "Familiar",
+        },
       ],
     },
   ],
@@ -117,7 +131,7 @@ export const portfolioData = {
     {
       name: "TaskVault Lite",
       description:
-        "Full-stack task manager with JWT/OAuth auth, AES-128-CBC encryption, and 1,247 req/min throughput. Built with Django REST Framework and React.",
+        "Encrypted task manager with JWT/OAuth authentication and AES-128-CBC encryption — 1,247 req/min throughput. Replaced manual tracking workflows with a secure API-first system. Built with Django REST Framework and React.",
       images: [
         {
           src: "images/taskvault/HomepageSS.webp",
@@ -155,7 +169,7 @@ export const portfolioData = {
     {
       name: "BeamSync",
       description:
-        "LAN file transfer with auto-IP discovery, QR pairing, and AES-256-GCM encryption. No cloud, no sign-up. Built with Go and Wails.",
+        "Offline P2P file transfer tool with zero-config auto-discovery and QR pairing. Encrypts data with AES-256-GCM — no cloud, no accounts. Built with Go and Wails. 32 GitHub stars from developers who use it for air-gapped transfers.",
       seriesTag: "BeamSync Ecosystem",
       githubStars: 32,
       images: [
@@ -194,7 +208,7 @@ export const portfolioData = {
     {
       name: "KisanRakshak",
       description:
-        "Predicts farmer distress using XGBoost on 6 agri signals with SHAP-explainable scores and real-time heatmaps. Built with React, Django, Go, and TimescaleDB.",
+        "Predicts farmer distress risk across 10 districts using XGBoost on 6 agricultural signals. SHAP-explainable scores + real-time heatmap dashboards for early intervention. Built with React, Django, Go, and TimescaleDB.",
       githubStars: 8,
       images: [
         {
@@ -236,7 +250,7 @@ export const portfolioData = {
     {
       name: "BeamSync Mobile",
       description:
-        "Android companion for wireless file transfer over local Wi-Fi. Scan a QR code, transfer at LAN speed with real-time progress. Built with Kotlin and Jetpack Compose.",
+        "Android companion that extends the BeamSync ecosystem to mobile — scan a QR code to pair, transfer files at LAN speed with real-time progress tracking. Built with Kotlin, Jetpack Compose, and Material Design 3.",
       seriesTag: "BeamSync Ecosystem",
       githubStars: 6,
       images: [
@@ -284,7 +298,8 @@ export const fallbackCertificates = [
     issuer: "NPTEL (IIT Kharagpur)",
     date: "2024-10",
     credential_url: "https://archive.nptel.ac.in/noc/Ecertificate/",
-    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-nptl.png",
+    image_url:
+      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-nptl.png",
     tags: ["Security", "Social Media", "Privacy"],
     is_verified: true,
     display_order: 1,
@@ -295,8 +310,10 @@ export const fallbackCertificates = [
     title: "Red Hat — Python Programming",
     issuer: "Red Hat Academy",
     date: "2024-08",
-    credential_url: "https://www.redhat.com/en/services/training-and-certification",
-    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-python.png",
+    credential_url:
+      "https://www.redhat.com/en/services/training-and-certification",
+    image_url:
+      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-python.png",
     tags: ["Python", "Red Hat"],
     is_verified: true,
     display_order: 2,
@@ -307,8 +324,10 @@ export const fallbackCertificates = [
     title: "Red Hat — Linux Essentials",
     issuer: "Red Hat Academy",
     date: "2024-06",
-    credential_url: "https://www.redhat.com/en/services/training-and-certification",
-    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-linux.png",
+    credential_url:
+      "https://www.redhat.com/en/services/training-and-certification",
+    image_url:
+      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-linux.png",
     tags: ["Linux", "Red Hat"],
     is_verified: true,
     display_order: 3,
@@ -320,7 +339,8 @@ export const fallbackCertificates = [
     issuer: "Joomla! Official",
     date: "2024-04",
     credential_url: "https://www.joomla.org/",
-    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-joomla.jpeg",
+    image_url:
+      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-joomla.jpeg",
     tags: ["Joomla", "CMS", "Web Development"],
     is_verified: false,
     display_order: 4,

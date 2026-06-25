@@ -33,7 +33,14 @@ func HandleCreateEvents(db *sql.DB) fiber.Handler {
 			events = events[:50]
 		}
 		if len(events) > 0 {
-			_ = InsertEvents(db, events)
+			for _, e := range events {
+				if e.SessionID == "" || e.Type == "" {
+					return c.Status(400).JSON(fiber.Map{"error": "each event requires session_id and type"})
+				}
+			}
+			if err := InsertEvents(db, events); err != nil {
+				return c.Status(500).JSON(fiber.Map{"error": "failed to store events"})
+			}
 		}
 		return c.Status(202).JSON(fiber.Map{"status": "accepted"})
 	}

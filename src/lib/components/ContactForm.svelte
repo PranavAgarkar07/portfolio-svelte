@@ -11,6 +11,7 @@
     let waking = $state(false);
     let success = $state(false);
     let errorMsg = $state("");
+    let serverDown = $state(false);
 
     let nameTouched = $state(false);
     let emailTouched = $state(false);
@@ -19,6 +20,36 @@
     let nameError = $derived(nameTouched && !name.trim() ? "Name is required" : "");
     let emailError = $derived(emailTouched && !email.trim() ? "Email is required" : emailTouched && !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email) ? "Invalid email format" : "");
     let messageError = $derived(messageTouched && !message.trim() ? "Message is required" : messageTouched && message.trim().length < 10 ? "At least 10 characters" : "");
+
+    let fieldsCompleted = $derived([name.trim(), email.trim(), message.trim()].filter(Boolean).length);
+    let totalRequired = 3;
+
+    let draftKey = "contact_form_draft";
+
+    function restoreDraft() {
+        try {
+            const saved = localStorage.getItem(draftKey);
+            if (saved) {
+                const data = JSON.parse(saved);
+                name = data.name || "";
+                email = data.email || "";
+                topic = data.topic || "general";
+                message = data.message || "";
+            }
+        } catch { }
+    }
+
+    function saveDraft() {
+        try {
+            localStorage.setItem(draftKey, JSON.stringify({ name, email, topic, message }));
+        } catch { }
+    }
+
+    function clearDraft() {
+        try { localStorage.removeItem(draftKey); } catch { }
+    }
+
+    restoreDraft();
 
     function validate(): string {
         nameTouched = true;
@@ -35,17 +66,17 @@
 
     async function wakeServer(): Promise<boolean> {
         waking = true;
-        for (let attempt = 0; attempt < 12; attempt++) {
+        for (let attempt = 0; attempt < 3; attempt++) {
             try {
                 const ctrl = new AbortController();
-                const id = setTimeout(() => ctrl.abort(), 8000);
+                const id = setTimeout(() => ctrl.abort(), 5000);
                 const res = await fetch(HEALTH_URL, { signal: ctrl.signal });
                 clearTimeout(id);
                 if (res.ok) return true;
             } catch {
-                /* server still waking — retry */
+                if (attempt === 0) serverDown = true;
             }
-            await new Promise(r => setTimeout(r, 5000));
+            if (attempt < 2) await new Promise(r => setTimeout(r, 3000));
         }
         return false;
     }
@@ -59,7 +90,8 @@
         const serverAwake = await wakeServer();
         waking = false;
         if (!serverAwake) {
-            errorMsg = "Server is taking too long to wake up. Try emailing me directly at pranavagarkar8@gmail.com.";
+            serverDown = true;
+            errorMsg = "";
             submitting = false;
             return;
         }
@@ -74,15 +106,16 @@
                 success = true;
                 name = ""; email = ""; topic = "general"; message = "";
                 nameTouched = false; emailTouched = false; messageTouched = false;
+                clearDraft();
                 setTimeout(() => success = false, 6000);
             } else if (res.status === 429) {
                 errorMsg = "Please wait a moment before sending another message.";
             } else {
                 const data = await res.json().catch(() => ({}));
-                errorMsg = data.message || "Something went wrong. Try emailing me directly at pranavagarkar8@gmail.com.";
+                errorMsg = data.message || "Server error. Try emailing me directly.";
             }
         } catch {
-            errorMsg = "Network error. Try emailing me directly at pranavagarkar8@gmail.com.";
+            errorMsg = "Network error. Try emailing me directly.";
         } finally {
             submitting = false;
         }
@@ -90,6 +123,40 @@
 </script>
 
 <div class="contact-form">
+    {#if serverDown}
+        <div class="server-down-banner" role="alert">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            <div class="sdb-content">
+                <span class="sdb-title">Server is sleeping</span>
+                <span class="sdb-text">Send me an email directly — I'll respond within 24 hours.</span>
+            </div>
+            <a href="mailto:pranavagarkar8@gmail.com?subject=Hello%20from%20your%20portfolio" class="sdb-cta">
+                Send Email
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+            </a>
+            <button class="sdb-retry" onclick={() => { serverDown = false; errorMsg = ""; }}>Try again</button>
+        </div>
+    {:else}
+    <div class="form-progress" aria-hidden="true">
+        <div class="form-progress-track">
+            <div class="form-progress-fill" style="width: {(fieldsCompleted / totalRequired) * 100}%"></div>
+        </div>
+        <span class="form-progress-label">{fieldsCompleted}/{totalRequired} fields</span>
+        {#if fieldsCompleted === totalRequired}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        {/if}
+    </div>
+
     <div class="form-body">
         <div class="form-row">
             <div class="input-card" class:has-error={nameError}>
@@ -103,7 +170,7 @@
                         disabled={submitting}
                         autocomplete="name"
                         onblur={() => nameTouched = true}
-                        oninput={() => { nameTouched = true; errorMsg = ""; }}
+                        oninput={() => { nameTouched = true; errorMsg = ""; saveDraft(); }}
                     />
                     <span class="input-accent"></span>
                 </div>
@@ -122,7 +189,7 @@
                         disabled={submitting}
                         autocomplete="email"
                         onblur={() => emailTouched = true}
-                        oninput={() => { emailTouched = true; errorMsg = ""; }}
+                        oninput={() => { emailTouched = true; errorMsg = ""; saveDraft(); }}
                     />
                     <span class="input-accent"></span>
                 </div>
@@ -206,7 +273,7 @@
                     disabled={submitting}
                     autocomplete="off"
                     onblur={() => messageTouched = true}
-                    oninput={() => { messageTouched = true; errorMsg = ""; }}
+                    oninput={() => { messageTouched = true; errorMsg = ""; saveDraft(); }}
                 ></textarea>
                 <span class="input-accent"></span>
             </div>
@@ -272,6 +339,7 @@
             Typically responds within 24 hours
         </span>
     </div>
+    {/if}
 </div>
 
 <style>
@@ -295,6 +363,103 @@
     }
     @media (max-width: 600px) {
         .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ---- Form Progress ---- */
+    .form-progress {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding-bottom: 0.5rem;
+    }
+    .form-progress-track {
+        flex: 1;
+        height: 2px;
+        background: var(--grid-line);
+        border-radius: 0;
+        overflow: hidden;
+    }
+    .form-progress-fill {
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.3s ease;
+    }
+    .form-progress-label {
+        font-size: 0.6rem;
+        font-family: var(--font-body);
+        color: var(--text-secondary);
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+    }
+
+    /* ---- Server Down Banner ---- */
+    .server-down-banner {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid rgba(255, 68, 0, 0.2);
+        background: rgba(255, 68, 0, 0.04);
+        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    }
+    .server-down-banner svg {
+        flex-shrink: 0;
+        color: var(--accent);
+        opacity: 0.7;
+    }
+    .sdb-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+    .sdb-title {
+        font-family: var(--font-heading);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+    }
+    .sdb-text {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+    .sdb-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: var(--accent);
+        color: #000;
+        font-family: var(--font-heading);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+        flex-shrink: 0;
+    }
+    .sdb-cta:hover {
+        opacity: 0.85;
+    }
+    .sdb-retry {
+        font-size: 0.6rem;
+        font-family: var(--font-body);
+        color: var(--text-secondary);
+        background: transparent;
+        border: none;
+        border-bottom: 1px dashed var(--text-secondary);
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+        transition: color 0.2s ease, border-color 0.2s ease;
+    }
+    .sdb-retry:hover {
+        color: var(--accent);
+        border-color: var(--accent);
     }
 
     /* ---- Input Cards ---- */

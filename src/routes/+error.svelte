@@ -7,7 +7,7 @@
     <title>SYSTEM::ERROR {$page.status}</title>
 </svelte:head>
 
-<div class="error-page">
+<div class="error-page" id="main-content">
     <div class="error-container">
         <h1 class="error-code">{$page.status}</h1>
         <h2 class="error-heading">SYSTEM::ERROR</h2>

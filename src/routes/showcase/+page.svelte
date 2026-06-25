@@ -45,7 +45,7 @@
 	<title>Component Library — Showcase</title>
 </svelte:head>
 
-<div class="showcase">
+<div class="showcase" id="main-content">
 	<CustomCursor color="var(--accent)" />
 
 	<header class="showcase-header">

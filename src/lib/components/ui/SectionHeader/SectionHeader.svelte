@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { motion } from '@humanspeak/svelte-motion';
     import type { HTMLAttributes } from 'svelte/elements';
 
     type Props = {
@@ -20,41 +19,40 @@
         style = '',
         ...rest
     }: Props = $props();
+
+    let el = $state<HTMLDivElement | null>(null);
+
+    $effect(() => {
+        if (!animate || !el) return;
+        const obs = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    el.classList.add('in-view');
+                    obs.disconnect();
+                }
+            },
+            { threshold: 0.2 }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    });
 </script>
 
-{#if animate}
-    <motion.div
-        class="section-header{className ? ' ' + className : ''}"
-        {style}
-        {id}
-        initial={{ clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)' }}
-        whileInView={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        {...rest}
-    >
-        <h2>
-            {title}
-            {#if count !== undefined}
-                <span class="count-badge">{String(count).padStart(2, '0')}</span>
-            {/if}
-        </h2>
-    </motion.div>
-{:else}
-    <div
-        class="section-header{className ? ' ' + className : ''}"
-        {style}
-        {id}
-        {...rest}
-    >
-        <h2>
-            {title}
-            {#if count !== undefined}
-                <span class="count-badge">{String(count).padStart(2, '0')}</span>
-            {/if}
-        </h2>
-    </div>
-{/if}
+<div
+    class="section-header{animate ? ' section-header-animate' : ''}{className ? ' ' + className : ''}"
+    class:section-header-animate={animate}
+    {style}
+    {id}
+    bind:this={el}
+    {...rest}
+>
+    <h2>
+        {title}
+        {#if count !== undefined}
+            <span class="count-badge">{String(count).padStart(2, '0')}</span>
+        {/if}
+    </h2>
+</div>
 
 <style lang="scss">
 	@use '../../../styles' as *;
@@ -90,6 +88,24 @@
 		}
 	}
 
+	.section-header-animate {
+		h2 {
+			clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+			transition: clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.count-badge {
+			clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+			transition: clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		&.in-view {
+			h2, .count-badge {
+				clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+			}
+		}
+	}
+
 	:global(body.light-mode) .section-header h2 {
 		color: #111;
 		border-color: $light-accent;
@@ -98,18 +114,5 @@
 	:global(body.light-mode) .section-header .count-badge {
 		color: $light-accent;
 		border-color: $light-accent;
-	}
-
-	.section-header.clip-reveal {
-		h2, .count-badge {
-			clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-			transition: clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-		}
-
-		&.visible {
-			h2, .count-badge {
-				clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-			}
-		}
 	}
 </style>

@@ -11,6 +11,7 @@
     }
 
     let { profile }: Props = $props();
+    let resumeUrl = $derived(profile.socials.find(s => s.name === "Resume")?.url || "/Pranav_Agarkar_Resume.pdf");
     let mobileMenuOpen = $state(false);
     let activeSection = $state("");
     let scrollProgress = $state(0);
@@ -18,9 +19,14 @@
     let lastScrollY = $state(0);
     let reachedTop = $state(true);
     let detached = $state(false);
+    let cachedDocHeight = $state(0);
 
     function toggleTheme() {
         theme.toggle();
+    }
+
+    function updateDocHeight() {
+        cachedDocHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
     }
 
     $effect(() => {
@@ -40,11 +46,11 @@
     });
 
     onMount(() => {
+        updateDocHeight();
+        window.addEventListener("resize", updateDocHeight);
+
         const handleScroll = (winScroll: number) => {
-            const height =
-                document.documentElement.scrollHeight -
-                document.documentElement.clientHeight;
-            scrollProgress = height > 0 ? (winScroll / height) * 100 : 0;
+            scrollProgress = cachedDocHeight > 0 ? (winScroll / cachedDocHeight) * 100 : 0;
             reachedTop = winScroll < 10;
 
             const isDesktop = window.innerWidth > 768;
@@ -95,6 +101,7 @@
         return () => {
             unsubScroll();
             window.removeEventListener("scroll", onNativeScroll);
+            window.removeEventListener("resize", updateDocHeight);
             observer.disconnect();
         };
     });
@@ -144,6 +151,18 @@
                     onclick={() => (mobileMenuOpen = false)}>Contact</a
                 >
             </li>
+            <li class="nav-resume-li mobile-only">
+                <a href={resumeUrl} target="_blank" rel="noopener" class="nav-resume-link" onclick={() => (mobileMenuOpen = false)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Resume
+                </a>
+            </li>
 
             <!-- Mobile Only Theme Switcher -->
             <li class="mobile-only">
@@ -159,8 +178,18 @@
             </li>
         </ul>
 
+        <div class="header-actions">
+        <a href={resumeUrl} target="_blank" rel="noopener" class="desktop-only header-resume-btn" aria-label="Download Resume">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            Resume
+        </a>
         <button
-            class="desktop-only theme-toggle"
+            class="theme-toggle"
             onclick={toggleTheme}
             aria-label="Toggle Theme"
         >
@@ -183,6 +212,7 @@
                 </svg>
             </span>
         </button>
+        </div>
 
         <button
             class="mobile-menu-btn"

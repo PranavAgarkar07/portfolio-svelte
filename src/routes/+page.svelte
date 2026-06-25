@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, tick } from "svelte";
+    import { onMount } from "svelte";
     import gsap from "gsap";
     import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 
@@ -25,25 +25,10 @@
     let badges = $state<Badge[]>([]);
     let prefersReducedMotion = $state(false);
 
-    async function animateCerts() {
-        await tick();
-        const wraps = document.querySelectorAll(".cert-card-wrap");
-        if (wraps.length > 0 && !prefersReducedMotion) {
-            gsap.to(wraps, {
-                opacity: 1, y: 0, scale: 1,
-                stagger: 0.08,
-                ease: "power3.out",
-                duration: 0.6,
-                clearProps: "transform",
-            });
-        }
-    }
-
     async function fetchCerts() {
         if (!API_BASE) {
             certificates = fallbackCertificates;
             certsLoading = false;
-            animateCerts();
             return;
         }
         try {
@@ -52,12 +37,10 @@
             const data = await r.json();
             certificates = Array.isArray(data.certificates) ? data.certificates : (Array.isArray(data) ? data : []);
             certsLoading = false;
-            animateCerts();
         } catch (e) {
             certsError = String(e);
             certificates = fallbackCertificates;
             certsLoading = false;
-            animateCerts();
         }
     }
 
@@ -108,48 +91,46 @@
         }});
 
         // ──────────────────────────────────────────────
-        // 6. PROJECTS — CARD PERSPECTIVE + STAGGER REVEAL (batched: 1 trigger)
+        // 6. PROJECTS — STAGGER REVEAL
         // ──────────────────────────────────────────────
         gsap.set(".project-card", {
-            x: (i: number) => (i % 2 === 0 ? -1 : 1) * 150,
+            y: 40,
             opacity: 0,
-            rotateY: (i: number) => (i % 2 === 0 ? -1 : 1) * 15,
-            scale: 0.9,
         });
         ScrollTrigger.create({
             trigger: "#projects", start: "top 85%", once: true,
             onEnter: () => { gsap.to(".project-card", {
-                x: 0, opacity: 1, rotateY: 0, scale: 1,
-                stagger: 0.12,
-                ease: "elastic.out(1, 0.65)", duration: 0.8,
+                y: 0, opacity: 1,
+                stagger: 0.08,
+                ease: "power3.out", duration: 0.6,
             });}
         });
 
         // ──────────────────────────────────────────────
-        // 7. SKILLS — CASCADE WAVE REVEAL
+        // 7. SKILLS — CASCADE REVEAL
         // ──────────────────────────────────────────────
-        gsap.set(".skill-category-card", { y: 80, opacity: 0, scale: 0.92, rotateX: 10 });
+        gsap.set(".skill-category-card", { y: 40, opacity: 0 });
         ScrollTrigger.create({
             trigger: "#skills", start: "top 85%", once: true,
             onEnter: () => { gsap.to(".skill-category-card", {
-                y: 0, opacity: 1, scale: 1, rotateX: 0,
-                stagger: { each: 0.15, from: "edges", ease: "power2.inOut" },
-                ease: "power3.out", duration: 0.7,
+                y: 0, opacity: 1,
+                stagger: 0.1,
+                ease: "power3.out", duration: 0.6,
             });}
         });
 
         // ──────────────────────────────────────────────
-        // 8. SKILL ITEMS — BATCH STAGGER POP (1 trigger instead of 12)
+        // 8. SKILL ITEMS — BATCH STAGGER
         // ──────────────────────────────────────────────
         const skillCards = gsap.utils.toArray(".skill-card");
         if (skillCards.length > 0) {
-            gsap.set(skillCards, { y: 30, opacity: 0, scale: 0.85 });
+            gsap.set(skillCards, { y: 20, opacity: 0 });
             ScrollTrigger.create({
                 trigger: "#skills", start: "top 75%", once: true,
                 onEnter: () => { gsap.to(skillCards, {
-                    y: 0, opacity: 1, scale: 1,
-                    stagger: 0.04,
-                    ease: "back.out(2)", duration: 0.5,
+                    y: 0, opacity: 1,
+                    stagger: 0.03,
+                    ease: "power3.out", duration: 0.4,
                 });}
             });
         }
@@ -158,18 +139,18 @@
         // (GSAP version removed to avoid duplicate clip-path animation)
 
         // ──────────────────────────────────────────────
-        gsap.set(".about-visual-col", { x: -80, opacity: 0, rotateY: 8, scale: 0.95 });
-        gsap.set(".about-content-col", { x: 80, opacity: 0, rotateY: -8, scale: 0.95 });
+        gsap.set(".about-visual-col", { x: -30, opacity: 0 });
+        gsap.set(".about-content-col", { x: 30, opacity: 0 });
         ScrollTrigger.create({
             trigger: "#about", start: "top 80%", once: true,
             onEnter: () => {
                 gsap.to(".about-visual-col", {
-                    x: 0, opacity: 1, rotateY: 0, scale: 1,
-                    ease: "power3.out", duration: 0.7,
+                    x: 0, opacity: 1,
+                    ease: "power3.out", duration: 0.6,
                 });
                 gsap.to(".about-content-col", {
-                    x: 0, opacity: 1, rotateY: 0, scale: 1,
-                    ease: "power3.out", duration: 0.7, delay: 0.1,
+                    x: 0, opacity: 1,
+                    ease: "power3.out", duration: 0.6, delay: 0.08,
                 });
             }
         });
@@ -178,9 +159,9 @@
         gsap.set(".about-spec-row", { y: 25, opacity: 0 });
 
         // ──────────────────────────────────────────────
-        // 11. ABOUT — METRICS COUNT-UP + SPRING (batched: 1 trigger instead of 12)
+        // 11. ABOUT — METRICS COUNT-UP
         // ──────────────────────────────────────────────
-        gsap.set(".about-metric", { y: 40, opacity: 0, scale: 0.85 });
+        gsap.set(".about-metric", { y: 20, opacity: 0 });
         ScrollTrigger.create({
             trigger: "#about", start: "top 75%", once: true,
             onEnter: () => {
@@ -200,10 +181,10 @@
                         onUpdate: () => { el.textContent = Math.round(obj.val) + suffix; },
                     });
                 });
-                // Metrics spring up
+                // Metrics fade up
                 gsap.to(".about-metric", {
-                    y: 0, opacity: 1, scale: 1,
-                    stagger: 0.1, ease: "power3.out", duration: 0.6,
+                    y: 0, opacity: 1,
+                    stagger: 0.08, ease: "power3.out", duration: 0.5,
                 });
             }
         });
@@ -211,35 +192,33 @@
         // ──────────────────────────────────────────────
         // 12-13. CONTACT — ALL (batched: 1 trigger instead of 7)
         // ──────────────────────────────────────────────
-        gsap.set(".contact-info", { x: -50, opacity: 0 });
-        gsap.set(".contact-form-container", { x: 50, opacity: 0 });
-        gsap.set(".info-item", { y: 20, opacity: 0 });
-        gsap.set(".social-link", { y: 15, opacity: 0, scale: 0.8 });
+        gsap.set(".contact-info", { y: 15, opacity: 0 });
+        gsap.set(".contact-form-container", { y: 15, opacity: 0 });
+        gsap.set(".info-item", { y: 10, opacity: 0 });
+        gsap.set(".social-link", { y: 10, opacity: 0 });
 
         // Contact section single trigger
         ScrollTrigger.create({
             trigger: "#contact", start: "top 85%", once: true,
             onEnter: () => {
-                // Dual-sided reveal
-                gsap.to(".contact-info", { x: 0, opacity: 1, ease: "power3.out", duration: 0.7 });
+                // Simple fade up
+                gsap.to(".contact-info", { y: 0, opacity: 1, ease: "power3.out", duration: 0.5 });
                 gsap.to(".contact-form-container", {
-                    x: 0, opacity: 1, ease: "power3.out", duration: 0.7, delay: 0.15,
+                    y: 0, opacity: 1, ease: "power3.out", duration: 0.5, delay: 0.1,
                 });
-                // Info items stagger
                 gsap.to(".info-item", {
-                    y: 0, opacity: 1, ease: "back.out(1.7)", duration: 0.5,
-                    stagger: 0.06,
-                });
-                // Social links stagger
-                gsap.to(".social-link", {
-                    y: 0, opacity: 1, scale: 1, ease: "power3.out", duration: 0.5,
+                    y: 0, opacity: 1, ease: "power3.out", duration: 0.4,
                     stagger: 0.05,
+                });
+                gsap.to(".social-link", {
+                    y: 0, opacity: 1, ease: "power3.out", duration: 0.4,
+                    stagger: 0.04,
                 });
             }
         });
 
         // ──────────────────────────────────────────────
-        // 14. MOBILE SAFETY — recover stuck hidden elements
+        // 14. SAFETY — recover stuck hidden elements (mobile + reduced motion)
         // ──────────────────────────────────────────────
         function forceVisibility() {
             ScrollTrigger.refresh();
@@ -247,28 +226,26 @@
                 ".section-header", ".skill-category-card", ".skill-card", ".project-card",
                 ".about-visual-col", ".about-content-col", ".about-spec-row",
                 ".about-metric", ".contact-info", ".contact-form-container",
-                ".info-item", ".social-link", ".cert-card-wrap",
+                ".info-item", ".social-link",
                 ".hero-status", ".hero-scroll"
             ];
             document.querySelectorAll(selectors.join(",")).forEach(el => {
-                const computed = getComputedStyle(el);
-                if (parseFloat(computed.opacity) < 0.5) {
-                    gsap.set(el, {
-                        opacity: 1, y: 0, x: 0, scale: 1,
-                        rotateY: 0, rotateX: 0,
-                        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-                    });
-                }
-});
-        gsap.set(".hero-name-text", {
-            clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-        });
+                gsap.set(el, {
+                    opacity: 1, y: 0, x: 0, scale: 1,
+                    clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+                });
+            });
+            gsap.set(".hero-name-text", {
+                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+            });
         }
 
         const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
-        if (isMobile) {
-            setTimeout(forceVisibility, 1500);
-            window.addEventListener("touchstart", () => ScrollTrigger.refresh(), { once: true });
+        if (isMobile || prefersReducedMotion) {
+            setTimeout(forceVisibility, 500);
+            if (isMobile) {
+                window.addEventListener("touchstart", () => ScrollTrigger.refresh(), { once: true });
+            }
         }
     });
 
@@ -320,7 +297,7 @@
 
 <Header {profile} />
 
-<main>
+<main id="main-content">
     <Hero {profile} {about} {skills} {badges} />
 
     <section id="projects" class="section-container snap-section">
@@ -337,7 +314,7 @@
         {#if certsLoading}
             <div class="certs-skeleton-grid">
                 {#each Array(3) as _, i}
-                    <div class="cert-card-wrap" style="animation-delay: {i * 100}ms">
+                    <div class="cert-card-wrap">
                         <div class="cert-skeleton">
                             <div class="skeleton-thumb"></div>
                             <div class="skeleton-body">
@@ -383,15 +360,20 @@
             <div class="contact-grid">
                 <div class="contact-info">
                     <Card>
-                        <div class="info-item">
-                            <div class="info-icon">
-                                <Icon name="chat" size={20} />
+                        <a href="mailto:pranavagarkar8@gmail.com?subject=Opportunity%20from%20your%20portfolio" class="contact-email-cta">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                <path d="M22 4L12 13 2 4"></path>
+                            </svg>
+                            <div class="contact-email-content">
+                                <span class="contact-email-label">Email me directly</span>
+                                <span class="contact-email-addr">pranavagarkar8@gmail.com</span>
                             </div>
-                            <div class="info-content">
-                                <span class="info-title">Chat</span>
-                                <span class="info-text">pranavagarkar8@gmail.com</span>
-                            </div>
-                        </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-email-arrow">
+                                <line x1="7" y1="17" x2="17" y2="7"></line>
+                                <polyline points="7 7 17 7 17 17"></polyline>
+                            </svg>
+                        </a>
                         <div class="info-item">
                             <div class="info-icon">
                                 <Icon name="clock" size={20} />
@@ -432,19 +414,4 @@
 <Footer {profile} />
 
 <style>
-    :global(.project-card),
-    :global(.skill-category-card),
-    :global(.skill-card),
-    :global(.cert-card-wrap),
-    :global(.section-header),
-    :global(.about-visual-col),
-    :global(.about-content-col),
-    :global(.about-spec-row),
-    :global(.about-metric),
-    :global(.contact-info),
-    :global(.contact-form-container),
-    :global(.info-item),
-    :global(.social-link) {
-        will-change: transform, opacity;
-    }
 </style>
