@@ -40,12 +40,13 @@
 
 	.tag {
 		font-family: $font-body;
-		font-size: 0.68rem;
+		font-size: 0.65rem;
+		line-height: 1;
 		font-weight: 600;
 		color: $accent;
 		border: 1px solid $accent;
 		background: transparent;
-		padding: 3px 8px;
+		padding: 1px 8px;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		transition: background 0.1s ease, color 0.1s ease;
@@ -90,8 +91,8 @@
 		}
 
 		&.tag-removable:hover {
-			background: $light-accent;
-			color: #fff;
+			background: rgba(256, 68, 0, 0.1);
+			color: var(--accent);
 		}
 	}
 

@@ -116,8 +116,10 @@
         color: var(--text-secondary);
         cursor: pointer;
         z-index: 999;
-        transition: all 0.2s ease;
+        transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
         clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        will-change: clip-path;
+        contain: paint;
     }
     .back-to-top:hover {
         border-color: var(--accent);

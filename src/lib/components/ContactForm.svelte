@@ -413,9 +413,11 @@
         background: transparent;
         border: 1.5px solid var(--grid-line);
         clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+        will-change: clip-path;
+        contain: paint;
         cursor: pointer;
         font-family: var(--font-body);
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         color: var(--text-secondary);
     }
@@ -437,7 +439,7 @@
         height: 6px;
         border-radius: 50%;
         background: var(--grid-line);
-        transition: all 0.25s ease;
+        transition: background 0.25s ease, transform 0.25s ease;
         flex-shrink: 0;
     }
     .topic-chip:hover:not(.active):not(:disabled) {
@@ -474,9 +476,11 @@
         border: 1.5px solid var(--accent);
         background: transparent;
         clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        will-change: clip-path;
+        contain: paint;
         cursor: pointer;
         font-family: var(--font-body);
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
     }
@@ -506,7 +510,7 @@
     }
     .submit-btn svg {
         color: var(--accent);
-        transition: all 0.25s ease;
+        transition: color 0.25s ease, transform 0.25s ease;
     }
     .submit-btn:hover:not(:disabled)::before {
         opacity: 1;
@@ -552,6 +556,8 @@
         border: 1px solid rgba(255, 68, 68, 0.25);
         background: rgba(255, 68, 68, 0.05);
         clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+        will-change: clip-path;
+        contain: paint;
         animation: shake 0.3s ease;
     }
     .form-error svg {

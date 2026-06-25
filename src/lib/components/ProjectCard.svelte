@@ -14,6 +14,9 @@ import { Lightbox } from "lightbox3";
             description: string;
             tags: string[];
             isLive: boolean;
+            featured?: boolean;
+            seriesTag?: string;
+            githubStars?: number;
             images?: Image[];
             links: Array<{ label: string; url: string; icon: string }>;
         };
@@ -76,6 +79,12 @@ import { Lightbox } from "lightbox3";
         scrollToSlide();
     }
 
+    function projectLinkTarget(name: string, label: string): string {
+        const n = name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+$/, '');
+        const l = label.toLowerCase().replace(/\s+/g, '_');
+        return `${n}_${l}`;
+    }
+
     function scrollToSlide() {
         if (!carousel) return;
         const child = carousel.children[currentSlide] as HTMLElement;
@@ -89,110 +98,195 @@ import { Lightbox } from "lightbox3";
 
 <article
     class="project-card"
+    class:featured={project.featured}
     bind:this={cardEl}
     onmousemove={handleMouseMove}
     onmouseleave={handleMouseLeave}
 >
-    <div class="card-media">
-        {#if project.images && project.images.length > 0}
-            <div class="carousel-track" bind:this={carousel}>
-                {#each project.images as img, i}
-                    <a
-                        href={img.src}
-                        data-lightbox={galleryName}
-                        data-caption={img.alt}
-                        class="carousel-slide"
-                        class:active={i === currentSlide}
-                        aria-label="View {img.alt} full size"
-                        onclick={(e) => {
-                            e.preventDefault();
-                            Lightbox.instance.open(img.src, e.currentTarget);
-                        }}
-                    >
-                        <img
-                            src={img.src}
-                            alt={img.alt}
-                            class="carousel-img"
-                            loading={i === 0 ? "eager" : "lazy"}
-                            decoding="async"
-                        />
-                    </a>
+    {#if project.featured}
+        <!-- FEATURED LAYOUT: horizontal split — image left, content right -->
+        <div class="featured-inner">
+            <div class="card-media featured-media">
+                {#if project.images && project.images.length > 0}
+                    <div class="carousel-track" bind:this={carousel}>
+                        {#each project.images as img, i}
+                            <a
+                                href={img.src}
+                                data-lightbox={galleryName}
+                                data-caption={img.alt}
+                                class="carousel-slide"
+                                class:active={i === currentSlide}
+                                aria-label="View {img.alt} full size"
+                                onclick={(e) => {
+                                    e.preventDefault();
+                                    Lightbox.instance.open(img.src, e.currentTarget);
+                                }}
+                            >
+                                <img
+                                    src={img.src}
+                                    alt={img.alt}
+                                    class="carousel-img"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            </a>
+                        {/each}
+                    </div>
+
+                    {#if slideCount > 1}
+                        <button class="carousel-btn prev" onclick={prev} aria-label="Previous slide">
+                            <Icon name="chevron-left" />
+                        </button>
+                        <button class="carousel-btn next" onclick={next} aria-label="Next slide">
+                            <Icon name="chevron-right" />
+                        </button>
+                        <div class="carousel-dots">
+                            {#each project.images as _, i}
+                                <button
+                                    class="dot"
+                                    class:active={i === currentSlide}
+                                    onclick={() => goTo(i)}
+                                    aria-label="Go to slide {i + 1}"
+                                ></button>
+                            {/each}
+                        </div>
+                    {/if}
+                {/if}
+            </div>
+
+            <div class="card-body featured-body">
+                <div class="card-header">
+                    <div class="card-meta">
+                        <span class="project-number">PRJ {String(index + 1).padStart(2, "0")}</span>
+                        <span class="featured-badge" aria-label="Featured project">FEATURED</span>
+                        {#if project.githubStars !== undefined}
+                            <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">
+                                <Icon name="star" size={10} />
+                                <span>{project.githubStars}</span>
+                            </span>
+                        {/if}
+                        {#if project.isLive}
+                            <Badge variant="live">LIVE</Badge>
+                        {:else}
+                            <Badge variant="offline">OFFLINE</Badge>
+                        {/if}
+                    </div>
+                    <h3 class="project-title featured-title">{project.name}</h3>
+                </div>
+
+                <p class="project-description">{project.description}</p>
+
+                <div class="card-tags">
+                    {#each project.tags as tag}
+                        <Tag>{tag}</Tag>
+                    {/each}
+                </div>
+
+                <div class="card-links">
+                    {#each project.links as link}
+                        <a href={link.url} target="_blank" rel="noopener" class="card-link">
+                            <Icon name={link.icon} size={14} />
+                            <span>{link.label}</span>
+                            <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        </div>
+    {:else}
+        <!-- STANDARD LAYOUT: vertical card -->
+        <div class="card-media">
+            {#if project.images && project.images.length > 0}
+                <div class="carousel-track" bind:this={carousel}>
+                    {#each project.images as img, i}
+                        <a
+                            href={img.src}
+                            data-lightbox={galleryName}
+                            data-caption={img.alt}
+                            class="carousel-slide"
+                            class:active={i === currentSlide}
+                            aria-label="View {img.alt} full size"
+                            onclick={(e) => {
+                                e.preventDefault();
+                                Lightbox.instance.open(img.src, e.currentTarget);
+                            }}
+                        >
+                            <img
+                                src={img.src}
+                                alt={img.alt}
+                                class="carousel-img"
+                                loading={i === 0 ? "eager" : "lazy"}
+                                decoding="async"
+                            />
+                        </a>
+                    {/each}
+                </div>
+
+                {#if slideCount > 1}
+                    <button class="carousel-btn prev" onclick={prev} aria-label="Previous slide">
+                        <Icon name="chevron-left" />
+                    </button>
+                    <button class="carousel-btn next" onclick={next} aria-label="Next slide">
+                        <Icon name="chevron-right" />
+                    </button>
+                    <div class="carousel-dots">
+                        {#each project.images as _, i}
+                            <button
+                                class="dot"
+                                class:active={i === currentSlide}
+                                onclick={() => goTo(i)}
+                                aria-label="Go to slide {i + 1}"
+                            ></button>
+                        {/each}
+                    </div>
+                {/if}
+            {/if}
+        </div>
+
+        <div class="card-body">
+            <div class="card-header">
+                <div class="card-meta">
+                    <span class="project-number">PRJ {String(index + 1).padStart(2, "0")}</span>
+                    {#if project.seriesTag}
+                        <span class="series-tag" title="Part of the {project.seriesTag}">{project.seriesTag.split(' ')[0].toUpperCase()}</span>
+                    {/if}
+                    {#if project.githubStars !== undefined}
+                        <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">
+                            <Icon name="star" size={10} />
+                            <span>{project.githubStars}</span>
+                        </span>
+                    {/if}
+                    {#if project.isLive}
+                        <Badge variant="live">LIVE</Badge>
+                    {:else}
+                        <Badge variant="offline">OFFLINE</Badge>
+                    {/if}
+                </div>
+                <h3 class="project-title">{project.name}</h3>
+            </div>
+
+            <p class="project-description">{project.description}</p>
+
+            <div class="card-tags">
+                {#each project.tags as tag}
+                    <Tag>{tag}</Tag>
                 {/each}
             </div>
 
-            {#if slideCount > 1}
-                <button
-                    class="carousel-btn prev"
-                    onclick={prev}
-                    aria-label="Previous slide"
-                >
-                    <Icon name="chevron-left" />
-                </button>
-                <button
-                    class="carousel-btn next"
-                    onclick={next}
-                    aria-label="Next slide"
-                >
-                    <Icon name="chevron-right" />
-                </button>
-
-                <div class="carousel-dots">
-                    {#each project.images as _, i}
-                        <button
-                            class="dot"
-                            class:active={i === currentSlide}
-                            onclick={() => goTo(i)}
-                            aria-label="Go to slide {i + 1}"
-                        ></button>
-                    {/each}
-                </div>
-            {/if}
-        {/if}
-    </div>
-
-    <div class="card-body">
-        <div class="card-header">
-            <div class="card-meta">
-                <span class="project-number"
-                    >PRJ {String(index + 1).padStart(2, "0")}</span
-                >
-                {#if project.isLive}
-                    <Badge variant="live">LIVE</Badge>
-                {:else}
-                    <Badge variant="offline">OFFLINE</Badge>
-                {/if}
+            <div class="card-links">
+                {#each project.links as link}
+                    <a href={link.url} target="_blank" rel="noopener" class="card-link">
+                        <Icon name={link.icon} size={14} />
+                        <span>{link.label}</span>
+                        <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
+                    </a>
+                {/each}
             </div>
-            <h3 class="project-title">{project.name}</h3>
+            <span class="card-number-watermark" bind:this={watermarkEl} aria-hidden="true"
+                >0{index + 1}</span
+            >
         </div>
-
-        <p class="project-description">{project.description}</p>
-
-        <div class="card-tags">
-            {#each project.tags as tag}
-                <Tag>{tag}</Tag>
-            {/each}
-        </div>
-
-        <div class="card-links">
-            {#each project.links as link}
-                <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener"
-                    class="card-link"
-                >
-                    <Icon name={link.icon} size={14} />
-                    <span>{link.label}</span>
-                    <span class="link-arrow-icon"
-                        ><Icon name="arrow-up-right" size={12} /></span
-                    >
-                </a>
-            {/each}
-        </div>
-        <span class="card-number-watermark" bind:this={watermarkEl} aria-hidden="true"
-            >0{index + 1}</span
-        >
-    </div>
+    {/if}
 </article>
 
 <style>
@@ -200,10 +294,9 @@ import { Lightbox } from "lightbox3";
         position: relative;
         background: #111922;
         padding: 0;
-        /* Hard brutalist borders — no chamfer, raw edges */
-        border: 2px solid rgba(255, 255, 255, 0.08);
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
         border-left: 4px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.6);
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6);
         transition:
             border-color 0.15s ease,
             box-shadow 0.15s ease,
@@ -216,8 +309,7 @@ import { Lightbox } from "lightbox3";
     .project-card:hover {
         border-color: var(--accent);
         border-left-color: var(--accent);
-        /* Brutalist: hard offset shadow in accent color */
-        box-shadow: 6px 6px 0px var(--accent);
+        box-shadow: 4px 4px 0px var(--accent);
         background: #141e2a;
     }
 
@@ -226,11 +318,108 @@ import { Lightbox } from "lightbox3";
         outline-offset: 4px;
     }
 
+    /* Featured card: same size as standard, accent border only */
+    .project-card.featured {
+        grid-column: auto;
+        border-color: rgba(255, 68, 0, 0.2);
+        border-left-color: var(--accent);
+    }
+
+    .project-card.featured:hover {
+        border-color: var(--accent);
+    }
+
+    .featured-inner {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        height: 100%;
+    }
+
+    .featured-media {
+        border-bottom: none;
+        height: 100%;
+    }
+
+    .featured-media .carousel-slide {
+        aspect-ratio: auto;
+        height: 100%;
+    }
+
+    .featured-body {
+        padding: 1.25rem 1.25rem 1.5rem;
+        gap: 0.6rem;
+    }
+
+    .featured-title {
+        font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+    }
+
+    .featured-badge {
+        font-family: var(--font-body);
+        font-size: 0.55rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        padding: 2px 7px;
+        line-height: 1.6;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Series tag for multi-project ecosystems */
+    .series-tag {
+        font-family: var(--font-body);
+        font-size: 0.55rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border: 1px dashed rgba(255,255,255,0.15);
+        padding: 2px 6px;
+        line-height: 1.6;
+    }
+
+    :global(body.light-mode) .series-tag {
+        border-color: rgba(0,0,0,0.15);
+        color: var(--text-muted);
+    }
+
+    .github-stars-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        background: rgba(251, 191, 36, 0.08);
+        padding: 2px 7px;
+        line-height: 1.6;
+    }
+
+    :global(body.light-mode) .github-stars-badge {
+        color: #b45309;
+        border-color: rgba(180, 83, 9, 0.25);
+        background: rgba(180, 83, 9, 0.06);
+    }
+
+    :global(.project-card:hover .tag) {
+        background: rgba(255, 68, 0, 0.15);
+        color: var(--accent);
+    }
+
+    :global(:global(body.light-mode) .project-card:hover .tag) {
+        background: rgba(200, 50, 0, 0.1);
+        color: var(--accent);
+    }
+
     .card-media {
         position: relative;
         overflow: hidden;
         background: #070a0f;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1.5px solid rgba(255, 255, 255, 0.06);
     }
 
     .project-card:hover .card-media {
@@ -254,7 +443,7 @@ import { Lightbox } from "lightbox3";
         scroll-snap-align: start;
         cursor: pointer;
         overflow: hidden;
-        aspect-ratio: 4 / 3;
+        aspect-ratio: 16 / 10;
         height: auto;
         display: block;
         text-decoration: none;
@@ -277,7 +466,7 @@ import { Lightbox } from "lightbox3";
 
     @media (max-width: 767px) {
         .carousel-slide {
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 16 / 10;
             height: auto;
         }
     }
@@ -390,11 +579,11 @@ import { Lightbox } from "lightbox3";
 
     .card-body {
         position: relative;
-        padding: 1.75rem 1.75rem 2rem;
+        padding: 1.25rem 1.25rem 1.5rem;
         display: flex;
         flex-direction: column;
         flex: 1;
-        gap: 0.9rem;
+        gap: 0.6rem;
         min-height: 0;
     }
 
@@ -456,13 +645,13 @@ import { Lightbox } from "lightbox3";
         z-index: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.3rem;
     }
 
     .card-meta {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.5rem;
     }
 
     .project-number {
@@ -487,23 +676,12 @@ import { Lightbox } from "lightbox3";
         margin-left: 1px;
     }
 
-    :global(.project-card:hover .tag) {
-        background: var(--accent);
-        color: #000;
-    }
-
-    :global(body.light-mode .project-card:hover .tag) {
-        background: rgba(200, 50, 0, 0.12);
-        color: var(--accent);
-    }
-
     .project-title {
         font-family: var(--font-heading);
-        /* Larger, heavier — brutalist punch */
-        font-size: 1.5rem;
+        font-size: clamp(1.05rem, 2vw, 1.25rem);
         font-weight: 700;
         color: #fff;
-        line-height: 1.15;
+        line-height: 1.2;
         letter-spacing: 0.02em;
         text-transform: uppercase;
         position: relative;
@@ -512,8 +690,8 @@ import { Lightbox } from "lightbox3";
 
     .project-description {
         color: var(--text-secondary);
-        font-size: 0.875rem;
-        line-height: 1.65;
+        font-size: 0.8rem;
+        line-height: 1.5;
         position: relative;
         z-index: 1;
     }
@@ -521,7 +699,7 @@ import { Lightbox } from "lightbox3";
     .card-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.4rem;
+        gap: 0.35rem;
         position: relative;
         z-index: 1;
     }
@@ -529,30 +707,28 @@ import { Lightbox } from "lightbox3";
     .card-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.6rem;
+        gap: clamp(0.375rem, 1vw, 0.5rem);
         margin-top: auto;
-        padding-top: 1rem;
-        border-top: 2px solid rgba(255, 255, 255, 0.06);
+        padding-top: clamp(0.5rem, 1.25vw, 0.75rem);
+        border-top: 1.5px solid rgba(255, 255, 255, 0.06);
         position: relative;
         z-index: 1;
     }
 
-    /* Brutalist link button: hard offset shadow, visible border */
     .card-link {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         font-family: var(--font-heading);
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.08em;
         color: #ccc;
         text-decoration: none;
-        padding: 7px 12px;
+        padding: 5px 10px;
         border: 1.5px solid rgba(255, 255, 255, 0.15);
         background: rgba(255, 255, 255, 0.03);
-        /* Hard offset — brutalism signature */
         box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
         transition:
             color 0.1s ease,
@@ -567,7 +743,6 @@ import { Lightbox } from "lightbox3";
         color: #fff;
         border-color: var(--accent);
         background: rgba(255, 68, 0, 0.1);
-        /* Push into shadow on hover */
         box-shadow: 2px 2px 0px var(--accent);
         transform: translate(1px, 1px);
     }
@@ -594,16 +769,21 @@ import { Lightbox } from "lightbox3";
 
     :global(body.light-mode) .project-card {
         background: #e4e8ed;
-        border-color: rgba(0, 0, 0, 0.1);
+        border-color: rgba(0, 0, 0, 0.08);
         border-left-color: rgba(0, 0, 0, 0.2);
-        box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.15);
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
     }
 
     :global(body.light-mode) .project-card:hover {
         border-color: var(--accent);
         border-left-color: var(--accent);
-        box-shadow: 6px 6px 0px var(--accent);
+        box-shadow: 4px 4px 0px var(--accent);
         background: #dce1e8;
+    }
+
+    :global(body.light-mode) .project-card.featured {
+        border-color: rgba(200, 50, 0, 0.2);
+        border-left-color: var(--accent);
     }
 
     :global(body.light-mode) .project-title {
@@ -621,6 +801,11 @@ import { Lightbox } from "lightbox3";
         color: var(--accent);
         border-color: rgba(200, 50, 0, 0.25);
         background: rgba(200, 50, 0, 0.05);
+        box-shadow: 1px 1px 0px rgba(200, 50, 0, 0.25);
+    }
+
+    :global(body.light-mode) .card-link:active {
+        box-shadow: none;
     }
 
     :global(body.light-mode) .card-links {
@@ -634,47 +819,5 @@ import { Lightbox } from "lightbox3";
     :global(body.light-mode) .carousel-dots {
         background: rgba(255, 255, 255, 0.7);
         border-color: rgba(0, 0, 0, 0.1);
-    }
-
-    :global(body.light-mode) .card-link {
-        box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.12);
-    }
-
-    :global(body.light-mode) .card-link:hover {
-        box-shadow: 1px 1px 0px rgba(200, 50, 0, 0.25);
-    }
-
-    :global(body.light-mode) .card-link:active {
-        box-shadow: none;
-    }
-
-    @media (min-width: 768px) {
-        .card-body {
-            padding: 1.5rem 1.5rem 1.75rem;
-            gap: 0.6rem;
-        }
-
-        .project-title {
-            font-size: 1.35rem;
-        }
-
-        .project-description {
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
-
-        .card-tags {
-            gap: 0.3rem;
-        }
-
-        .card-links {
-            padding-top: 0.75rem;
-            gap: 0.5rem;
-        }
-
-        .card-link {
-            font-size: 0.65rem;
-            padding: 6px 11px;
-        }
     }
 </style>

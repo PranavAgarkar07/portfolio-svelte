@@ -8,7 +8,9 @@
     clip-path: polygon(20px 0, 100% 0,
             100% calc(100% - 20px), calc(100% - 20px) 100%,
             0 100%, 0 20px);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    will-change: clip-path;
+    contain: paint;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
     overflow: hidden;
     background: linear-gradient(160deg, #252e3a 0%, #171e28 100%);
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import gsap from "gsap";
     import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 
     import { theme } from "$lib/stores/theme";
-    import { portfolioData } from "$lib/data";
+    import { portfolioData, fallbackCertificates } from "$lib/data";
     import Header from "$lib/components/Header.svelte";
     import Hero from "$lib/components/Hero.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
@@ -23,6 +23,43 @@
     let certsLoading = $state(true);
     let certsError = $state("");
     let badges = $state<Badge[]>([]);
+    let prefersReducedMotion = $state(false);
+
+    async function animateCerts() {
+        await tick();
+        const wraps = document.querySelectorAll(".cert-card-wrap");
+        if (wraps.length > 0 && !prefersReducedMotion) {
+            gsap.to(wraps, {
+                opacity: 1, y: 0, scale: 1,
+                stagger: 0.08,
+                ease: "power3.out",
+                duration: 0.6,
+                clearProps: "transform",
+            });
+        }
+    }
+
+    async function fetchCerts() {
+        if (!API_BASE) {
+            certificates = fallbackCertificates;
+            certsLoading = false;
+            animateCerts();
+            return;
+        }
+        try {
+            const r = await fetch(`${API_BASE}/api/certificates`);
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            const data = await r.json();
+            certificates = Array.isArray(data.certificates) ? data.certificates : (Array.isArray(data) ? data : []);
+            certsLoading = false;
+            animateCerts();
+        } catch (e) {
+            certsError = String(e);
+            certificates = fallbackCertificates;
+            certsLoading = false;
+            animateCerts();
+        }
+    }
 
     const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
     const pageTitle = `${profile.name} | ${profile.role}`;
@@ -32,20 +69,17 @@
     const coverImage = `${siteUrl}avatar.png`; // Fallback to avatar if no dedicated cover
 
     onMount(() => {
-        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.defaults({ overwrite: "auto" });
+
+        fetchCerts();
 
         if (API_BASE) {
-            fetch(`${API_BASE}/api/certificates`)
-                .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
-                .then(data => { certificates = data.certificates ?? data ?? []; certsLoading = false; })
-                .catch(e => { certsError = String(e); certsLoading = false; });
-
             fetch(`${API_BASE}/api/badges`)
                 .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
                 .then(data => { badges = data.badges ?? data ?? []; })
                 .catch(() => {});
-        } else {
-            certsLoading = false;
         }
 
         if (prefersReducedMotion) return;
@@ -74,18 +108,21 @@
         }});
 
         // ──────────────────────────────────────────────
-        // 6. PROJECTS — CARD PERSPECTIVE + STAGGER REVEAL
+        // 6. PROJECTS — CARD PERSPECTIVE + STAGGER REVEAL (batched: 1 trigger)
         // ──────────────────────────────────────────────
-        gsap.utils.toArray(".project-card").forEach((card: any, i: number) => {
-            const dir = i % 2 === 0 ? -1 : 1;
-            gsap.set(card, { x: dir * 150, opacity: 0, rotateY: dir * 15, scale: 0.9 });
-            ScrollTrigger.create({
-                trigger: card as Element, start: "top 85%", once: true,
-                onEnter: () => { gsap.to(card, {
-                    x: 0, opacity: 1, rotateY: 0, scale: 1,
-                    ease: "elastic.out(1, 0.65)", duration: 0.8,
-                });}
-            });
+        gsap.set(".project-card", {
+            x: (i: number) => (i % 2 === 0 ? -1 : 1) * 150,
+            opacity: 0,
+            rotateY: (i: number) => (i % 2 === 0 ? -1 : 1) * 15,
+            scale: 0.9,
+        });
+        ScrollTrigger.create({
+            trigger: "#projects", start: "top 85%", once: true,
+            onEnter: () => { gsap.to(".project-card", {
+                x: 0, opacity: 1, rotateY: 0, scale: 1,
+                stagger: 0.12,
+                ease: "elastic.out(1, 0.65)", duration: 0.8,
+            });}
         });
 
         // ──────────────────────────────────────────────
@@ -102,31 +139,17 @@
         });
 
         // ──────────────────────────────────────────────
-        // 8. SKILL ITEMS — INDIVIDUAL STAGGER POP
+        // 8. SKILL ITEMS — BATCH STAGGER POP (1 trigger instead of 12)
         // ──────────────────────────────────────────────
-        gsap.utils.toArray(".skill-card").forEach((card: any, i: number) => {
-            gsap.set(card, { y: 30, opacity: 0, scale: 0.85 });
+        const skillCards = gsap.utils.toArray(".skill-card");
+        if (skillCards.length > 0) {
+            gsap.set(skillCards, { y: 30, opacity: 0, scale: 0.85 });
             ScrollTrigger.create({
-                trigger: card as Element, start: "top 92%", once: true,
-                onEnter: () => { gsap.to(card, {
+                trigger: "#skills", start: "top 75%", once: true,
+                onEnter: () => { gsap.to(skillCards, {
                     y: 0, opacity: 1, scale: 1,
+                    stagger: 0.04,
                     ease: "back.out(2)", duration: 0.5,
-                });}
-            });
-        });
-
-        // ──────────────────────────────────────────────
-        // CERTIFICATES — FILE DRAWER REVEAL (batched: 1 trigger instead of 13)
-        // ──────────────────────────────────────────────
-        const certCards = gsap.utils.toArray(".cert-card-wrap");
-        if (certCards.length > 0) {
-            const dirs = certCards.map((_: any, i: number) => i % 2 === 0 ? -1 : 1);
-            gsap.set(certCards, { x: (i: number) => dirs[i] * 80, y: 60, opacity: 0, rotateX: 5, scale: 0.95 });
-            ScrollTrigger.create({
-                trigger: "#certifications", start: "top 85%", once: true,
-                onEnter: () => { gsap.to(certCards, {
-                    x: 0, y: 0, opacity: 1, rotateX: 0, scale: 1,
-                    stagger: 0.06, ease: "power3.out", duration: 0.65,
                 });}
             });
         }
@@ -134,8 +157,6 @@
         // Handled by motion.div whileInView in SectionHeader.svelte
         // (GSAP version removed to avoid duplicate clip-path animation)
 
-        // ──────────────────────────────────────────────
-        // 10. ABOUT — DEPTH LAYER REVEAL
         // ──────────────────────────────────────────────
         gsap.set(".about-visual-col", { x: -80, opacity: 0, rotateY: 8, scale: 0.95 });
         gsap.set(".about-content-col", { x: 80, opacity: 0, rotateY: -8, scale: 0.95 });
@@ -153,95 +174,68 @@
             }
         });
 
-        // About specs — sweep up
-        gsap.utils.toArray(".about-spec-row").forEach((row: any, i: number) => {
-            gsap.set(row, { y: 25, opacity: 0 });
-            ScrollTrigger.create({
-                trigger: row as Element, start: "top 80%", once: true,
-                onEnter: () => { gsap.to(row, {
-                    y: 0, opacity: 1,
-                    ease: "power3.out", duration: 0.5,
-                });}
-            });
-        });
+        // About specs — sweep up (batched: inside #about trigger)
+        gsap.set(".about-spec-row", { y: 25, opacity: 0 });
 
         // ──────────────────────────────────────────────
-        // 11. ABOUT — COUNT-UP METRICS
+        // 11. ABOUT — METRICS COUNT-UP + SPRING (batched: 1 trigger instead of 12)
         // ──────────────────────────────────────────────
-        gsap.utils.toArray<HTMLElement>(".about-metric-value").forEach((el) => {
-            const raw = el.textContent || "0";
-            const num = parseFloat(raw.replace(/[^0-9.]/g, ""));
-            if (isNaN(num)) return;
-            const suffix = raw.replace(/[0-9.]/g, "");
-            const display = el;
-            ScrollTrigger.create({
-                trigger: el, start: "top 85%", once: true,
-                onEnter: () => {
+        gsap.set(".about-metric", { y: 40, opacity: 0, scale: 0.85 });
+        ScrollTrigger.create({
+            trigger: "#about", start: "top 75%", once: true,
+            onEnter: () => {
+                // Spec rows
+                gsap.utils.toArray(".about-spec-row").forEach((row: any) => {
+                    gsap.to(row, { y: 0, opacity: 1, ease: "power3.out", duration: 0.5 });
+                });
+                // Count-up metrics
+                gsap.utils.toArray<HTMLElement>(".about-metric-value").forEach((el) => {
+                    const raw = el.textContent || "0";
+                    const num = parseFloat(raw.replace(/[^0-9.]/g, ""));
+                    if (isNaN(num)) return;
+                    const suffix = raw.replace(/[0-9.]/g, "");
                     let obj = { val: 0 };
                     gsap.to(obj, {
                         val: num, duration: 1.5, ease: "power3.out",
-                        onUpdate: () => { display.textContent = Math.round(obj.val) + suffix; },
+                        onUpdate: () => { el.textContent = Math.round(obj.val) + suffix; },
                     });
-                }
-            });
-        });
-
-        // About metrics — spring up
-        gsap.utils.toArray(".about-metric").forEach((metric: any, i: number) => {
-            gsap.set(metric, { y: 40, opacity: 0, scale: 0.85 });
-            ScrollTrigger.create({
-                trigger: "#about", start: "top 75%", once: true,
-                onEnter: () => { gsap.to(metric, {
-                    y: 0, opacity: 1, scale: 1,
-                    ease: "power3.out", duration: 0.6,
-                    delay: i * 0.1,
-                });}
-            });
-        });
-
-        // ──────────────────────────────────────────────
-        // 12. CONTACT — DUAL-SIDED REVEAL
-        // ──────────────────────────────────────────────
-        gsap.set(".contact-info", { x: -50, opacity: 0 });
-        gsap.set(".contact-form-container", { x: 50, opacity: 0 });
-        ScrollTrigger.create({
-            trigger: "#contact", start: "top 85%", once: true,
-            onEnter: () => {
-                gsap.to(".contact-info", {
-                    x: 0, opacity: 1,
-                    ease: "power3.out", duration: 0.7,
                 });
-                gsap.to(".contact-form-container", {
-                    x: 0, opacity: 1,
-                    ease: "power3.out", duration: 0.7, delay: 0.15,
+                // Metrics spring up
+                gsap.to(".about-metric", {
+                    y: 0, opacity: 1, scale: 1,
+                    stagger: 0.1, ease: "power3.out", duration: 0.6,
                 });
             }
         });
 
-        // Contact info items — staggered
-        gsap.utils.toArray(".info-item").forEach((item: any, i: number) => {
-            gsap.set(item, { y: 20, opacity: 0 });
-            ScrollTrigger.create({
-                trigger: "#contact", start: "top 85%", once: true,
-                onEnter: () => { gsap.to(item, {
-                    y: 0, opacity: 1,
-                    ease: "back.out(1.7)", duration: 0.5, delay: i * 0.06,
-                });}
-            });
-        });
+        // ──────────────────────────────────────────────
+        // 12-13. CONTACT — ALL (batched: 1 trigger instead of 7)
+        // ──────────────────────────────────────────────
+        gsap.set(".contact-info", { x: -50, opacity: 0 });
+        gsap.set(".contact-form-container", { x: 50, opacity: 0 });
+        gsap.set(".info-item", { y: 20, opacity: 0 });
+        gsap.set(".social-link", { y: 15, opacity: 0, scale: 0.8 });
 
-        // ──────────────────────────────────────────────
-        // 13. SOCIAL LINKS — STAGGER REVEAL
-        // ──────────────────────────────────────────────
-        gsap.utils.toArray(".social-link").forEach((link: any, i: number) => {
-            gsap.set(link, { y: 15, opacity: 0, scale: 0.8 });
-            ScrollTrigger.create({
-                trigger: "#contact", start: "top 85%", once: true,
-                onEnter: () => { gsap.to(link, {
-                    y: 0, opacity: 1, scale: 1,
-                    ease: "power3.out", duration: 0.5, delay: i * 0.05,
-                });}
-            });
+        // Contact section single trigger
+        ScrollTrigger.create({
+            trigger: "#contact", start: "top 85%", once: true,
+            onEnter: () => {
+                // Dual-sided reveal
+                gsap.to(".contact-info", { x: 0, opacity: 1, ease: "power3.out", duration: 0.7 });
+                gsap.to(".contact-form-container", {
+                    x: 0, opacity: 1, ease: "power3.out", duration: 0.7, delay: 0.15,
+                });
+                // Info items stagger
+                gsap.to(".info-item", {
+                    y: 0, opacity: 1, ease: "back.out(1.7)", duration: 0.5,
+                    stagger: 0.06,
+                });
+                // Social links stagger
+                gsap.to(".social-link", {
+                    y: 0, opacity: 1, scale: 1, ease: "power3.out", duration: 0.5,
+                    stagger: 0.05,
+                });
+            }
         });
 
         // ──────────────────────────────────────────────
@@ -277,6 +271,8 @@
             window.addEventListener("touchstart", () => ScrollTrigger.refresh(), { once: true });
         }
     });
+
+
 </script>
 
 <svelte:head>
@@ -337,29 +333,26 @@
     </section>
 
     <section id="certifications" class="section-container snap-section">
-        <SectionHeader title="Certifications" count={certificates.length} animate />
+        <SectionHeader title="Certifications" count={certsLoading ? undefined : certificates.length} animate />
         {#if certsLoading}
-            <div class="certs-loading">
-                {#each { length: 3 } as _}
-                    <div class="cert-skeleton">
-                        <div class="cert-skeleton-media shimmer" />
-                        <div class="cert-skeleton-body">
-                            <div class="shimmer w-30" />
-                            <div class="shimmer w-80" />
-                            <div class="shimmer w-50" />
-                            <div class="cert-skeleton-tags">
-                                <div class="shimmer w-15" />
-                                <div class="shimmer w-20" />
-                                <div class="shimmer w-18" />
+            <div class="certs-skeleton-grid">
+                {#each Array(3) as _, i}
+                    <div class="cert-card-wrap" style="animation-delay: {i * 100}ms">
+                        <div class="cert-skeleton">
+                            <div class="skeleton-thumb"></div>
+                            <div class="skeleton-body">
+                                <Skeleton width="40%" height="10px" />
+                                <Skeleton width="85%" height="16px" />
+                                <Skeleton width="55%" height="10px" />
+                                <div class="skeleton-tags">
+                                    <Skeleton width="50px" height="18px" />
+                                    <Skeleton width="60px" height="18px" />
+                                </div>
+                                <Skeleton width="110px" height="24px" />
                             </div>
-                            <div class="shimmer w-40" />
                         </div>
                     </div>
                 {/each}
-            </div>
-        {:else if certsError}
-            <div class="certs-error">
-                <span class="certs-error-text">&#9888; Failed to load certificates</span>
             </div>
         {:else if certificates.length > 0}
             <div class="certs-grid">
@@ -368,6 +361,13 @@
                         <CertificateCard certificate={cert} index={i} />
                     </div>
                 {/each}
+            </div>
+        {:else if certsError}
+            <div class="certs-error">
+                <span class="certs-error-text">&#9888; Failed to load certificates</span>
+                <button class="certs-retry-btn" onclick={() => { certsLoading = true; certsError = ''; fetchCerts(); }}>
+                    Retry
+                </button>
             </div>
         {/if}
     </section>

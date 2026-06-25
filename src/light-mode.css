@@ -1,16 +1,19 @@
-/* Light Mode Theme ("Technical Manual") */
+/* Light Mode Theme ("Technical Slate") */
 /* Usage: Add class="light-mode" to <body> */
 
 body.light-mode {
-    --bg-dark: #ffffff;
-    --surface-dark: #f4f5f7;
-    --text-primary: #18181b;
-    --text-secondary: #52525b;
+    --bg-dark: #fcfbf9;
+    --surface-dark: #edede9;
+    --surface-raised: #ffffff;
+    --text-primary: #202024;
+    --text-secondary: #4a4a52;
+    --text-muted: #8b8b93;
     --accent: #d94100;
+    --accent-hover: #e03d00;
     --accent-glow: rgba(217, 65, 0, 0.12);
     --grid-line: rgba(0, 0, 0, 0.06);
-    --wire-color: #e2e4e9;
-    --wire-active: #18181b;
+    --wire-color: #d4d7dd;
+    --wire-active: #202024;
 }
 
 body.light-mode .noise-overlay {
@@ -55,21 +58,24 @@ body.light-mode .aero-card:hover {
     transform: translateY(-2px);
 }
 
+/* Docked navbar: no borders */
 body.light-mode .aero-header {
-    border-bottom: 1px solid var(--grid-line);
-    border-left: 3px solid #c8cbcf;
+    border-bottom: none;
+    border-left: none;
 }
 
+/* Floating navbar: visible borders */
 body.light-mode .aero-header.detached {
-    background: rgba(255,255,255,0.92);
+    background: rgba(245, 246, 248, 0.92);
     backdrop-filter: blur(12px);
-    border: 1px solid var(--wire-color);
+    border: 1px solid #d4d7dd;
     border-left: 3px solid var(--accent);
     box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 
 body.light-mode .contact-form-container {
-    background: var(--surface-dark);
+    background-color: var(--surface-dark);
+    background-image: linear-gradient(160deg, #f5f5f0 0%, #edede9 100%);
     border: 1px solid var(--wire-color);
     border-left: 3px solid var(--accent);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);

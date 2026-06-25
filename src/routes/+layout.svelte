@@ -13,6 +13,23 @@
     let { children } = $props();
 
     onMount(() => {
+        function applyTheme(value: 'dark' | 'light') {
+            document.getElementById('theme-guard')?.remove();
+            const style = document.createElement('style');
+            style.id = 'theme-guard';
+            style.textContent = '*,*::before,*::after{transition-duration:0s!important;transition-property:none!important;animation-duration:0s!important}';
+            document.head.appendChild(style);
+            document.body.offsetHeight;
+            if (value === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            requestAnimationFrame(() => {
+                document.getElementById('theme-guard')?.remove();
+            });
+        }
+        const unsub = theme.subscribe(applyTheme);
         const prefersReducedMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
@@ -121,22 +138,14 @@
             cardListeners.push({ el: card, handler });
         });
 
-        const unsubscribe = theme.subscribe((value) => {
-            if (value === "light") {
-                document.body.classList.add("light-mode");
-            } else {
-                document.body.classList.remove("light-mode");
-            }
-        });
-
         return () => {
+            unsub();
             document.querySelectorAll('a[href^="#"]').forEach((a) => {
                 a.removeEventListener("click", handleAnchorClick);
             });
             cardListeners.forEach(({ el, handler }) => {
                 el.removeEventListener("mouseenter", handler);
             });
-            unsubscribe();
             lenis?.destroy();
         };
     });
@@ -213,9 +222,8 @@
 </svelte:head>
 
 
-<div class="noise-overlay"></div>
 <div class="background-gradient"></div>
 
-<svelte:body class:light-mode={$theme === "light"} />
+<svelte:body />
 
 {@render children()}

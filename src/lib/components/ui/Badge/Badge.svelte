@@ -36,7 +36,8 @@
 
 	.badge {
 		font-family: $font-body;
-		font-size: 0.65rem;
+		font-size: 0.6rem;
+		line-height: 1.6;
 		letter-spacing: 1.5px;
 		display: inline-flex;
 		align-items: center;
@@ -66,7 +67,10 @@
 			border: 1px solid rgba(255, 255, 255, 0.08);
 
 			.badge-dot {
-				display: none;
+				width: 5px;
+				height: 5px;
+				border-radius: 50%;
+				background: $text-secondary;
 			}
 		}
 
@@ -75,7 +79,10 @@
 			border: 1px solid $grid-line;
 
 			.badge-dot {
-				display: none;
+				width: 5px;
+				height: 5px;
+				border-radius: 50%;
+				background: $text-secondary;
 			}
 		}
 	}
@@ -86,13 +93,13 @@
 
 	:global(body.light-mode) .badge {
 		&.badge-live {
-			color: #00aa77;
-			border-color: #00aa77;
-			background: rgba(0, 170, 119, 0.1);
+			color: #006b45;
+			border-color: #006b45;
+			background: rgba(0, 107, 69, 0.1);
 
 			.badge-dot {
-				background: #00aa77;
-				box-shadow: 0 0 6px rgba(0, 170, 119, 0.4);
+				background: #006b45;
+				box-shadow: 0 0 6px rgba(0, 107, 69, 0.4);
 			}
 		}
 
@@ -100,11 +107,19 @@
 			color: $light-text-secondary;
 			opacity: 0.6;
 			border-color: rgba(0, 0, 0, 0.12);
+
+			.badge-dot {
+				background: $light-text-secondary;
+			}
 		}
 
 		&.badge-default {
 			color: $light-text-secondary;
 			border-color: $light-grid-line;
+
+			.badge-dot {
+				background: $light-text-secondary;
+			}
 		}
 	}
 

@@ -75,6 +75,11 @@ export const portfolioData = {
           icon: "devicon-html5-plain colored",
           level: "Expert",
         },
+        {
+          name: "Rust",
+          icon: "devicon-rust-plain",
+          level: "Familiar",
+        },
       ],
     },
     {
@@ -95,6 +100,16 @@ export const portfolioData = {
           icon: "devicon-docker-plain colored",
           level: "Familiar",
         },
+        {
+          name: "AWS",
+          icon: "devicon-amazonwebservices-plain-wordmark colored",
+          level: "Familiar",
+        },
+        {
+          name: "K8s",
+          icon: "devicon-kubernetes-plain colored",
+          level: "Familiar",
+        },
       ],
     },
   ],
@@ -102,7 +117,7 @@ export const portfolioData = {
     {
       name: "TaskVault Lite",
       description:
-        "Secure full-stack task manager with JWT authentication, Google/GitHub OAuth, and Fernet AES-128-CBC encryption for sensitive data. Handles 1,247 req/min API throughput with PostgreSQL SSL database. Built with Django REST Framework and React.",
+        "Full-stack task manager with JWT/OAuth auth, AES-128-CBC encryption, and 1,247 req/min throughput. Built with Django REST Framework and React.",
       images: [
         {
           src: "images/taskvault/HomepageSS.webp",
@@ -122,6 +137,7 @@ export const portfolioData = {
         },
       ],
       tags: ["Django", "React", "JWT", "OAuth", "Security"],
+      githubStars: 14,
       isLive: true,
       links: [
         {
@@ -139,7 +155,9 @@ export const portfolioData = {
     {
       name: "BeamSync",
       description:
-        "High-performance offline P2P file transfer system with a cyberpunk terminal UI. Features auto-IP discovery across local network, dynamic port scouting, QR-based mobile pairing, and AES-256-GCM encrypted transfers — no internet or server required. Built with Go and Wails.",
+        "LAN file transfer with auto-IP discovery, QR pairing, and AES-256-GCM encryption. No cloud, no sign-up. Built with Go and Wails.",
+      seriesTag: "BeamSync Ecosystem",
+      githubStars: 32,
       images: [
         {
           src: "images/beamsync/appiconStartingpage.webp",
@@ -176,7 +194,8 @@ export const portfolioData = {
     {
       name: "KisanRakshak",
       description:
-        "AI platform for SDG 2 & 3 that predicts farmer distress using ML on rainfall, crop health, prices, groundwater, debt, and historical data. Features explainable risk scores, real-time heatmaps, PDF reports, historical analysis, and instant multilingual alerts. Built with React, Django, Go, TimescaleDB, Celery, and Bhashini API.",
+        "Predicts farmer distress using XGBoost on 6 agri signals with SHAP-explainable scores and real-time heatmaps. Built with React, Django, Go, and TimescaleDB.",
+      githubStars: 8,
       images: [
         {
           src: "images/kisanrakshak/01-dashboard.webp",
@@ -217,7 +236,9 @@ export const portfolioData = {
     {
       name: "BeamSync Mobile",
       description:
-        "Wireless file transfer between Android and desktop over local Wi-Fi—no cables, cloud, or sign-up. Connect via QR code and transfer files at LAN speed with real-time progress tracking. Features Material Design 3 UI, transfer history, hotspot detection, and secure local transfers. Built with Kotlin, Jetpack Compose, CameraX, ML Kit, and OkHttp.",
+        "Android companion for wireless file transfer over local Wi-Fi. Scan a QR code, transfer at LAN speed with real-time progress. Built with Kotlin and Jetpack Compose.",
+      seriesTag: "BeamSync Ecosystem",
+      githubStars: 6,
       images: [
         {
           src: "images/beamsync-mobile/permissions.webp",
@@ -255,3 +276,54 @@ export const portfolioData = {
     },
   ],
 };
+
+export const fallbackCertificates = [
+  {
+    id: 1,
+    title: "NPTEL — Privacy and Security in Online Social Media",
+    issuer: "NPTEL (IIT Kharagpur)",
+    date: "2024-10",
+    credential_url: "https://archive.nptel.ac.in/noc/Ecertificate/",
+    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-nptl.png",
+    tags: ["Security", "Social Media", "Privacy"],
+    is_verified: true,
+    display_order: 1,
+    created_at: "2024-10-01T00:00:00Z",
+  },
+  {
+    id: 2,
+    title: "Red Hat — Python Programming",
+    issuer: "Red Hat Academy",
+    date: "2024-08",
+    credential_url: "https://www.redhat.com/en/services/training-and-certification",
+    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-python.png",
+    tags: ["Python", "Red Hat"],
+    is_verified: true,
+    display_order: 2,
+    created_at: "2024-08-01T00:00:00Z",
+  },
+  {
+    id: 3,
+    title: "Red Hat — Linux Essentials",
+    issuer: "Red Hat Academy",
+    date: "2024-06",
+    credential_url: "https://www.redhat.com/en/services/training-and-certification",
+    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-linux.png",
+    tags: ["Linux", "Red Hat"],
+    is_verified: true,
+    display_order: 3,
+    created_at: "2024-06-01T00:00:00Z",
+  },
+  {
+    id: 4,
+    title: "Joomla! — Web Development Basics",
+    issuer: "Joomla! Official",
+    date: "2024-04",
+    credential_url: "https://www.joomla.org/",
+    image_url: "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-joomla.jpeg",
+    tags: ["Joomla", "CMS", "Web Development"],
+    is_verified: false,
+    display_order: 4,
+    created_at: "2024-04-01T00:00:00Z",
+  },
+];

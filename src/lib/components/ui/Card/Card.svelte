@@ -129,16 +129,17 @@
 	@use '../../../styles' as *;
 
 	.aero-card {
-		background: $surface-dark;
+		background-color: #171e28;
+		background-image: linear-gradient(160deg, #252e3a 0%, #171e28 100%);
 		padding: $card-padding;
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		position: relative;
 		clip-path: polygon(20px 0, 100% 0,
 				100% calc(100% - 20px), calc(100% - 20px) 100%,
 				0 100%, 0 20px);
-		transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+		transition: box-shadow 0.2s ease, transform 0.2s ease;
 		overflow: hidden;
-		background: linear-gradient(160deg, #252e3a 0%, #171e28 100%);
+		will-change: clip-path;
 		box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 		border-left: 3px solid rgba(255, 255, 255, 0.1);
 
@@ -236,20 +237,17 @@
 	}
 
 	:global(body.light-mode) .aero-card {
-		background: #f0f0f3;
-		border: none;
-		border-left: 3px solid #c8c8cc;
-		box-shadow:
-			8px 8px 16px rgba(0, 0, 0, 0.1),
-			-8px -8px 16px rgba(255, 255, 255, 0.8);
+		background-color: var(--surface-dark);
+		background-image: linear-gradient(160deg, #f5f5f0 0%, #edede9 100%);
+		border: 1px solid var(--wire-color);
+		border-left: 3px solid #c8cbcf;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 
 		&.card-interactive:hover {
 			border-left-color: $light-accent;
-			background: #f0f0f3 !important;
-			box-shadow:
-				12px 12px 24px rgba(0, 0, 0, 0.12),
-				-8px -8px 16px rgba(255, 255, 255, 0.9),
-				inset 0 0 0 1px rgba(255, 68, 0, 0.1);
+			background: #fff !important;
+			background-color: #fff !important;
+			box-shadow: 0 4px 16px rgba(0,0,0,0.06);
 			transform: translateY(-2px);
 		}
 	}

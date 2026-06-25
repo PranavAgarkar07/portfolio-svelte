@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Lightbox } from "lightbox3";
     import { Badge, Tag, Icon } from "$lib/components/ui";
     import type { Certificate } from "$lib/types";
     import { certPlaceholders } from "$lib/cert-placeholders";
@@ -8,15 +7,16 @@
     let { certificate, index }: { certificate: Certificate; index: number } = $props();
 
     function formatDate(d: string): string {
-        if (!d) return d;
+        if (!d) return "Date unavailable";
         const parts = d.split("-");
-        if (parts.length < 2) return d;
+        if (parts.length < 2) return parts[0];
         const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-        const month = months[parseInt(parts[1], 10) - 1];
-        if (!month) return d;
-        if (parts.length === 3) {
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        const month = months[monthIndex] || "";
+        if (!month) return parts[0];
+        if (parts.length >= 3 && parts[2]) {
             const day = parseInt(parts[2], 10);
-            return `${month} ${day}, ${parts[0]}`;
+            return isNaN(day) ? `${month} ${parts[0]}` : `${month} ${day}, ${parts[0]}`;
         }
         return `${month} ${parts[0]}`;
     }
@@ -78,8 +78,8 @@
     style="--cert-index: {index}"
 >
     {#if certificate.is_verified}
-        <div class="cert-ribbon" aria-hidden="true">
-            <span>VERIFIED</span>
+        <div class="cert-ribbon" role="text" aria-label="Verified certificate">
+            <span aria-hidden="true">VERIFIED</span>
         </div>
     {/if}
 
@@ -88,13 +88,10 @@
             <div class="cert-media-border" aria-hidden="true"></div>
             <a
                 href={certificate.image_url}
-                data-lightbox="cert-{certificate.id}"
+                data-lightbox="certificates"
                 data-caption="{certificate.title} — {certificate.issuer}"
                 class="cert-image-link"
-                onclick={(e) => {
-                    e.preventDefault();
-                    Lightbox.instance.open(certificate.image_url, e.currentTarget);
-                }}
+                aria-label="View {certificate.title} certificate image"
             >
                 <img
                     src={thumb}
@@ -183,10 +180,8 @@
         border: 1px solid rgba(255, 255, 255, 0.06);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
         transition:
-            border-color 0.25s ease,
             box-shadow 0.25s ease,
-            transform 0.25s ease,
-            background 0.25s ease;
+            transform 0.25s ease;
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -448,9 +443,10 @@
         gap: 0.3rem;
         font-size: 0.55rem;
         font-family: var(--font-body);
-        color: rgba(255, 255, 255, 0.2);
+        color: var(--text-secondary);
         letter-spacing: 0.05em;
         font-variant-numeric: tabular-nums;
+        opacity: 0.5;
     }
 
     .fp-dot {
@@ -522,15 +518,20 @@
     /* ── Light mode ── */
 
     :global(body.light-mode) .cert-card {
-        background: #fff;
+        background: var(--surface-dark);
         border-color: var(--wire-color);
         box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        transition:
+            box-shadow 0.25s ease,
+            transform 0.25s ease,
+            border-color 0.25s ease,
+            background 0.25s ease;
     }
 
     :global(body.light-mode) .cert-card:hover {
         border-color: rgba(217, 65, 0, 0.2);
         box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        background: #fff;
+        background: var(--surface-raised, #fff);
     }
 
     :global(body.light-mode) .cert-title {
@@ -553,7 +554,7 @@
     }
 
     :global(body.light-mode) .cert-media {
-        background: #e8eaed;
+        background: var(--surface-dark);
     }
 
     :global(body.light-mode) .cert-number-watermark {
