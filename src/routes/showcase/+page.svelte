@@ -5,9 +5,12 @@
 		Input, Textarea, Select, DatePicker, Checkbox, Radio, RadioGroup,
 		Magnetic, CustomCursor
 	} from '$lib/components/ui';
+	import { base } from "$app/paths";
 
 	let enableAnimations = $state(false);
 	let themeLabel = $derived($theme === 'dark' ? 'DARK' : 'LIGHT');
+
+	const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
 
 	let countryOptions = [
 		{ value: 'us', label: 'United States' },
@@ -42,7 +45,22 @@
 </script>
 
 <svelte:head>
-	<title>Component Library — Showcase</title>
+	<title>Component Library — Showcase | Pranav Agarkar</title>
+	<meta name="description" content="Explore the UI component library built for Pranav Agarkar's portfolio — interactive buttons, cards, forms, badges, and more." />
+
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="{siteUrl}showcase" />
+	<meta property="og:title" content="Component Library — Showcase | Pranav Agarkar" />
+	<meta property="og:description" content="Explore the UI component library built for Pranav Agarkar's portfolio — interactive buttons, cards, forms, badges, and more." />
+	<meta property="og:image" content="{siteUrl}og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:url" content="{siteUrl}showcase" />
+	<meta name="twitter:title" content="Component Library — Showcase | Pranav Agarkar" />
+	<meta name="twitter:description" content="Explore the UI component library built for Pranav Agarkar's portfolio — interactive buttons, cards, forms, badges, and more." />
+	<meta name="twitter:image" content="{siteUrl}og-image.png" />
 </svelte:head>
 
 <div class="showcase" id="main-content">

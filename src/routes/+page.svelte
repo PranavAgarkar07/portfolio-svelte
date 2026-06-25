@@ -49,7 +49,7 @@
     const pageDescription = `${profile.tagline} Experienced in building secure, scalable applications with Django, React, Svelte, and Go.`;
     const pageKeywords =
         "Svelte, SvelteKit, Django, Go, Full Stack Developer, Portfolio, Pranav Agarkar, Web Development, TaskVault, BeamSync";
-    const coverImage = `${siteUrl}avatar.png`; // Fallback to avatar if no dedicated cover
+    const coverImage = `${siteUrl}og-image.png`;
 
     onMount(() => {
         prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -268,6 +268,12 @@
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
     <meta property="og:image" content={coverImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Pranav Agarkar — Fullstack Developer Portfolio" />
+    <meta property="og:site_name" content="Pranav Agarkar Portfolio" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />

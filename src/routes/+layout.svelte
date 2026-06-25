@@ -174,6 +174,8 @@
     <meta property="og:image" content="https://pranavagarkar07.github.io/portfolio-svelte/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Pranav Agarkar — Fullstack Developer Portfolio" />
     <meta property="og:site_name" content="Pranav Agarkar Portfolio" />
     <meta property="og:locale" content="en_US" />
 
@@ -194,7 +196,9 @@
         "description": "Fullstack Developer specializing in Django, React, Svelte, and Go.",
         "knowsAbout": ["Django", "React", "Svelte", "SvelteKit", "Go", "Python", "JavaScript", "TypeScript", "PostgreSQL"],
         "sameAs": [
-            "https://github.com/PranavAgarkar07"
+            "https://github.com/PranavAgarkar07",
+            "https://www.linkedin.com/in/pranav-agarkar-344291257/",
+            "https://x.com/PranavAgarkar18"
         ]
     })}</script>`}
 
