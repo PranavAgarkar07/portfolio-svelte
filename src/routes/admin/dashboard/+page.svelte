@@ -7,12 +7,14 @@
     interface ReferrerCount { referrer: string; count: number; }
     interface TargetCount { target: string; count: number; }
     interface CountryCount { country: string; count: number; }
+    interface SourceCount { source: string; count: number; }
     interface DashboardStats {
         total_views: number;
         unique_visitors: number;
         top_referrers: ReferrerCount[];
         top_targets: TargetCount[];
         country_breakdown: CountryCount[];
+        source_breakdown: SourceCount[];
         avg_time_on_site: number;
         resume_downloads: number;
         form_submissions: number;
@@ -184,6 +186,27 @@
                                 <tr>
                                     <td>{c.country || "Unknown"}</td>
                                     <td class="num">{c.count}</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                {/if}
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Traffic Sources</h2>
+                {#if stats.source_breakdown.length === 0}
+                    <p class="panel-empty">No source data</p>
+                {:else}
+                    <table class="table">
+                        <thead>
+                            <tr><th>Source</th><th class="num">Visits</th></tr>
+                        </thead>
+                        <tbody>
+                            {#each stats.source_breakdown as s}
+                                <tr>
+                                    <td>{s.source}</td>
+                                    <td class="num">{s.count}</td>
                                 </tr>
                             {/each}
                         </tbody>

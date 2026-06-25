@@ -43,6 +43,27 @@ function getTheme(): string {
   }
 }
 
+function getSource(): string {
+  const params = new URLSearchParams(window.location.search);
+  const utm = params.get("utm_source");
+  if (utm) return utm;
+
+  const ref = document.referrer || "";
+  if (!ref) return "direct";
+  if (ref.includes("linkedin.com")) return "linkedin";
+  if (ref.includes("facebook.com") || ref.includes("fb.com") || ref.includes("fb.me")) return "facebook";
+  if (ref.includes("instagram.com")) return "instagram";
+  if (ref.includes("wa.me") || ref.includes("whatsapp.com")) return "whatsapp";
+  if (ref.includes("x.com") || ref.includes("twitter.com") || ref.includes("t.co")) return "x";
+  if (ref.includes("github.com")) return "github";
+  try {
+    const u = new URL(ref);
+    return u.hostname;
+  } catch {
+    return "other";
+  }
+}
+
 function getOrCreateSessionId(): string {
   try {
     let id = localStorage.getItem(SESSION_KEY);
@@ -70,6 +91,7 @@ export async function initAnalytics(): Promise<void> {
     country: "",
     city: "",
     referrer: document.referrer || "",
+    source: getSource(),
     device: getDeviceType(),
     os: getOS(),
     browser: getBrowser(),
