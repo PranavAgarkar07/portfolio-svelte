@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"log/slog"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,6 +23,7 @@ func HandleCreateSession(db *sql.DB) fiber.Handler {
 		h := sha256.Sum256([]byte(ip))
 		s.IPHash = hex.EncodeToString(h[:8])
 		if err := InsertSession(db, s); err != nil {
+			slog.Error("analytics: failed to insert session", "error", err, "session_id", s.ID)
 			return c.Status(500).JSON(fiber.Map{"error": "failed to create session"})
 		}
 		return c.Status(201).JSON(fiber.Map{"status": "created"})
@@ -44,6 +46,7 @@ func HandleCreateEvents(db *sql.DB) fiber.Handler {
 				}
 			}
 			if err := InsertEvents(db, events); err != nil {
+				slog.Error("analytics: failed to insert events", "error", err)
 				return c.Status(500).JSON(fiber.Map{"error": "failed to store events"})
 			}
 		}

@@ -126,7 +126,7 @@ export function trackEvent(type: string, target: string, value?: string): void {
     ts: Date.now(),
   }];
 
-  fetch(`${ANALYTICS_BASE}/events`, {
+  fetch(`${ANALYTICS_BASE}/e`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
