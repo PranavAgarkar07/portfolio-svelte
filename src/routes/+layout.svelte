@@ -3,6 +3,7 @@
     import { theme } from "$lib/stores/theme";
     import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
+    import { initAnalytics, trackEvent } from "$lib/analytics";
     import gsap from "gsap";
     import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
     import Lenis from "lenis";
@@ -14,6 +15,9 @@
     let { children } = $props();
 
     onMount(() => {
+        initAnalytics();
+        trackEvent("pageview", window.location.pathname);
+
         function applyTheme(value: 'dark' | 'light') {
             document.getElementById('theme-guard')?.remove();
             const style = document.createElement('style');

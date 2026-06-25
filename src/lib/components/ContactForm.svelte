@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { trackEvent } from "$lib/analytics";
+
     const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
     const API_URL = BASE_URL + "/api/contact";
     const HEALTH_URL = BASE_URL + "/healthz";
@@ -104,6 +106,7 @@
             });
             if (res.ok) {
                 success = true;
+                trackEvent("form", "form_submit");
                 name = ""; email = ""; topic = "general"; message = "";
                 nameTouched = false; emailTouched = false; messageTouched = false;
                 clearDraft();

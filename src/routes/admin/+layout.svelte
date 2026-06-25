@@ -5,6 +5,7 @@
     let { children } = $props();
 
     const navItems = [
+        { label: "Dashboard", path: `${base}/admin/dashboard`, icon: "📊" },
         { label: "Contact", path: `${base}/admin/contact`, icon: "📬" },
         { label: "Certificates", path: `${base}/admin/certificates`, icon: "📜" },
         { label: "Badges", path: `${base}/admin/badges`, icon: "🏅" },

@@ -18,8 +18,7 @@ func TestCreateSession_RejectsMissingFields(t *testing.T) {
 		status int
 	}{
 		{"empty body", `{}`, 400},
-		{"missing id", `{"ip_hash": "abc"}`, 400},
-		{"missing ip_hash", `{"id": "abc"}`, 400},
+		{"missing id", `{}`, 400},
 	}
 
 	for _, tt := range tests {

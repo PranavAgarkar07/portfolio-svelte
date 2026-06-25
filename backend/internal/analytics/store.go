@@ -38,35 +38,36 @@ func InsertEvents(db *sql.DB, events []EventPayload) error {
 
 func GetDashboardStats(db *sql.DB, since time.Time) DashboardStats {
 	var ds DashboardStats
+	sinceTs := since.Unix()
 
 	if err := db.QueryRow(`SELECT COUNT(*) FROM sessions`).Scan(&ds.TotalViews); err != nil {
 		slog.Error("analytics: failed to count total views", "error", err)
 	}
-	if err := db.QueryRow(`SELECT COUNT(DISTINCT ip_hash) FROM sessions WHERE created_at >= $1`, since).Scan(&ds.UniqueVisitors); err != nil {
+	if err := db.QueryRow(`SELECT COUNT(DISTINCT ip_hash) FROM sessions WHERE created_at >= to_timestamp($1)`, sinceTs).Scan(&ds.UniqueVisitors); err != nil {
 		slog.Error("analytics: failed to count unique visitors", "error", err)
 	}
-	if err := db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'click' AND target = 'resume_pdf' AND ts >= $1`, since).Scan(&ds.ResumeDownloads); err != nil {
+	if err := db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'click' AND target = 'resume_pdf' AND ts >= to_timestamp($1)`, sinceTs).Scan(&ds.ResumeDownloads); err != nil {
 		slog.Error("analytics: failed to count resume downloads", "error", err)
 	}
-	if err := db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'form' AND target = 'form_submit' AND ts >= $1`, since).Scan(&ds.FormSubmissions); err != nil {
+	if err := db.QueryRow(`SELECT COUNT(*) FROM events WHERE type = 'form' AND target = 'form_submit' AND ts >= to_timestamp($1)`, sinceTs).Scan(&ds.FormSubmissions); err != nil {
 		slog.Error("analytics: failed to count form submissions", "error", err)
 	}
-	if err := db.QueryRow(`SELECT COALESCE(AVG(NULLIF(value, '')::numeric), 0) FROM events WHERE type = 'timing' AND target = 'session_duration' AND ts >= $1`,
-		since).Scan(&ds.AvgTimeOnSite); err != nil {
+	if err := db.QueryRow(`SELECT COALESCE(AVG(NULLIF(value, '')::numeric), 0) FROM events WHERE type = 'timing' AND target = 'session_duration' AND ts >= to_timestamp($1)`,
+		sinceTs).Scan(&ds.AvgTimeOnSite); err != nil {
 		slog.Error("analytics: failed to compute avg time on site", "error", err)
 	}
 
-	ds.TopReferrers = GetReferrerBreakdown(db, since)
-	ds.TopTargets = GetTopTargets(db, since, 20)
-	ds.CountryBreakdown = GetCountryBreakdown(db, since)
+	ds.TopReferrers = GetReferrerBreakdown(db, sinceTs)
+	ds.TopTargets = GetTopTargets(db, sinceTs, 20)
+	ds.CountryBreakdown = GetCountryBreakdown(db, sinceTs)
 
 	return ds
 }
 
-func GetTopTargets(db *sql.DB, since time.Time, limit int) []TargetCount {
+func GetTopTargets(db *sql.DB, sinceTs int64, limit int) []TargetCount {
 	rows, err := db.Query(
-		`SELECT target, COUNT(*) as cnt FROM events WHERE ts >= $1 AND target != '' GROUP BY target ORDER BY cnt DESC LIMIT $2`,
-		since, limit,
+		`SELECT target, COUNT(*) as cnt FROM events WHERE ts >= to_timestamp($1) AND target != '' GROUP BY target ORDER BY cnt DESC LIMIT $2`,
+		sinceTs, limit,
 	)
 	if err != nil {
 		slog.Error("analytics: failed to query top targets", "error", err)
@@ -85,10 +86,10 @@ func GetTopTargets(db *sql.DB, since time.Time, limit int) []TargetCount {
 	return out
 }
 
-func GetCountryBreakdown(db *sql.DB, since time.Time) []CountryCount {
+func GetCountryBreakdown(db *sql.DB, sinceTs int64) []CountryCount {
 	rows, err := db.Query(
-		`SELECT country, COUNT(*) as cnt FROM sessions WHERE created_at >= $1 AND country != '' GROUP BY country ORDER BY cnt DESC`,
-		since,
+		`SELECT country, COUNT(*) as cnt FROM sessions WHERE created_at >= to_timestamp($1) AND country != '' GROUP BY country ORDER BY cnt DESC`,
+		sinceTs,
 	)
 	if err != nil {
 		slog.Error("analytics: failed to query country breakdown", "error", err)
@@ -107,10 +108,10 @@ func GetCountryBreakdown(db *sql.DB, since time.Time) []CountryCount {
 	return out
 }
 
-func GetReferrerBreakdown(db *sql.DB, since time.Time) []ReferrerCount {
+func GetReferrerBreakdown(db *sql.DB, sinceTs int64) []ReferrerCount {
 	rows, err := db.Query(
-		`SELECT referrer, COUNT(*) as cnt FROM sessions WHERE created_at >= $1 AND referrer != '' GROUP BY referrer ORDER BY cnt DESC`,
-		since,
+		`SELECT referrer, COUNT(*) as cnt FROM sessions WHERE created_at >= to_timestamp($1) AND referrer != '' GROUP BY referrer ORDER BY cnt DESC`,
+		sinceTs,
 	)
 	if err != nil {
 		slog.Error("analytics: failed to query referrer breakdown", "error", err)
@@ -132,14 +133,14 @@ func GetReferrerBreakdown(db *sql.DB, since time.Time) []ReferrerCount {
 const dataRetentionDays = 90
 
 func CleanupOldData(db *sql.DB) {
-	cutoff := time.Now().AddDate(0, 0, -dataRetentionDays)
-	result, err := db.Exec(`DELETE FROM events WHERE ts < $1`, cutoff)
+	cutoff := time.Now().AddDate(0, 0, -dataRetentionDays).Unix()
+	result, err := db.Exec(`DELETE FROM events WHERE ts < to_timestamp($1)`, cutoff)
 	if err != nil {
 		slog.Error("analytics: failed to cleanup old events", "error", err)
 	} else if n, _ := result.RowsAffected(); n > 0 {
 		slog.Info("analytics: cleaned up old events", "count", n)
 	}
-	result, err = db.Exec(`DELETE FROM sessions WHERE created_at < $1`, cutoff)
+	result, err = db.Exec(`DELETE FROM sessions WHERE created_at < to_timestamp($1)`, cutoff)
 	if err != nil {
 		slog.Error("analytics: failed to cleanup old sessions", "error", err)
 	} else if n, _ := result.RowsAffected(); n > 0 {

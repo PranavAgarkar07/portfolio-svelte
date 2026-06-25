@@ -3,6 +3,7 @@
     import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
     import { base } from "$app/paths";
+    import { trackEvent } from "$lib/analytics";
     interface Props {
         profile: {
             name: string;
@@ -152,7 +153,7 @@
                 >
             </li>
             <li class="nav-resume-li mobile-only">
-                <a href={resumeUrl} target="_blank" rel="noopener" class="nav-resume-link" onclick={() => (mobileMenuOpen = false)}>
+                <a href={resumeUrl} target="_blank" rel="noopener" class="nav-resume-link" onclick={() => { mobileMenuOpen = false; trackEvent("click", "resume_pdf"); }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -179,7 +180,7 @@
         </ul>
 
         <div class="header-actions">
-        <a href={resumeUrl} target="_blank" rel="noopener" class="desktop-only header-resume-btn" aria-label="Download Resume">
+        <a href={resumeUrl} target="_blank" rel="noopener" class="desktop-only header-resume-btn" aria-label="Download Resume" onclick={() => trackEvent("click", "resume_pdf")}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>

@@ -1,7 +1,9 @@
 package analytics
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,9 +15,12 @@ func HandleCreateSession(db *sql.DB) fiber.Handler {
 		if err := c.BodyParser(&s); err != nil {
 			return c.Status(400).JSON(fiber.Map{"error": "invalid JSON body"})
 		}
-		if s.ID == "" || s.IPHash == "" {
-			return c.Status(400).JSON(fiber.Map{"error": "id and ip_hash are required"})
+		if s.ID == "" {
+			return c.Status(400).JSON(fiber.Map{"error": "id is required"})
 		}
+		ip := c.IP()
+		h := sha256.Sum256([]byte(ip))
+		s.IPHash = hex.EncodeToString(h[:8])
 		if err := InsertSession(db, s); err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "failed to create session"})
 		}
