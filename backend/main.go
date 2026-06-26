@@ -251,6 +251,17 @@ func main() {
 			}
 			db.Exec(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS source TEXT DEFAULT ''`)
 
+			if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS project_likes (
+				project_name TEXT NOT NULL,
+				visitor_token TEXT NOT NULL,
+				liked BOOLEAN NOT NULL DEFAULT TRUE,
+				created_at TIMESTAMPTZ DEFAULT NOW(),
+				updated_at TIMESTAMPTZ DEFAULT NOW(),
+				PRIMARY KEY (project_name, visitor_token)
+			)`); err != nil {
+				slog.Warn("project_likes migration failed", "error", err)
+			}
+
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'https://sentinel-backend-4x3i.onrender.com/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'http://localhost:8080/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 
@@ -336,6 +347,11 @@ func main() {
 	app.Put("/api/admin/badges/reorder", handleAdminReorderBadges)
 	app.Put("/api/admin/badges/:id", handleAdminUpdateBadge)
 	app.Delete("/api/admin/badges/:id", handleAdminDeleteBadge)
+
+	app.Get("/api/projects/likes", handleGetProjectLikes)
+	app.Post("/api/projects/like", likeRateLimit, handleToggleProjectLike)
+
+	go resetLikeRate()
 
 	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
 		slog.Info("Sentinel starting in Lambda mode")
@@ -1247,6 +1263,115 @@ func handleAdminReorderBadges(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"success": true})
+}
+
+// --- Project Likes ---
+
+var (
+	likeRateMu sync.Mutex
+	likeRate   = map[string]int{}
+)
+
+func likeRateLimit(c *fiber.Ctx) error {
+	ip := c.IP()
+	likeRateMu.Lock()
+	defer likeRateMu.Unlock()
+	likeRate[ip]++
+	if likeRate[ip] > 20 {
+		return c.Status(429).JSON(fiber.Map{"error": "too many requests"})
+	}
+	return c.Next()
+}
+
+func resetLikeRate() {
+	for range time.Tick(1 * time.Minute) {
+		likeRateMu.Lock()
+		likeRate = map[string]int{}
+		likeRateMu.Unlock()
+	}
+}
+
+type likeRow struct {
+	ProjectName string `json:"project_name"`
+	Count       int    `json:"count"`
+	Liked       bool   `json:"liked"`
+}
+
+func handleGetProjectLikes(c *fiber.Ctx) error {
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	visitorToken := c.Query("visitor_token", "")
+
+	rows, err := db.Query(`SELECT project_name, COUNT(*) as cnt FROM project_likes WHERE liked = TRUE GROUP BY project_name`)
+	if err != nil {
+		slog.Error("Failed to query project likes", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+	defer rows.Close()
+
+	likes := map[string]int{}
+	for rows.Next() {
+		var name string
+		var cnt int
+		if err := rows.Scan(&name, &cnt); err != nil {
+			slog.Error("Failed to scan like row", "error", err)
+			continue
+		}
+		likes[name] = cnt
+	}
+
+	userLikes := map[string]bool{}
+	if visitorToken != "" {
+		urows, err := db.Query(`SELECT project_name FROM project_likes WHERE visitor_token = $1 AND liked = TRUE`, visitorToken)
+		if err == nil {
+			defer urows.Close()
+			for urows.Next() {
+				var name string
+				if err := urows.Scan(&name); err == nil {
+					userLikes[name] = true
+				}
+			}
+		}
+	}
+
+	return c.JSON(fiber.Map{"likes": likes, "user_likes": userLikes})
+}
+
+func handleToggleProjectLike(c *fiber.Ctx) error {
+	if db == nil {
+		return c.Status(503).JSON(fiber.Map{"error": "service unavailable"})
+	}
+
+	var input struct {
+		ProjectName  string `json:"project_name"`
+		VisitorToken string `json:"visitor_token"`
+		Liked        bool   `json:"liked"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid JSON body"})
+	}
+	if input.ProjectName == "" || input.VisitorToken == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "project_name and visitor_token are required"})
+	}
+
+	_, err := db.Exec(
+		`INSERT INTO project_likes (project_name, visitor_token, liked, updated_at)
+		 VALUES ($1, $2, $3, NOW())
+		 ON CONFLICT (project_name, visitor_token)
+		 DO UPDATE SET liked = $3, updated_at = NOW()`,
+		input.ProjectName, input.VisitorToken, input.Liked,
+	)
+	if err != nil {
+		slog.Error("Failed to upsert project like", "error", err)
+		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
+	}
+
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM project_likes WHERE project_name = $1 AND liked = TRUE`, input.ProjectName).Scan(&count)
+
+	return c.JSON(fiber.Map{"likes": count})
 }
 
 func htmlEscape(s string) string {
