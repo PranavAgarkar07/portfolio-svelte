@@ -6,6 +6,7 @@ type SessionPayload struct {
 	Country  string `json:"country"`
 	City     string `json:"city"`
 	Referrer string `json:"referrer"`
+	Source   string `json:"source"`
 	Device   string `json:"device"`
 	OS       string `json:"os"`
 	Browser  string `json:"browser"`
@@ -35,12 +36,18 @@ type CountryCount struct {
 	Count   int    `json:"count"`
 }
 
+type SourceCount struct {
+	Source string `json:"source"`
+	Count  int    `json:"count"`
+}
+
 type DashboardStats struct {
 	TotalViews      int             `json:"total_views"`
 	UniqueVisitors  int             `json:"unique_visitors"`
 	TopReferrers    []ReferrerCount `json:"top_referrers"`
 	TopTargets      []TargetCount   `json:"top_targets"`
 	CountryBreakdown []CountryCount `json:"country_breakdown"`
+	SourceBreakdown []SourceCount   `json:"source_breakdown"`
 	AvgTimeOnSite   float64         `json:"avg_time_on_site"`
 	ResumeDownloads int             `json:"resume_downloads"`
 	FormSubmissions int             `json:"form_submissions"`

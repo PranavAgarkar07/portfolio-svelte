@@ -28,18 +28,20 @@ body.light-mode .nav-links a {
 }
 
 body.light-mode .mobile-menu-btn {
-    background: #fff;
-    color: #000;
-    border-color: #000;
+    background: none;
+    color: var(--text-primary);
 }
 
-body.light-mode .mobile-menu-btn.active {
-    background: #000;
-    color: #fff;
+body.light-mode .mobile-menu-btn:hover {
+    opacity: 0.6;
+}
+
+body.light-mode .hamburger-line {
+    background: var(--text-primary);
 }
 
 body.light-mode .mobile-menu-btn.active .hamburger-line {
-    background: #fff;
+    background: var(--text-primary);
 }
 
 /* Cards */
@@ -110,12 +112,23 @@ body.light-mode .theme-toggle:hover {
 
 @media (max-width: 768px) {
     body.light-mode .nav-links {
-        background: var(--bg-dark);
-        color: #18181b;
+        background: rgba(252, 251, 249, 0.98);
+        color: var(--text-primary);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
     }
-    body.light-mode .nav-links.active {
-        background: #ffffff;
-        border-bottom: 1px solid var(--grid-line);
+
+    body.light-mode .nav-links a {
+        color: var(--text-primary);
+    }
+
+    body.light-mode .nav-close-btn {
+        color: var(--text-secondary);
+    }
+
+    body.light-mode .nav-close-btn:hover {
+        color: var(--accent);
+        background: rgba(0,0,0,0.04);
     }
 }
 

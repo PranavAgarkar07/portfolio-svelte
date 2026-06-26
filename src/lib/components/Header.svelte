@@ -4,6 +4,20 @@
     import { onMount } from "svelte";
     import { base } from "$app/paths";
     import { trackEvent } from "$lib/analytics";
+    
+    interface NavigationItem {
+        id: string;
+        title: string;
+    }
+
+    const navigationItems: NavigationItem[] = [
+        { id: "about", title: "About" },
+        { id: "skills", title: "Skills" },
+        { id: "certifications", title: "Certifications" },
+        { id: "projects", title: "Projects" },
+        { id: "contact", title: "Contact" }
+    ];
+
     interface Props {
         profile: {
             name: string;
@@ -123,96 +137,107 @@
             >Pranav<span class="text-accent">.</span></a
         >
         <ul class="nav-links" class:active={mobileMenuOpen}>
-            <li>
-                <a href="#about" onclick={() => (mobileMenuOpen = false)}
-                    >About</a
-                >
-            </li>
-            <li>
-                <a href="#skills" onclick={() => (mobileMenuOpen = false)}
-                    >Skills</a
-                >
-            </li>
-            <li>
-                <a href="#certifications" onclick={() => (mobileMenuOpen = false)}
-                    >Certifications</a
-                >
-            </li>
-            <li>
-                <a
-                    href="#projects"
-                    class:active={activeSection === "projects"}
-                    onclick={() => (mobileMenuOpen = false)}>Projects</a
-                >
-            </li>
-            <li>
-                <a
-                    href="#contact"
-                    class:active={activeSection === "contact"}
-                    onclick={() => (mobileMenuOpen = false)}>Contact</a
-                >
-            </li>
+            {#each navigationItems as item (item.id)}
+                <li>
+                    <a href="#{item.id}" class:active-section={activeSection === item.id} onclick={() => (mobileMenuOpen = false)}
+                        >{item.title}</a
+                    >
+                </li>
+            {/each}
+            {#if theme === "dark"}
+                <li class="nav-resume-li mobile-only">
+                    <button
+                        class="nav-link-btn"
+                        onclick={() => {
+                            toggleTheme();
+                            mobileMenuOpen = false;
+                        }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        Dark Mode
+                    </button>
+                </li>
+            {:else}
+                <li class="nav-resume-li mobile-only">
+                    <button
+                        class="nav-link-btn"
+                        onclick={() => {
+                            toggleTheme();
+                            mobileMenuOpen = false;
+                        }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        Light Mode
+                    </button>
+                </li>
+            {/if}
             <li class="nav-resume-li mobile-only">
                 <a href={resumeUrl} target="_blank" rel="noopener" class="nav-resume-link" onclick={() => { mobileMenuOpen = false; trackEvent("click", "resume_pdf"); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
                         <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                     Resume
                 </a>
             </li>
-
-            <!-- Mobile Only Theme Switcher -->
-            <li class="mobile-only">
-                <button
-                    class="nav-link-btn"
-                    onclick={() => {
-                        toggleTheme();
-                        mobileMenuOpen = false;
-                    }}
-                >
-                    THEME
-                </button>
-            </li>
         </ul>
 
         <div class="header-actions">
-        <a href={resumeUrl} target="_blank" rel="noopener" class="desktop-only header-resume-btn" aria-label="Download Resume" onclick={() => trackEvent("click", "resume_pdf")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-            Resume
-        </a>
-        <button
-            class="theme-toggle"
-            onclick={toggleTheme}
-            aria-label="Toggle Theme"
-        >
-            <span class="sun-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            <a href={resumeUrl} target="_blank" rel="noopener" class="desktop-only header-resume-btn" aria-label="Download Resume" onclick={() => trackEvent("click", "resume_pdf")}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
-            </span>
-            <span class="moon-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-            </span>
-        </button>
+                Resume
+            </a>
+            <button
+                class="theme-toggle desktop-only"
+                onclick={toggleTheme}
+                aria-label="Toggle Theme"
+            >
+                <span class="sun-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </span>
+                <span class="moon-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </span>
+            </button>
         </div>
 
         <button

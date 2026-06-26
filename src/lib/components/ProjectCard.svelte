@@ -162,17 +162,13 @@ import { Lightbox } from "lightbox3";
                     <div class="card-meta">
                         <span class="project-number">PRJ {String(index + 1).padStart(2, "0")}</span>
                         <span class="featured-badge" aria-label="Featured project">FEATURED</span>
-                        {#if project.githubStars !== undefined}
-                            <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">
-                                <Icon name="star" size={10} />
-                                <span>{project.githubStars}</span>
-                            </span>
-                        {/if}
-                        {#if project.isLive}
-                            <Badge variant="live">LIVE</Badge>
-                        {:else}
-                            <Badge variant="offline">OFFLINE</Badge>
-                        {/if}
+                        <span class="badge-align">
+                            {#if project.isLive}
+                                <Badge variant="live">LIVE</Badge>
+                            {:else}
+                                <Badge variant="offline">OFFLINE</Badge>
+                            {/if}
+                        </span>
                     </div>
                     <h3 class="project-title featured-title">{project.name}</h3>
                 </div>
@@ -259,17 +255,13 @@ import { Lightbox } from "lightbox3";
                     {#if project.seriesTag}
                         <span class="series-tag" title="Part of the {project.seriesTag}">{project.seriesTag.split(' ')[0].toUpperCase()}</span>
                     {/if}
-                    {#if project.githubStars !== undefined}
-                        <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">
-                            <Icon name="star" size={10} />
-                            <span>{project.githubStars}</span>
-                        </span>
-                    {/if}
-                    {#if project.isLive}
-                        <Badge variant="live">LIVE</Badge>
-                    {:else}
-                        <Badge variant="offline">OFFLINE</Badge>
-                    {/if}
+                    <span class="badge-align">
+                        {#if project.isLive}
+                            <Badge variant="live">LIVE</Badge>
+                        {:else}
+                            <Badge variant="offline">OFFLINE</Badge>
+                        {/if}
+                    </span>
                 </div>
                 <h3 class="project-title">{project.name}</h3>
             </div>
@@ -399,25 +391,6 @@ import { Lightbox } from "lightbox3";
     :global(body.light-mode) .series-tag {
         border-color: rgba(0,0,0,0.15);
         color: var(--text-muted);
-    }
-
-    .github-stars-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        font-size: 0.6rem;
-        font-weight: 600;
-        color: #fbbf24;
-        border: 1px solid rgba(251, 191, 36, 0.3);
-        background: rgba(251, 191, 36, 0.08);
-        padding: 2px 7px;
-        line-height: 1.6;
-    }
-
-    :global(body.light-mode) .github-stars-badge {
-        color: #b45309;
-        border-color: rgba(180, 83, 9, 0.25);
-        background: rgba(180, 83, 9, 0.06);
     }
 
     :global(.project-card:hover .tag) {
@@ -667,6 +640,10 @@ import { Lightbox } from "lightbox3";
         display: flex;
         align-items: center;
         gap: 0.5rem;
+    }
+
+    .badge-align {
+        margin-left: auto;
     }
 
     .project-number {

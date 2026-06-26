@@ -9,10 +9,10 @@ import (
 
 func InsertSession(db *sql.DB, s SessionPayload) error {
 	_, err := db.Exec(
-		`INSERT INTO sessions (id, ip_hash, country, city, referrer, device, os, browser, theme, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+		`INSERT INTO sessions (id, ip_hash, country, city, referrer, source, device, os, browser, theme, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
 		 ON CONFLICT (id) DO NOTHING`,
-		s.ID, s.IPHash, s.Country, s.City, s.Referrer, s.Device, s.OS, s.Browser, s.Theme,
+		s.ID, s.IPHash, s.Country, s.City, s.Referrer, s.Source, s.Device, s.OS, s.Browser, s.Theme,
 	)
 	return err
 }
@@ -60,6 +60,7 @@ func GetDashboardStats(db *sql.DB, since time.Time) DashboardStats {
 	ds.TopReferrers = GetReferrerBreakdown(db, sinceTs)
 	ds.TopTargets = GetTopTargets(db, sinceTs, 20)
 	ds.CountryBreakdown = GetCountryBreakdown(db, sinceTs)
+	ds.SourceBreakdown = GetSourceBreakdown(db, sinceTs)
 
 	return ds
 }
@@ -126,6 +127,28 @@ func GetReferrerBreakdown(db *sql.DB, sinceTs int64) []ReferrerCount {
 			continue
 		}
 		out = append(out, rc)
+	}
+	return out
+}
+
+func GetSourceBreakdown(db *sql.DB, sinceTs int64) []SourceCount {
+	rows, err := db.Query(
+		`SELECT COALESCE(NULLIF(source, ''), 'direct') as src, COUNT(*) as cnt FROM sessions WHERE created_at >= to_timestamp($1) GROUP BY src ORDER BY cnt DESC`,
+		sinceTs,
+	)
+	if err != nil {
+		slog.Error("analytics: failed to query source breakdown", "error", err)
+		return []SourceCount{}
+	}
+	defer rows.Close()
+	out := []SourceCount{}
+	for rows.Next() {
+		var sc SourceCount
+		if err := rows.Scan(&sc.Source, &sc.Count); err != nil {
+			slog.Error("analytics: failed to scan source row", "error", err)
+			continue
+		}
+		out = append(out, sc)
 	}
 	return out
 }
