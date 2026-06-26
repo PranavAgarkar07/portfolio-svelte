@@ -31,8 +31,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
-	"github.com/lib/pq"
 	"golang.org/x/image/draw"
 	"portfolio-backend/internal/analytics"
 )
@@ -158,7 +158,7 @@ func main() {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL != "" {
 		var err error
-		db, err = sql.Open("postgres", databaseURL)
+		db, err = sql.Open("pgx", databaseURL)
 		if err != nil {
 			slog.Warn("Failed to open database", "error", err)
 		} else {
@@ -170,6 +170,7 @@ func main() {
 				db = nil
 			} else {
 				slog.Info("Database connected successfully")
+				db.SetMaxIdleConns(0)
 				migrateQuery := `CREATE TABLE IF NOT EXISTS contact_messages (
 					id SERIAL PRIMARY KEY,
 					name TEXT NOT NULL,
@@ -248,6 +249,7 @@ func main() {
 					slog.Warn("analytics migration failed", "error", err)
 				}
 			}
+			db.Exec(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS source TEXT DEFAULT ''`)
 
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'https://sentinel-backend-4x3i.onrender.com/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
 			db.Exec(`UPDATE badges SET image_url = REPLACE(image_url, 'http://localhost:8080/static/uploads/', '/badges/') WHERE image_url LIKE '%/static/uploads/%'`)
@@ -655,16 +657,54 @@ func handleGetCertificates(c *fiber.Ctx) error {
 	for rows.Next() {
 		var cert Certificate
 		var createdAt time.Time
-		if err := rows.Scan(&cert.ID, &cert.Title, &cert.Issuer, &cert.Date, &cert.CredentialURL, &cert.ImageURL, pq.Array(&cert.Tags), &cert.IsVerified, &cert.DisplayOrder, &createdAt); err != nil {
+		var tagsStr string
+		if err := rows.Scan(&cert.ID, &cert.Title, &cert.Issuer, &cert.Date, &cert.CredentialURL, &cert.ImageURL, &tagsStr, &cert.IsVerified, &cert.DisplayOrder, &createdAt); err != nil {
 			slog.Error("Failed to scan certificate row", "error", err)
 			continue
 		}
+		cert.Tags = parsePgArray(tagsStr)
 		cert.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
 		cert.ThumbURL = deriveThumbURL(cert.ImageURL)
 		certs = append(certs, cert)
 	}
 
 	return c.JSON(fiber.Map{"certificates": certs})
+}
+
+func parsePgArray(s string) []string {
+	s = strings.TrimSpace(s)
+	if len(s) < 2 || s[0] != '{' || s[len(s)-1] != '}' {
+		return []string{}
+	}
+	inner := s[1 : len(s)-1]
+	if inner == "" {
+		return []string{}
+	}
+	var out []string
+	var cur strings.Builder
+	inQuote := false
+	for i := 0; i < len(inner); i++ {
+		switch ch := inner[i]; {
+		case ch == '"' && !inQuote:
+			inQuote = true
+		case ch == '"' && inQuote:
+			if i+1 < len(inner) && inner[i+1] == '"' {
+				cur.WriteByte('"')
+				i++
+			} else {
+				inQuote = false
+			}
+		case ch == ',' && !inQuote:
+			out = append(out, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteByte(ch)
+		}
+	}
+	if cur.Len() > 0 || len(out) > 0 {
+		out = append(out, cur.String())
+	}
+	return out
 }
 
 func deriveThumbURL(imageURL string) string {
@@ -745,8 +785,8 @@ func handleAdminCreateCertificate(c *fiber.Ctx) error {
 	var id int
 	err := db.QueryRow(
 		"INSERT INTO certificates (title, issuer, date, credential_url, image_url, tags, is_verified, display_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
-		input.Title, input.Issuer, input.Date, input.CredentialURL, input.ImageURL, pq.Array(input.Tags), input.IsVerified, input.DisplayOrder,
-	).Scan(&id)
+		input.Title, input.Issuer, input.Date, input.CredentialURL, input.ImageURL, input.Tags, input.IsVerified, input.DisplayOrder,
+	)
 	if err != nil {
 		slog.Error("Failed to insert certificate", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "internal server error"})
@@ -803,7 +843,7 @@ func handleAdminUpdateCertificate(c *fiber.Ctx) error {
 
 	result, err := db.Exec(
 		"UPDATE certificates SET title=$1, issuer=$2, date=$3, credential_url=$4, image_url=$5, tags=$6, is_verified=$7, display_order=$8 WHERE id=$9",
-		input.Title, input.Issuer, input.Date, input.CredentialURL, input.ImageURL, pq.Array(input.Tags), input.IsVerified, input.DisplayOrder, id,
+		input.Title, input.Issuer, input.Date, input.CredentialURL, input.ImageURL, input.Tags, input.IsVerified, input.DisplayOrder, id,
 	)
 	if err != nil {
 		slog.Error("Failed to update certificate", "error", err)
