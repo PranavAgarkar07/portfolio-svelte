@@ -134,3 +134,70 @@ export function trackEvent(type: string, target: string, value?: string): void {
     if (!r.ok) r.text().then(t => console.warn("analytics: events POST failed", r.status, t));
   }).catch(() => {});
 }
+
+// --- Project Likes ---
+
+const VISITOR_KEY = "portfolio_visitor_id";
+
+function getOrCreateVisitorId(): string {
+  try {
+    let id = localStorage.getItem(VISITOR_KEY);
+    if (!id) {
+      id = generateUUID();
+      localStorage.setItem(VISITOR_KEY, id);
+    }
+    return id;
+  } catch {
+    return generateUUID();
+  }
+}
+
+function getFingerprint(): string {
+  return [
+    navigator.userAgent,
+    screen.width,
+    screen.height,
+    screen.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    navigator.platform,
+    navigator.language,
+  ].join("|");
+}
+
+async function sha256(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf)).slice(0, 16).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function getVisitorToken(): Promise<string> {
+  return sha256(getOrCreateVisitorId() + "|" + getFingerprint());
+}
+
+export async function fetchProjectLikes(): Promise<{ likes: Record<string, number>; user_likes: Record<string, boolean> }> {
+  if (!BASE) return { likes: {}, user_likes: {} };
+  const token = await getVisitorToken();
+  try {
+    const resp = await fetch(`${BASE}/api/projects/likes?visitor_token=${encodeURIComponent(token)}`);
+    if (!resp.ok) return { likes: {}, user_likes: {} };
+    return resp.json();
+  } catch {
+    return { likes: {}, user_likes: {} };
+  }
+}
+
+export async function toggleProjectLike(projectName: string, liked: boolean): Promise<number> {
+  if (!BASE) return -1;
+  const visitorToken = await getVisitorToken();
+  try {
+    const resp = await fetch(`${BASE}/api/projects/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_name: projectName, visitor_token: visitorToken, liked }),
+    });
+    if (!resp.ok) return -1;
+    const data = await resp.json();
+    return data.likes;
+  } catch {
+    return -1;
+  }
+}

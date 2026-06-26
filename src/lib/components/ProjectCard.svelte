@@ -21,9 +21,12 @@ import { Lightbox } from "lightbox3";
             links: Array<{ label: string; url: string; icon: string }>;
         };
         index: number;
+        liked?: boolean;
+        likeCount?: number;
+        onLike?: (liked: boolean) => void;
     }
 
-    let { project, index }: Props = $props();
+    let { project, index, liked = false, likeCount = 0, onLike }: Props = $props();
     let currentSlide = $state(0);
     let carousel = $state<HTMLDivElement | null>(null);
     let cardEl = $state<HTMLElement | null>(null);
@@ -190,6 +193,12 @@ import { Lightbox } from "lightbox3";
                             <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
                         </a>
                     {/each}
+                    <button class="like-btn" class:liked class:interactive={!!onLike} onclick={() => onLike?.(!liked)} aria-label={liked ? "Unlike" : "Like this project"}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                        </svg>
+                        <span class="like-count">{likeCount}</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -281,6 +290,12 @@ import { Lightbox } from "lightbox3";
                         <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
                     </a>
                 {/each}
+                <button class="like-btn" class:liked class:interactive={!!onLike} onclick={() => onLike?.(!liked)} aria-label={liked ? "Unlike" : "Like this project"}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                    </svg>
+                    <span class="like-count">{likeCount}</span>
+                </button>
             </div>
             <span class="card-number-watermark" bind:this={watermarkEl} aria-hidden="true"
                 >0{index + 1}</span
@@ -805,6 +820,90 @@ import { Lightbox } from "lightbox3";
     }
 
     :global(body.light-mode) .card-link:active {
+        box-shadow: none;
+    }
+
+    /* ── Like Button ── */
+
+    .like-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-heading);
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.25);
+        text-decoration: none;
+        padding: 5px 10px;
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.03);
+        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+        cursor: default;
+        transition: all 0.15s ease;
+        margin-left: auto;
+    }
+
+    .like-btn.interactive {
+        cursor: pointer;
+    }
+
+    .like-btn.interactive:hover {
+        color: #ef4444;
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        box-shadow: 2px 2px 0px #ef4444;
+        transform: translate(1px, 1px);
+    }
+
+    .like-btn.interactive:active {
+        box-shadow: none;
+        transform: translate(3px, 3px);
+    }
+
+    .like-btn.liked {
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.08);
+    }
+
+    .like-btn.liked.interactive:hover {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.15);
+    }
+
+    .like-count {
+        font-size: 0.6rem;
+        opacity: 0.8;
+    }
+
+    :global(body.light-mode) .like-btn {
+        color: rgba(0, 0, 0, 0.25);
+        border-color: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.03);
+        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    :global(body.light-mode) .like-btn.interactive:hover {
+        color: #dc2626;
+        border-color: rgba(220, 38, 38, 0.3);
+        background: rgba(220, 38, 38, 0.06);
+        box-shadow: 1px 1px 0px rgba(220, 38, 38, 0.25);
+    }
+
+    :global(body.light-mode) .like-btn.liked {
+        color: #dc2626;
+        border-color: rgba(220, 38, 38, 0.3);
+        background: rgba(220, 38, 38, 0.06);
+    }
+
+    :global(body.light-mode) .like-btn.liked.interactive:hover {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.12);
+    }
+
+    :global(body.light-mode) .like-btn.interactive:active {
         box-shadow: none;
     }
 

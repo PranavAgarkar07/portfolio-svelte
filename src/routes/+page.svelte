@@ -15,6 +15,7 @@
     import ContactForm from "$lib/components/ContactForm.svelte";
     import { Icon, SectionHeader, Card, Skeleton } from "$lib/components/ui";
     import type { Certificate, Badge } from "$lib/types";
+    import { fetchProjectLikes, toggleProjectLike } from "$lib/analytics";
 
     const { profile, about, skills, projects } = portfolioData;
     const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
@@ -23,6 +24,8 @@
     let certsLoading = $state(true);
     let certsError = $state("");
     let badges = $state<Badge[]>([]);
+    let likes = $state<Record<string, number>>({});
+    let userLikes = $state<Record<string, boolean>>({});
     let prefersReducedMotion = $state(false);
 
     async function fetchCerts() {
@@ -63,6 +66,10 @@
                 .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
                 .then(data => { badges = data.badges ?? data ?? []; })
                 .catch(() => {});
+            fetchProjectLikes().then(result => {
+                likes = result.likes;
+                userLikes = result.user_likes;
+            }).catch(() => {});
         }
 
         if (prefersReducedMotion) return;
@@ -310,7 +317,20 @@
         <SectionHeader title="Featured Projects" count={projects.length} animate />
         <div class="projects-grid" style="margin-top: 1.5rem">
             {#each projects as project, i}
-                <ProjectCard {project} index={i} />
+                <ProjectCard {project} index={i} liked={userLikes[project.name] ?? false} likeCount={likes[project.name] ?? 0} onLike={(liked) => {
+                    const name = project.name;
+                    const prevLikes = likes;
+                    userLikes = { ...userLikes, [name]: liked };
+                    likes = { ...likes, [name]: (likes[name] ?? 0) + (liked ? 1 : -1) };
+                    toggleProjectLike(name, liked).then(count => {
+                        if (count < 0) {
+                            userLikes = { ...userLikes, [name]: !liked };
+                            likes = { ...likes, [name]: (likes[name] ?? 0) + (liked ? -1 : 1) };
+                        } else {
+                            likes = { ...likes, [name]: count };
+                        }
+                    });
+                }} />
             {/each}
         </div>
     </section>
