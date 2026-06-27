@@ -39,7 +39,9 @@
             const r = await fetch(`${API_BASE}/api/certificates`);
             if (!r.ok) throw new Error("HTTP " + r.status);
             const data = await r.json();
-            certificates = Array.isArray(data.certificates) ? data.certificates : (Array.isArray(data) ? data : []);
+            const result = Array.isArray(data.certificates) ? data.certificates : (Array.isArray(data) ? data : []);
+            certificates = result.length > 0 ? result : fallbackCertificates;
+            if (result.length === 0) certsError = "No certificates found on server";
             certsLoading = false;
         } catch (e) {
             certsError = String(e);

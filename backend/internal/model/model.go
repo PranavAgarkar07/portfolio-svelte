@@ -59,7 +59,7 @@ type Certificate struct {
 	CredentialURL string   `json:"credential_url"`
 	ImageURL      string   `json:"image_url"`
 	ThumbURL      string   `json:"thumb_url"`
-	Tags          []string `json:"tags"`
+	Tags          Strings  `json:"tags"`
 	IsVerified    bool     `json:"is_verified"`
 	DisplayOrder  int      `json:"display_order"`
 	CreatedAt     string   `json:"created_at"`
