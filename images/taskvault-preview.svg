@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" fill="none">
+  <rect width="600" height="340" fill="#0e1116"/>
+  <rect x="0" y="0" width="600" height="340" fill="url(#grid)" opacity="0.15"/>
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ff4400" stroke-width="0.3"/>
+    </pattern>
+  </defs>
+  <rect x="15" y="15" width="570" height="310" rx="0" stroke="#ff4400" stroke-width="1" opacity="0.3"/>
+  <rect x="15" y="15" width="570" height="34" rx="0" fill="#ff4400" fill-opacity="0.15"/>
+  <rect x="15" y="49" width="570" height="1" fill="#ff4400" opacity="0.4"/>
+  <text x="25" y="37" font-family="monospace" font-size="11" fill="#ff4400" font-weight="bold" letter-spacing="2">TASKVAULT LITE // DASHBOARD v1.2</text>
+  <rect x="25" y="65" width="170" height="120" rx="0" stroke="rgba(255,255,255,0.12)" stroke-width="1" fill="rgba(255,255,255,0.03)"/>
+  <text x="35" y="85" font-family="monospace" font-size="9" fill="#94a3b8" letter-spacing="1">TASK OVERVIEW</text>
+  <rect x="35" y="95" width="70" height="18" rx="0" fill="rgba(255,68,0,0.2)"/>
+  <text x="40" y="108" font-family="monospace" font-size="8" fill="#ff4400">ACTIVE: 12</text>
+  <rect x="115" y="95" width="70" height="18" rx="0" fill="rgba(0,255,170,0.15)"/>
+  <text x="120" y="108" font-family="monospace" font-size="8" fill="#00ffaa">DONE: 47</text>
+  <rect x="35" y="120" width="150" height="1" fill="rgba(255,255,255,0.06)"/>
+  <rect x="35" y="130" width="140" height="4" rx="0" fill="rgba(255,255,255,0.06)"/>
+  <rect x="35" y="130" width="95" height="4" rx="0" fill="#ff4400"/>
+  <text x="35" y="148" font-family="monospace" font-size="8" fill="#94a3b8">COMPLETION: 68%</text>
+  <rect x="35" y="158" width="150" height="1" fill="rgba(255,255,255,0.06)"/>
+  <text x="35" y="173" font-family="monospace" font-size="7" fill="#555">LAST SYNC: 2m ago</text>
+  <rect x="210" y="65" width="365" height="120" rx="0" stroke="rgba(255,255,255,0.12)" stroke-width="1" fill="rgba(255,255,255,0.02)"/>
+  <text x="220" y="85" font-family="monospace" font-size="9" fill="#94a3b8" letter-spacing="1">RECENT TASKS</text>
+  <rect x="220" y="95" width="345" height="22" rx="0" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="232" cy="106" r="3" fill="#00ffaa"/>
+  <text x="242" y="109" font-family="monospace" font-size="8" fill="#f0f2f5">Implement JWT refresh token rotation</text>
+  <text x="505" y="109" font-family="monospace" font-size="7" fill="#555">2h ago</text>
+  <rect x="220" y="118" width="345" height="22" rx="0" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="232" cy="129" r="3" fill="#00ffaa"/>
+  <text x="242" y="132" font-family="monospace" font-size="8" fill="#f0f2f5">Add OAuth Google login integration</text>
+  <text x="498" y="132" font-family="monospace" font-size="7" fill="#555">4h ago</text>
+  <rect x="220" y="141" width="345" height="22" rx="0" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="232" cy="152" r="3" fill="#ff4400"/>
+  <text x="242" y="155" font-family="monospace" font-size="8" fill="#f0f2f5">Fix Fernet decryption on shared tasks</text>
+  <text x="498" y="155" font-family="monospace" font-size="7" fill="#ff4400">HIGH</text>
+  <rect x="220" y="164" width="345" height="1" fill="rgba(255,255,255,0.06)"/>
+  <text x="220" y="178" font-family="monospace" font-size="7" fill="#555">Showing 3 of 14 tasks</text>
+  <rect x="25" y="200" width="540" height="110" rx="0" stroke="rgba(255,255,255,0.12)" stroke-width="1" fill="rgba(255,255,255,0.02)"/>
+  <text x="35" y="220" font-family="monospace" font-size="9" fill="#94a3b8" letter-spacing="1">SECURITY STATUS</text>
+  <rect x="35" y="230" width="8" height="8" rx="0" fill="#00ffaa"/>
+  <text x="50" y="238" font-family="monospace" font-size="8" fill="#94a3b8">AUTH: JWT + OAuth2</text>
+  <rect x="35" y="248" width="8" height="8" rx="0" fill="#00ffaa"/>
+  <text x="50" y="256" font-family="monospace" font-size="8" fill="#94a3b8">ENCRYPTION: Fernet (AES-128-CBC)</text>
+  <rect x="35" y="266" width="8" height="8" rx="0" fill="#00ffaa"/>
+  <text x="50" y="274" font-family="monospace" font-size="8" fill="#94a3b8">DB: PostgreSQL (SSL)</text>
+  <rect x="200" y="230" width="150" height="50" rx="0" stroke="rgba(255,68,0,0.3)" stroke-width="1" fill="rgba(255,68,0,0.05)"/>
+  <text x="210" y="248" font-family="monospace" font-size="8" fill="#ff4400">API THROUGHPUT</text>
+  <text x="210" y="265" font-family="monospace" font-size="14" fill="#ff4400" font-weight="bold">1,247</text>
+  <text x="210" y="275" font-family="monospace" font-size="7" fill="#555">req/min</text>
+  <rect x="370" y="230" width="150" height="50" rx="0" stroke="rgba(0,255,170,0.3)" stroke-width="1" fill="rgba(0,255,170,0.05)"/>
+  <text x="380" y="248" font-family="monospace" font-size="8" fill="#00ffaa">UPTIME</text>
+  <text x="380" y="265" font-family="monospace" font-size="14" fill="#00ffaa" font-weight="bold">99.7%</text>
+  <text x="380" y="275" font-family="monospace" font-size="7" fill="#555">last 30 days</text>
+</svg>
