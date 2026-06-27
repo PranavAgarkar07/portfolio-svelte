@@ -1,0 +1,13 @@
+# Binaries
+portfolio-backend
+server
+bootstrap
+backfill-thumbs
+*.exe
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db

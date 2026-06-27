@@ -20,7 +20,7 @@
     let messageTouched = $state(false);
 
     let nameError = $derived(nameTouched && !name.trim() ? "Name is required" : "");
-    let emailError = $derived(emailTouched && !email.trim() ? "Email is required" : emailTouched && !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email) ? "Invalid email format" : "");
+    let emailError = $derived(emailTouched && !email.trim() ? "Email is required" : emailTouched && !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim()) ? "Invalid email format" : "");
     let messageError = $derived(messageTouched && !message.trim() ? "Message is required" : messageTouched && message.trim().length < 10 ? "At least 10 characters" : "");
 
     let fieldsCompleted = $derived([name.trim(), email.trim(), message.trim()].filter(Boolean).length);
@@ -377,7 +377,7 @@
     }
     .form-progress-track {
         flex: 1;
-        height: 2px;
+        height: 3px;
         background: var(--grid-line);
         border-radius: 0;
         overflow: hidden;

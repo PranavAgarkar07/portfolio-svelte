@@ -90,7 +90,7 @@ export const portfolioData = {
       ],
     },
     {
-      category: "In Orbit",
+      category: "Exploring",
       items: [
         {
           name: "Go",
@@ -129,6 +129,46 @@ export const portfolioData = {
   ],
   projects: [
     {
+      name: "BeamSync",
+      description:
+        "Offline P2P file transfer tool with zero-config auto-discovery and QR pairing. Encrypts data with AES-256-GCM — no cloud, no accounts. Built with Go and Wails. 32 GitHub stars from developers who use it for air-gapped transfers.",
+      featured: true,
+      seriesTag: "BeamSync Ecosystem",
+      githubStars: 32,
+      images: [
+        {
+          src: "images/beamsync/appiconStartingpage.webp",
+          alt: "BeamSync app icon and starting page",
+        },
+        {
+          src: "images/beamsync/appSS1.webp",
+          alt: "BeamSync file transfer interface",
+        },
+        {
+          src: "images/beamsync/appSS2.webp",
+          alt: "BeamSync peer discovery and connection",
+        },
+        {
+          src: "images/beamsync/appSS3.webp",
+          alt: "BeamSync QR sync and mobile pairing",
+        },
+      ],
+      tags: ["Go", "Wails", "Svelte", "Networking", "P2P"],
+      isLive: true,
+      links: [
+        {
+          label: "Website",
+          url: "https://pranavagarkar07.github.io/BeamSync/",
+          icon: "external-link",
+        },
+        {
+          label: "GitHub",
+          url: "https://github.com/PranavAgarkar07/BeamSync",
+          icon: "github",
+        },
+      ],
+    },
+    {
       name: "TaskVault Lite",
       description:
         "Encrypted task manager with JWT/OAuth authentication and AES-128-CBC encryption — 1,247 req/min throughput. Replaced manual tracking workflows with a secure API-first system. Built with Django REST Framework and React.",
@@ -162,45 +202,6 @@ export const portfolioData = {
         {
           label: "GitHub",
           url: "https://github.com/PranavAgarkar07/TaskVault-lite",
-          icon: "github",
-        },
-      ],
-    },
-    {
-      name: "BeamSync",
-      description:
-        "Offline P2P file transfer tool with zero-config auto-discovery and QR pairing. Encrypts data with AES-256-GCM — no cloud, no accounts. Built with Go and Wails. 32 GitHub stars from developers who use it for air-gapped transfers.",
-      seriesTag: "BeamSync Ecosystem",
-      githubStars: 32,
-      images: [
-        {
-          src: "images/beamsync/appiconStartingpage.webp",
-          alt: "BeamSync app icon and starting page",
-        },
-        {
-          src: "images/beamsync/appSS1.webp",
-          alt: "BeamSync file transfer interface",
-        },
-        {
-          src: "images/beamsync/appSS2.webp",
-          alt: "BeamSync peer discovery and connection",
-        },
-        {
-          src: "images/beamsync/appSS3.webp",
-          alt: "BeamSync QR sync and mobile pairing",
-        },
-      ],
-      tags: ["Go", "Wails", "Svelte", "Networking", "P2P"],
-      isLive: true,
-      links: [
-        {
-          label: "Website",
-          url: "https://pranavagarkar07.github.io/BeamSync/",
-          icon: "external-link",
-        },
-        {
-          label: "GitHub",
-          url: "https://github.com/PranavAgarkar07/BeamSync",
           icon: "github",
         },
       ],

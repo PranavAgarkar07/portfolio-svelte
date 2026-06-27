@@ -11,9 +11,9 @@
     }
 
     const navigationItems: NavigationItem[] = [
-        { id: "about", title: "About" },
-        { id: "skills", title: "Skills" },
         { id: "projects", title: "Projects" },
+        { id: "skills", title: "Skills" },
+        { id: "about", title: "About" },
         { id: "certifications", title: "Certifications" },
         { id: "contact", title: "Contact" },
     ];

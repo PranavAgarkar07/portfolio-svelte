@@ -32,21 +32,31 @@ import { Lightbox } from "lightbox3";
     let cardEl = $state<HTMLElement | null>(null);
     let watermarkEl = $state<HTMLElement | null>(null);
     let reducedMotion = $state(false);
-
-    let galleryName = $derived(`project-${index}`);
-    let slideCount = $derived(project.images?.length ?? 0);
+    let touchStartX = 0;
 
     function handleKeyDown(e: KeyboardEvent) {
         if (e.key === 'ArrowLeft') prev();
         if (e.key === 'ArrowRight') next();
     }
 
+    let galleryName = $derived(`project-${index}`);
+    let slideCount = $derived(project.images?.length ?? 0);
+
     onMount(() => {
         reducedMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        if (carousel) {
+            carousel.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            carousel.addEventListener('touchend', (e) => {
+                const diff = touchStartX - e.changedTouches[0].screenX;
+                if (Math.abs(diff) > 50) {
+                    diff > 0 ? next() : prev();
+                }
+            }, { passive: true });
+        }
     });
 
     function handleMouseMove(e: MouseEvent) {
@@ -105,6 +115,8 @@ import { Lightbox } from "lightbox3";
     bind:this={cardEl}
     onmousemove={handleMouseMove}
     onmouseleave={handleMouseLeave}
+    onkeydown={handleKeyDown}
+    tabindex="0"
 >
     {#if project.featured}
         <!-- FEATURED LAYOUT: horizontal split — image left, content right -->
@@ -169,6 +181,9 @@ import { Lightbox } from "lightbox3";
                                 <Badge variant="offline">OFFLINE</Badge>
                             {/if}
                         </span>
+                        {#if project.githubStars}
+                            <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">★ {project.githubStars}</span>
+                        {/if}
                     </div>
                     <h3 class="project-title featured-title">{project.name}</h3>
                 </div>
@@ -176,9 +191,12 @@ import { Lightbox } from "lightbox3";
                 <p class="project-description">{project.description}</p>
 
                 <div class="card-tags">
-                    {#each project.tags as tag}
+                    {#each project.tags.slice(0, 5) as tag}
                         <Tag>{tag}</Tag>
                     {/each}
+                    {#if project.tags.length > 5}
+                        <span class="tag-overflow" title={project.tags.slice(5).join(', ')}>+{project.tags.length - 5}</span>
+                    {/if}
                 </div>
 
                 <div class="card-links">
@@ -261,18 +279,24 @@ import { Lightbox } from "lightbox3";
                         {:else}
                             <Badge variant="offline">OFFLINE</Badge>
                         {/if}
-                    </span>
+                        </span>
+                        {#if project.githubStars}
+                            <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">★ {project.githubStars}</span>
+                        {/if}
+                    </div>
+                    <h3 class="project-title">{project.name}</h3>
                 </div>
-                <h3 class="project-title">{project.name}</h3>
-            </div>
 
-            <p class="project-description">{project.description}</p>
+                <p class="project-description">{project.description}</p>
 
-            <div class="card-tags">
-                {#each project.tags as tag}
-                    <Tag>{tag}</Tag>
-                {/each}
-            </div>
+                <div class="card-tags">
+                    {#each project.tags.slice(0, 5) as tag}
+                        <Tag>{tag}</Tag>
+                    {/each}
+                    {#if project.tags.length > 5}
+                        <span class="tag-overflow" title={project.tags.slice(5).join(', ')}>+{project.tags.length - 5}</span>
+                    {/if}
+                </div>
 
             <div class="card-links">
                 {#each project.links as link}
@@ -325,21 +349,45 @@ import { Lightbox } from "lightbox3";
         outline-offset: 4px;
     }
 
-    /* Featured card: same size as standard, accent border only */
+    /* Featured card: full-width layout with higher contrast/weight */
     .project-card.featured {
-        grid-column: auto;
-        border-color: rgba(255, 68, 0, 0.2);
-        border-left-color: var(--accent);
+        grid-column: span 1;
+        border-color: rgba(255, 68, 0, 0.25);
+        border-left: 5px solid var(--accent);
+        box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.7);
+        background: #0f1620;
     }
 
     .project-card.featured:hover {
         border-color: var(--accent);
+        box-shadow: 6px 6px 0px var(--accent);
+        background: #121b27;
+    }
+
+    @media (min-width: 768px) {
+        .project-card.featured {
+            grid-column: span 2;
+            height: 360px;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .project-card.featured {
+            grid-column: span 3;
+            height: 360px;
+        }
     }
 
     .featured-inner {
         display: grid;
-        grid-template-columns: 1.2fr 1fr;
+        grid-template-columns: 1.2fr 1.1fr;
         height: 100%;
+    }
+
+    @media (max-width: 767px) {
+        .featured-inner {
+            grid-template-columns: 1fr;
+        }
     }
 
     .featured-media {
@@ -646,6 +694,31 @@ import { Lightbox } from "lightbox3";
         margin-left: auto;
     }
 
+    .github-stars-badge {
+        font-family: var(--font-body);
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        background: rgba(245, 158, 11, 0.06);
+        padding: 2px 8px;
+        margin-left: 0.5rem;
+    }
+
+    .tag-overflow {
+        font-family: var(--font-body);
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border: 1px solid var(--grid-line);
+        padding: 2px 8px;
+        cursor: default;
+    }
+
     .project-number {
         font-family: var(--font-body);
         font-size: 0.65rem;
@@ -774,8 +847,15 @@ import { Lightbox } from "lightbox3";
     }
 
     :global(body.light-mode) .project-card.featured {
-        border-color: rgba(200, 50, 0, 0.2);
-        border-left-color: var(--accent);
+        background: #dbe0e7;
+        border-color: rgba(200, 50, 0, 0.25);
+        border-left: 5px solid var(--accent);
+        box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    :global(body.light-mode) .project-card.featured:hover {
+        background: #d4d9e0;
+        box-shadow: 6px 6px 0px var(--accent);
     }
 
     :global(body.light-mode) .project-title {

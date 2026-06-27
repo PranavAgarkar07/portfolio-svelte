@@ -3,9 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -231,8 +229,4 @@ func thumbFilename(key string) string {
 	return strings.TrimSuffix(base, ext) + "_thumb.jpg"
 }
 
-func init() {
-	// Quick way to verify hash generation matches the upload handler
-	_ = sha256.Sum256
-	_ = hex.EncodeToString
-}
+

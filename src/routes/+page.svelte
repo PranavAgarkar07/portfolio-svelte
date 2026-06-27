@@ -7,10 +7,11 @@
     import { portfolioData, fallbackCertificates } from "$lib/data";
     import Header from "$lib/components/Header.svelte";
     import Hero from "$lib/components/Hero.svelte";
+    import About from "$lib/components/About.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
     import CertificateCard from "$lib/components/CertificateCard.svelte";
 
-    import DevLog from "$lib/components/DevLog.svelte";
+    import Skills from "$lib/components/Skills.svelte";
     import Footer from "$lib/components/Footer.svelte";
     import ContactForm from "$lib/components/ContactForm.svelte";
     import { Icon, SectionHeader, Card, Skeleton } from "$lib/components/ui";
@@ -113,39 +114,6 @@
             });}
         });
 
-        // ──────────────────────────────────────────────
-        // 7. SKILLS — CASCADE REVEAL
-        // ──────────────────────────────────────────────
-        gsap.set(".skill-category-card", { y: 40, opacity: 0 });
-        ScrollTrigger.create({
-            trigger: "#skills", start: "top 85%", once: true,
-            onEnter: () => { gsap.to(".skill-category-card", {
-                y: 0, opacity: 1,
-                stagger: 0.1,
-                ease: "power3.out", duration: 0.6,
-            });}
-        });
-
-        // ──────────────────────────────────────────────
-        // 8. SKILL ITEMS — BATCH STAGGER
-        // ──────────────────────────────────────────────
-        const skillCards = gsap.utils.toArray(".skill-card");
-        if (skillCards.length > 0) {
-            gsap.set(skillCards, { y: 20, opacity: 0 });
-            ScrollTrigger.create({
-                trigger: "#skills", start: "top 75%", once: true,
-                onEnter: () => { gsap.to(skillCards, {
-                    y: 0, opacity: 1,
-                    stagger: 0.03,
-                    ease: "power3.out", duration: 0.4,
-                });}
-            });
-        }
-
-        // Handled by motion.div whileInView in SectionHeader.svelte
-        // (GSAP version removed to avoid duplicate clip-path animation)
-
-        // ──────────────────────────────────────────────
         gsap.set(".about-visual-col", { x: -30, opacity: 0 });
         gsap.set(".about-content-col", { x: 30, opacity: 0 });
         ScrollTrigger.create({
@@ -230,7 +198,7 @@
         function forceVisibility() {
             ScrollTrigger.refresh();
             const selectors = [
-                ".section-header", ".skill-category-card", ".skill-card", ".project-card",
+                ".section-header", ".project-card",
                 ".about-visual-col", ".about-content-col", ".about-spec-row",
                 ".about-metric", ".contact-info", ".contact-form-container",
                 ".info-item", ".social-link",
@@ -311,7 +279,7 @@
 <Header {profile} />
 
 <main id="main-content">
-    <Hero {profile} {about} {skills} {badges} />
+    <Hero {profile} {skills} {about} />
 
     <section id="projects" class="section-container snap-section">
         <SectionHeader title="Featured Projects" count={projects.length} animate />
@@ -334,6 +302,10 @@
             {/each}
         </div>
     </section>
+
+    <Skills {skills} />
+
+    <About {profile} {about} {badges} />
 
     <section id="certifications" class="section-container snap-section">
         <SectionHeader title="Certifications" count={certsLoading ? undefined : certificates.length} animate />
@@ -422,7 +394,7 @@
                                     class="social-link"
                                     aria-label={social.label}
                                 >
-                                    <Icon name={social.icon} size={18} />
+                                    <Icon name={social.icon as any} size={18} />
                                 </a>
                             {/each}
                         </div>

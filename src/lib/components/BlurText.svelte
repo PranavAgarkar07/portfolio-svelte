@@ -40,7 +40,7 @@
         <span
             class="blur-segment"
             style="transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1) {i * delay}ms; filter: blur({inView ? 0 : 10}px); opacity: {inView ? 1 : 0}; transform: translateY({inView ? 0 : yOffset});"
-        >{segment}{animateBy === "words" && i < segments.length - 1 ? "\u00A0" : ""}</span>
+        >{segment}{animateBy === "words" && i < segments.length - 1 ? " " : ""}</span>
     {/each}
 </p>
 

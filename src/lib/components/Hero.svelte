@@ -1,11 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { fade } from "svelte/transition";
-    import { SectionHeader } from "$lib/components/ui";
-    import { base } from "$app/paths";
-    import DevLog from "$lib/components/DevLog.svelte";
     import BlurText from "./BlurText.svelte";
-    import type { Badge } from "$lib/types";
 
     interface Props {
         profile: {
@@ -15,75 +10,17 @@
             status: string;
             avatar: string;
         };
-        about: {
-            bio: string;
-            stats: Array<{ label: string; value: string }>;
-        };
-        skills: Array<{
-            category: string;
-            items: Array<{ name: string; icon: string; level: string }>;
-        }>;
-        badges?: Badge[];
+        skills: Array<{ category: string; items: Array<{ name: string }> }>;
+        about: { stats: Array<{ label: string; value: string }> };
     }
 
-    let { profile, about, skills, badges = [] }: Props = $props();
+    let { profile, skills, about }: Props = $props();
+
+    let marqueeTechList = $derived([...new Set(skills.flatMap(cat => cat.items.map(s => s.name)))]);
 
     let nameParts = $derived(profile.name.split(" "));
 
-    let sortedBadges = $derived([...badges].sort((a, b) => a.display_order - b.display_order));
-
-    let importantBadges = $derived(sortedBadges.filter(b => b.important));
-    let nonImportantBadges = $derived(sortedBadges.filter(b => !b.important));
-
-    let showAllBadges = $state(false);
-
-    let displayBadges = $derived(showAllBadges ? sortedBadges : importantBadges);
-
-    let badgeGroups = $derived.by(() => {
-        const groups: Record<string, Badge[]> = {};
-        for (const b of displayBadges) {
-            const cat = b.category || "Achievements";
-            if (!groups[cat]) groups[cat] = [];
-            groups[cat].push(b);
-        }
-        return groups;
-    });
-
     let heroReady = $state(false);
-
-    let previewBadge: Badge | null = $state(null);
-
-    function badgeImgUrl(url: string): string {
-        if (url.startsWith("http")) return url;
-        const webp = url.replace(/\.png$/, ".webp");
-        return base + webp;
-    }
-
-    function togglePreview(badge: Badge) {
-        previewBadge = previewBadge?.id === badge.id ? null : badge;
-    }
-
-    function closePreview() {
-        previewBadge = null;
-    }
-
-    let allDisplayBadges = $derived.by(() => {
-        const flat: Badge[] = [];
-        for (const [, group] of Object.entries(badgeGroups)) {
-            flat.push(...group);
-        }
-        return flat;
-    });
-
-    let currentIndex = $derived(previewBadge ? allDisplayBadges.findIndex(b => b.id === previewBadge.id) : -1);
-
-    function prevBadge() {
-        if (currentIndex > 0) previewBadge = allDisplayBadges[currentIndex - 1];
-    }
-
-    function nextBadge() {
-        if (currentIndex < allDisplayBadges.length - 1) previewBadge = allDisplayBadges[currentIndex + 1];
-    }
 
     onMount(() => {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -116,35 +53,6 @@
             };
         }
 
-        // Parallax on about avatar — pre-calculate rect, use passive scroll
-        const aboutFrame = document.querySelector('.about-frame');
-        if (aboutFrame && !prefersReducedMotion) {
-            const frameEl = aboutFrame as HTMLElement;
-            let rect = frameEl.getBoundingClientRect();
-            const updateRect = () => { rect = frameEl.getBoundingClientRect(); };
-            window.addEventListener('resize', updateRect, { passive: true });
-
-            const handleParallax = () => {
-                const center = rect.top + rect.height / 2;
-                const viewportCenter = window.innerHeight / 2;
-                const offset = (center - viewportCenter) / viewportCenter;
-                frameEl.style.transform = `translateY(${offset * -8}px)`;
-            };
-            window.addEventListener('scroll', handleParallax, { passive: true });
-
-            const parallaxCleanup = () => {
-                window.removeEventListener('scroll', handleParallax);
-                window.removeEventListener('resize', updateRect);
-            };
-
-            // Store for cleanup
-            const existingCleanup = glowCleanup;
-            glowCleanup = () => {
-                existingCleanup?.();
-                parallaxCleanup();
-            };
-        }
-
         // Pulse CTA after idle
         let pulseTimer: ReturnType<typeof setTimeout>;
         function resetPulseTimer() {
@@ -174,68 +82,86 @@
     <div class="hero-background-pattern" aria-hidden="true"></div>
 
     <div class="hero-inner">
-        <div class="hero-status" class:hero-ready={heroReady}>
-            <span class="hero-status-icon" class:available={profile.status.includes("Open")}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M4 7h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    <path d="M7 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-            </span>
-            <span class="hero-status-value" class:available={profile.status.includes("Open")}>{profile.status}</span>
-            <span class="hero-status-divider" aria-hidden="true">//</span>
-            <span class="hero-status-role">{profile.role}</span>
-            <span class="hero-status-divider" aria-hidden="true">//</span>
-            <span class="hero-status-exp">2+ Years</span>
+        <div class="hero-left-col">
+            <div class="hero-status" class:hero-ready={heroReady}>
+                <span class="hero-status-icon" class:available={profile.status.includes("Open")}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M4 7h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M7 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="hero-status-value" class:available={profile.status.includes("Open")}>{profile.status}</span>
+                <span class="hero-status-divider" aria-hidden="true">//</span>
+                <span class="hero-status-role">{profile.role}</span>
+                <span class="hero-status-divider" aria-hidden="true">//</span>
+                <span class="hero-status-exp">2+ Years</span>
+            </div>
+
+            <h1 class="hero-name" class:hero-ready={heroReady}>
+                <span class="hero-name-line hero-name-line--first">
+                    <span class="hero-name-text">{nameParts[0]}</span>
+                </span>
+                <span class="hero-name-line hero-name-line--last">
+                    <span class="hero-name-text">{nameParts.slice(1).join(" ") || nameParts[0]}</span>
+                </span>
+            </h1>
+
+            <div class="hero-tagline-wrap" class:hero-ready={heroReady}>
+                <BlurText
+                    text={profile.tagline}
+                    animateBy="words"
+                    direction="top"
+                    delay={120}
+                    class="hero-tagline"
+                />
+            </div>
+
+            <div class="cta-group" class:hero-ready={heroReady}>
+                <a href="#projects" class="btn btn-primary">
+                    <span class="btn-label">View Work</span>
+                    <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 9l6 6 6-6"/>
+                    </svg>
+                </a>
+                <a href="#contact" class="btn btn-secondary">
+                    <span class="btn-label">Contact Me</span>
+                    <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="10 3 16 9 10 15"/>
+                    <line x1="2" y1="9" x2="16" y2="9"/>
+                    </svg>
+                </a>
+            </div>
+
+            <div class="tech-marquee" class:hero-ready={heroReady}>
+                <span class="marquee-label">TECH STACK</span>
+                <div class="marquee-track">
+                    <div class="marquee-content">
+                        {#each [...marqueeTechList, ...marqueeTechList] as tech}
+                            <span class="marquee-item">
+                                <span class="marquee-dot"></span>
+                                {tech}
+                            </span>
+                        {/each}
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <h1 class="hero-name" class:hero-ready={heroReady}>
-            <span class="hero-name-line hero-name-line--first">
-                <span class="hero-name-text">{nameParts[0]}</span>
-            </span>
-            <span class="hero-name-line hero-name-line--last">
-                <span class="hero-name-text">{nameParts.slice(1).join(" ") || nameParts[0]}</span>
-            </span>
-        </h1>
-
-        <div class="hero-tagline-wrap" class:hero-ready={heroReady}>
-            <BlurText
-                text={profile.tagline}
-                animateBy="words"
-                direction="top"
-                delay={120}
-                class="hero-tagline"
-            />
-        </div>
-
-        <div class="cta-group" class:hero-ready={heroReady}>
-            <a href="#projects" class="btn btn-primary">
-                <span class="btn-label">View Work</span>
-                <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 9l6 6 6-6"/>
-                </svg>
-            </a>
-            <a href="#contact" class="btn btn-secondary">
-                <span class="btn-label">Contact Me</span>
-                <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="2"/>
-                </svg>
-            </a>
-        </div>
-
-        <div class="tech-marquee" class:hero-ready={heroReady}>
-            <span class="marquee-label">TECH STACK</span>
-            <div class="marquee-track">
-                <div class="marquee-content">
-                    {#each ['Python', 'Django', 'React', 'Go', 'Svelte', 'TypeScript', 'PostgreSQL', 'Docker', 'Linux'] as tech}
-                        <span class="marquee-item">
-                            <span class="marquee-dot"></span>
-                            {tech}
-                        </span>
+        <div class="hero-right-col">
+            <div class="hero-avatar-card">
+                <img src={profile.avatar} alt={profile.name} width="280" height="280" loading="eager" decoding="async" />
+                <div class="hero-stats-mini" aria-label="Quick stats">
+                    {#each about.stats.slice(0, 3) as stat}
+                        <div class="hero-stat-row">
+                            <span class="hero-stat-label">{stat.label}</span>
+                            <span class="hero-stat-value">{stat.value}</span>
+                        </div>
                     {/each}
                 </div>
             </div>
         </div>
+    </div>
 
     <div class="hero-scroll" class:hero-ready={heroReady}>
         <span class="hero-scroll-text">SCROLL</span>
@@ -243,161 +169,7 @@
     </div>
 </section>
 
-<section id="about" class="section-container snap-section-content">
-    <div class="about-grid">
-        <div class="about-visual-col">
-            <div class="about-frame">
-                <div class="about-frame-border"></div>
-                <img
-                    src={profile.avatar}
-                    alt="{profile.name}"
-                    class="about-img"
-                    loading="lazy"
-                    decoding="async"
-                    width="400"
-                    height="400"
-                />
-                <div class="about-frame-grid"></div>
-            </div>
-            <div class="about-specs">
-                <div class="about-spec-row">
-                    <span class="about-spec-key">Role</span>
-                    <span class="about-spec-val">{profile.role}</span>
-                </div>
-                <div class="about-spec-divider"></div>
-                <div class="about-spec-row">
-                    <span class="about-spec-key">Status</span>
-                    <span class="about-spec-val about-spec-val--accent">{profile.status}</span>
-                </div>
-            </div>
-        </div>
-        <div class="about-content-col">
-            <div class="about-header">
-                <h2>About</h2>
-            </div>
-            <p class="about-bio">{about.bio}</p>
-            {#if badges.length > 0}
-                {#each Object.entries(badgeGroups) as [category, groupBadges]}
-                    <div class="about-badges">
-                        <div class="about-badges-category">
-                            <div class="about-badges-header">
-                                <span class="about-badges-label">{category.toUpperCase()}</span>
-                                <span class="about-badges-count">{groupBadges.length}</span>
-                            </div>
-                            <div class="about-badges-grid">
-                                {#each groupBadges as badge, i}
-                                    <button
-                                        class="badge-cell"
-                                        onclick={() => togglePreview(badge)}
-                                        style="--i: {i}"
-                                    >
-                                        <span class="badge-cell-frame">
-                                            <img
-                                                src={badgeImgUrl(badge.image_url)}
-                                                alt={badge.name}
-                                                loading="lazy"
-                                                decoding="async"
-                                            />
-                                            <span class="badge-cell-dot" class:uncommon={badge.rarity === "uncommon"} class:rare={badge.rarity === "rare"}></span>
-                                        </span>
-                                        <span class="badge-cell-name">{badge.name}</span>
-                                    </button>
-                                {/each}
-                            </div>
-                        </div>
-                    </div>
-                {/each}
-                {#if nonImportantBadges.length > 0 && !showAllBadges}
-                    <button class="about-badges-more" onclick={() => showAllBadges = true}>
-                        <span class="more-text">SHOW MORE BADGES</span>
-                        <span class="more-count">+{nonImportantBadges.length}</span>
-                    </button>
-                {/if}
-                {#if showAllBadges && nonImportantBadges.length > 0}
-                    <button class="about-badges-more about-badges-less" onclick={() => showAllBadges = false}>
-                        <span class="more-text">SHOW LESS</span>
-                    </button>
-                {/if}
-            {/if}
-            <div class="about-metrics">
-                {#each about.stats as stat}
-                    <div class="about-metric">
-                        <span class="about-metric-value">{stat.value}</span>
-                        <span class="about-metric-label">{stat.label}</span>
-                    </div>
-                {/each}
-            </div>
-        </div>
-    </div>
-</section>
-
-{#if previewBadge}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="badge-preview-backdrop" onclick={closePreview} transition:fade={{ duration: 150 }}>
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="badge-preview-card" onclick={(e) => e.stopPropagation()}>
-            <button class="badge-preview-close" onclick={closePreview}>×</button>
-            <div class="badge-preview-nav">
-                <button class="badge-prev" onclick={prevBadge} disabled={currentIndex <= 0} aria-label="Previous badge">‹</button>
-                <div class="badge-preview-image">
-                    {#key previewBadge.id}
-                        <img src={badgeImgUrl(previewBadge.image_url)} alt={previewBadge.name} />
-                    {/key}
-                </div>
-                <button class="badge-next" onclick={nextBadge} disabled={currentIndex >= allDisplayBadges.length - 1} aria-label="Next badge">›</button>
-            </div>
-            <div class="badge-preview-name">{previewBadge.name}</div>
-            <div class="badge-preview-meta">
-                <span class="badge-preview-rarity" class:uncommon={previewBadge.rarity === 'uncommon'} class:rare={previewBadge.rarity === 'rare'}>
-                    {previewBadge.rarity}
-                </span>
-                {#if previewBadge.credential_url}
-                    <span class="badge-preview-dot"></span>
-                {/if}
-                {#if previewBadge.credential_url}
-                    <a href={previewBadge.credential_url} target="_blank" rel="noopener noreferrer">credential</a>
-                {/if}
-            </div>
-            <div class="badge-preview-counter">{currentIndex + 1} / {allDisplayBadges.length}</div>
-        </div>
-    </div>
-{/if}
-
-<svelte:window onkeydown={(e) => { if (e.key === 'Escape') closePreview(); if (e.key === 'ArrowLeft') prevBadge(); if (e.key === 'ArrowRight') nextBadge(); }} />
-
-<section id="skills" class="section-container snap-section-content">
-    <SectionHeader title="Technical Proficiency" class="fade-in" />
-    <div class="skills-wrapper">
-        {#each skills as category}
-            <div class="aero-card skill-category-card fade-in">
-                <h3 class="category-title">{category.category}</h3>
-                <div class="skills-grid">
-                    {#each category.items as skill}
-                        <div class="skill-card">
-                            <i class="{skill.icon} skill-icon"></i>
-                            <span class="skill-name">{skill.name}</span>
-                            <span class="skill-level-label">{skill.level}</span>
-                            {#if skill.projects && skill.projects.length > 0}
-                                <span class="skill-projects">{skill.projects.slice(0, 2).join(" · ")}</span>
-                            {/if}
-                        </div>
-                    {/each}
-                </div>
-            </div>
-        {/each}
-    </div>
-
-    <div class="skills-footer fade-in">
-        <DevLog />
-    </div>
-</section>
-
 <style>
-    .about-frame {
-        transform-style: preserve-3d;
-        will-change: transform;
-    }
-    
     :global(.hero-ambient-glow) {
         position: absolute;
         top: 0; left: 0;
@@ -407,14 +179,6 @@
         background-size: 200% 200%;
         will-change: background-position;
     }
-    
-    .skills-footer {
-        margin-top: 3rem;
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    
     /* ─── HERO ─── */
     .hero-background-pattern {
         position: absolute; top: 0; left: 0;
@@ -426,27 +190,136 @@
     }
     
     .hero-inner {
+        width: 100%;
         max-width: 1000px; padding: 6rem 0;
         position: relative;
     }
+
+    .hero-left-col {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-right-col {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .hero-inner {
+            padding: 3rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+    }
+
+    @media (min-width: 1100px) {
+        .hero-inner {
+            max-width: 1300px;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            align-items: center;
+            gap: 4rem;
+        }
+        .hero-right-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 1.5rem;
+        }
+        .hero-avatar-card {
+            border: 2px solid var(--grid-line);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+        .hero-avatar-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            filter: grayscale(20%);
+        }
+        .hero-stats-mini {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            border-top: 1px solid var(--grid-line);
+            padding-top: 0.875rem;
+            margin-top: 0.125rem;
+        }
+        .hero-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .hero-stat-label {
+            font-family: var(--font-body);
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .hero-stat-value {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text-primary);
+        }
+    }
     
     .hero-status {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 0.75rem;
         margin-bottom: 2rem;
         font-family: var(--font-body);
-        font-size: 0.75rem;
+        font-size: 0.72rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.15em;
+        letter-spacing: 0.1em;
         opacity: 0;
         transform: translateY(10px);
         transition: opacity 0.8s ease, transform 0.8s ease;
+        align-self: flex-start;
+
+        /* Neobrutalist design */
+        background: #111922;
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        border-left: 4px solid var(--accent);
+        padding: 6px 14px;
+        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+    }
+    
+    :global(body.light-mode) .hero-status {
+        background: #e4e8ed;
+        border-color: rgba(0, 0, 0, 0.08);
+        border-left-color: var(--accent);
+        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
     }
     
     .hero-status.hero-ready {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    @media (max-width: 600px) {
+        .hero-status {
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            gap: 0.45rem;
+            padding: 5px 12px;
+        }
+        .hero-status-divider,
+        .hero-status-role,
+        .hero-status-exp {
+            display: none;
+        }
     }
     
     .hero-status-icon {
@@ -570,11 +443,15 @@
         opacity: 0;
         transform: translateY(10px);
         transition: opacity 0.6s ease, transform 0.6s ease;
-        transition-delay: 1.4s;
+        transition-delay: 2.5s;
     }
     .tech-marquee.hero-ready {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    .marquee-track:hover .marquee-content {
+        animation-play-state: paused;
     }
     .marquee-label {
         font-family: var(--font-body);
@@ -595,6 +472,8 @@
         display: flex;
         gap: 0.5rem;
         animation: marqueeScroll 20s linear infinite;
+        animation-delay: 2.5s;
+        animation-fill-mode: backwards;
         width: max-content;
     }
     .marquee-item {
@@ -672,245 +551,12 @@
     :global(.btn-primary.idle-pulse) {
         animation: idlePulse 2s ease-in-out 3;
     }
-    
-    /* ─── BADGE PREVIEW ─── */
-
-    .badge-preview-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-    }
-
-    .badge-preview-card {
-        background: #0d1117;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 2rem;
-        max-width: 480px;
-        width: 90vw;
-        position: relative;
-    }
-
-    .badge-preview-close {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1.2rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s ease, color 0.15s ease;
-        z-index: 1;
-    }
-
-    .badge-preview-close:hover {
-        background: rgba(255, 68, 0, 0.15);
-        color: var(--accent);
-    }
-
-    .badge-preview-nav {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .badge-prev,
-    .badge-next {
-        flex-shrink: 0;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 1.4rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-    }
-
-    .badge-prev:hover:not(:disabled),
-    .badge-next:hover:not(:disabled) {
-        background: rgba(255, 68, 0, 0.1);
-        color: var(--accent);
-        border-color: rgba(255, 68, 0, 0.2);
-    }
-
-    .badge-prev:disabled,
-    .badge-next:disabled {
-        opacity: 0.25;
-        cursor: not-allowed;
-    }
-
-    .badge-preview-image {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        aspect-ratio: 1;
-        background: #070a0f;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .badge-preview-image img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        display: block;
-    }
-
-    .badge-preview-name {
-        font-family: var(--font-heading);
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        text-align: center;
-        margin-bottom: 0.4rem;
-    }
-
-    .badge-preview-meta {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .badge-preview-rarity {
-        font-family: var(--font-body);
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .badge-preview-rarity.uncommon {
-        color: #60a5fa;
-        border-color: rgba(96, 165, 250, 0.2);
-        background: rgba(96, 165, 250, 0.06);
-    }
-
-    .badge-preview-rarity.rare {
-        color: #f59e0b;
-        border-color: rgba(245, 158, 11, 0.2);
-        background: rgba(245, 158, 11, 0.06);
-    }
-
-    .badge-preview-dot {
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-    }
-
-    .badge-preview-meta a {
-        font-family: var(--font-body);
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--accent);
-        text-decoration: none;
-        transition: opacity 0.15s ease;
-    }
-
-    .badge-preview-meta a:hover {
-        opacity: 0.7;
-    }
-
-    .badge-preview-counter {
-        font-family: var(--font-body);
-        font-size: 0.5rem;
-        color: rgba(255, 255, 255, 0.25);
-        text-align: center;
-        letter-spacing: 0.15em;
-    }
-
-    /* ─── LIGHT MODE ─── */
     :global(body.light-mode) .hero-status-icon.available {
-        color: #008f5e;
-        filter: drop-shadow(0 0 4px rgba(0, 143, 94, 0.25));
+        color: var(--light-accent, #d94100);
+        filter: drop-shadow(0 0 4px rgba(217, 65, 0, 0.2));
     }
     :global(body.light-mode) .hero-status-value.available {
-        color: #008f5e;
-    }
-
-    :global(body.light-mode) .badge-preview-card {
-        background: #fff;
-        border-color: rgba(0, 0, 0, 0.08);
-    }
-
-    :global(body.light-mode) .badge-preview-close {
-        color: rgba(0, 0, 0, 0.4);
-        background: rgba(0, 0, 0, 0.04);
-    }
-
-    :global(body.light-mode) .badge-preview-close:hover {
-        background: rgba(217, 65, 0, 0.08);
         color: var(--light-accent, #d94100);
-    }
-
-    :global(body.light-mode) .badge-prev,
-    :global(body.light-mode) .badge-next {
-        border-color: rgba(0, 0, 0, 0.1);
-        background: rgba(0, 0, 0, 0.03);
-        color: rgba(0, 0, 0, 0.5);
-    }
-
-    :global(body.light-mode) .badge-prev:hover:not(:disabled),
-    :global(body.light-mode) .badge-next:hover:not(:disabled) {
-        background: rgba(217, 65, 0, 0.06);
-        color: var(--light-accent, #d94100);
-        border-color: rgba(217, 65, 0, 0.15);
-    }
-
-    :global(body.light-mode) .badge-preview-image {
-        background: #f4f4f5;
-    }
-
-    :global(body.light-mode) .badge-preview-name {
-        color: #18181b;
-    }
-
-    :global(body.light-mode) .badge-preview-rarity {
-        color: rgba(0, 0, 0, 0.4);
-        border-color: rgba(0, 0, 0, 0.06);
-        background: rgba(0, 0, 0, 0.02);
-    }
-
-    :global(body.light-mode) .badge-preview-rarity.uncommon {
-        color: #2563eb;
-        border-color: rgba(37, 99, 235, 0.15);
-        background: rgba(37, 99, 235, 0.04);
-    }
-
-    :global(body.light-mode) .badge-preview-rarity.rare {
-        color: #d97706;
-        border-color: rgba(217, 119, 6, 0.15);
-        background: rgba(217, 119, 6, 0.04);
     }
 
 </style>

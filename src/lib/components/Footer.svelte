@@ -69,6 +69,15 @@
         </div>
     </div>
 
+    <div class="footer-cta">
+        <a href="#contact" class="footer-cta-link">
+            <span>Get In Touch</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </a>
+    </div>
     <div class="footer-bottom">
         <p>
             &copy; {currentYear} Pranav Agarkar &mdash; Built with Svelte
@@ -255,7 +264,41 @@
         .footer-nav-list {
             align-items: center;
         }
-        .footer-bottom {
+    .footer-cta {
+        text-align: center;
+        padding: 2rem 2rem 0;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .footer-cta-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--font-heading);
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent);
+        text-decoration: none;
+        border: 2px solid var(--accent);
+        padding: 0.75rem 1.5rem;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .footer-cta-link:hover {
+        background: var(--accent);
+        color: #050505;
+    }
+    :global(body.light-mode) .footer-cta-link:hover {
+        color: #fff;
+    }
+    .footer-cta-link svg {
+        transition: transform 0.2s ease;
+    }
+    .footer-cta-link:hover svg {
+        transform: translateX(4px);
+    }
+    .footer-bottom {
             padding-left: 1rem;
             padding-right: 1rem;
         }

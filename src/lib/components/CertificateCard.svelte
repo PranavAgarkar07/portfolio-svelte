@@ -422,8 +422,10 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
+        min-height: 44px;
         margin-top: auto;
         padding-top: 0.7rem;
+        padding-bottom: 0.5rem;
         font-family: var(--font-heading);
         font-size: 0.5rem;
         font-weight: 700;

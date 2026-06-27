@@ -17,10 +17,16 @@ func InsertSession(db *sql.DB, s SessionPayload) error {
 	return err
 }
 
+const maxBatchSize = 50
+
 func InsertEvents(db *sql.DB, events []EventPayload) error {
 	if len(events) == 0 {
 		return nil
 	}
+	if len(events) > maxBatchSize {
+		events = events[:maxBatchSize]
+	}
+
 	query := `INSERT INTO events (session_id, type, target, value, ts) VALUES `
 	params := make([]interface{}, 0, len(events)*5)
 	for i, e := range events {

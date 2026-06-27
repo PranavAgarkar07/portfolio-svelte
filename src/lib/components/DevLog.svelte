@@ -67,6 +67,8 @@
             <span class="pulse-label">
                 {#if loading}
                     BOOT
+                {:else if loading}
+                    LOADING
                 {:else if status === "System Offline"}
                     OFFLINE
                 {:else}
@@ -108,28 +110,31 @@
         flex-direction: column;
         width: 100%;
         max-width: 640px;
-        background: #050505;
-        border: 1px solid var(--grid-line);
-        border-left: 3px solid var(--accent);
-        border-right: 1px solid var(--grid-line);
+        background: #111922;
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        border-left: 4px solid var(--accent);
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6);
         font-family: var(--font-body);
-        transition: border-color 0.3s ease;
+        transition: all 0.2s ease;
     }
     .status-panel.offline {
         border-left-color: #ff4444;
+        box-shadow: 4px 4px 0px rgba(255, 68, 68, 0.08), 4px 4px 0px rgba(0, 0, 0, 0.6);
     }
     :global(body.light-mode) .status-panel {
-        background: rgba(255, 255, 255, 0.95);
-        border-color: rgba(0, 0, 0, 0.12);
+        background: #e4e8ed;
+        border-color: rgba(0, 0, 0, 0.08);
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
     }
     :global(body.light-mode) .status-panel.offline {
         border-left-color: #ff4444;
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
     }
     .panel-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 1rem;
+        padding: 0.6rem 1.2rem;
     }
     .panel-label {
         font-weight: 700;
@@ -141,15 +146,15 @@
         color: var(--accent);
     }
     .panel-divider {
-        height: 1px;
+        height: 1.5px;
         background: var(--grid-line);
-        margin: 0 1rem;
+        margin: 0;
     }
     :global(body.light-mode) .panel-divider {
-        background: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.08);
     }
     .panel-body {
-        padding: 0.75rem 1rem 1rem;
+        padding: 1rem 1.2rem 1.2rem;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
