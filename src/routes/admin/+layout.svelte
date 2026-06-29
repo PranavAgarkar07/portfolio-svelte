@@ -171,7 +171,7 @@
     }
 
     .admin-page {
-        padding-top: 1rem;
+        padding-top: calc(48px + 3rem);
         background: var(--bg-dark);
         min-height: calc(100vh - 48px);
     }
