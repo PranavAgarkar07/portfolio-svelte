@@ -1,5 +1,14 @@
-# allow crawling everything by default
 User-agent: *
-Disallow:
+Allow: /
+
+# Block AI crawlers (no benefit to indexing)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
 
 Sitemap: https://pranavagarkar07.github.io/portfolio-svelte/sitemap.xml

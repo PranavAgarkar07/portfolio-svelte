@@ -82,3 +82,69 @@ type LikeRow struct {
 	Count       int    `json:"count"`
 	Liked       bool   `json:"liked"`
 }
+
+type User struct {
+	ID        string `json:"id"`
+	GoogleID  string `json:"google_id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatar_url"`
+	Role      string `json:"role"`
+	CreatedAt string `json:"created_at"`
+}
+
+type BlogImage struct {
+	URL     string `json:"url"`
+	Alt     string `json:"alt,omitempty"`
+	Caption string `json:"caption,omitempty"`
+}
+
+type BlogPost struct {
+	ID          string      `json:"id"`
+	Slug        string      `json:"slug"`
+	Title       string      `json:"title"`
+	ContentMD   string      `json:"content_md"`
+	Excerpt     string      `json:"excerpt"`
+	CoverImage  string      `json:"cover_image"`
+	Images      []BlogImage `json:"images,omitempty"`
+	Tags        []string    `json:"tags"`
+	Published   bool        `json:"published"`
+	PublishedAt string      `json:"published_at,omitempty"`
+	AuthorID    string      `json:"author_id,omitempty"`
+	AuthorName  string      `json:"author_name,omitempty"`
+	CreatedAt   string      `json:"created_at"`
+	UpdatedAt   string      `json:"updated_at"`
+}
+
+type ProjectReview struct {
+	UserID      string `json:"user_id"`
+	UserName    string `json:"user_name"`
+	AvatarURL   string `json:"avatar_url,omitempty"`
+	ProjectName string `json:"project_name"`
+	Rating      int    `json:"rating"`
+	Comment     string `json:"comment,omitempty"`
+	CreatedAt   string `json:"created_at"`
+}
+
+type BlogComment struct {
+	ID        string  `json:"id"`
+	PostID    string  `json:"post_id"`
+	ParentID  *string `json:"parent_id,omitempty"`
+	UserID    string  `json:"user_id"`
+	UserName  string  `json:"user_name"`
+	AvatarURL string  `json:"avatar_url"`
+	Content   string  `json:"content"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
+	Replies   []BlogComment `json:"replies,omitempty"`
+}
+
+type MarqueeItem struct {
+	Type       string `json:"type"`
+	UserName   string `json:"user_name"`
+	AvatarURL  string `json:"avatar_url,omitempty"`
+	ProjectName string `json:"project_name"`
+	Rating     int    `json:"rating,omitempty"`
+	Comment    string `json:"comment,omitempty"`
+	CreatedAt  string `json:"created_at"`
+}

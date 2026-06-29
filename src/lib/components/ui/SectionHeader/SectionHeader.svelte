@@ -27,6 +27,7 @@
         const obs = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
+                    if (!el) return;
                     el.classList.add('in-view');
                     obs.disconnect();
                 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { browser } from "$app/environment";
     import { trackEvent } from "$lib/analytics";
 
     const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
@@ -51,7 +52,7 @@
         try { localStorage.removeItem(draftKey); } catch { }
     }
 
-    restoreDraft();
+    if (browser) restoreDraft();
 
     function validate(): string {
         nameTouched = true;

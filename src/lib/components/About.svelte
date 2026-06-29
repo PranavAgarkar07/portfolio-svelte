@@ -63,7 +63,7 @@
         return flat;
     });
 
-    let currentIndex = $derived(previewBadge ? allDisplayBadges.findIndex(b => b.id === previewBadge.id) : -1);
+    let currentIndex = $derived(previewBadge ? allDisplayBadges.findIndex(b => b.id === previewBadge!.id) : -1);
 
     function prevBadge() {
         if (currentIndex > 0) previewBadge = allDisplayBadges[currentIndex - 1];

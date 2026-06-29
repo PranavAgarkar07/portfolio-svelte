@@ -5,7 +5,6 @@
 
     import { theme } from "$lib/stores/theme";
     import { portfolioData, fallbackCertificates } from "$lib/data";
-    import Header from "$lib/components/Header.svelte";
     import Hero from "$lib/components/Hero.svelte";
     import About from "$lib/components/About.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
@@ -15,8 +14,10 @@
     import Footer from "$lib/components/Footer.svelte";
     import ContactForm from "$lib/components/ContactForm.svelte";
     import { Icon, SectionHeader, Card, Skeleton } from "$lib/components/ui";
-    import type { Certificate, Badge } from "$lib/types";
+    import type { Certificate, Badge, MarqueeItem } from "$lib/types";
     import { fetchProjectLikes, toggleProjectLike } from "$lib/analytics";
+    import FeedbackMarquee from "$lib/components/feedback/FeedbackMarquee.svelte";
+    import { staleWhileRevalidate } from '$lib/utils/cache';
 
     const { profile, about, skills, projects } = portfolioData;
     const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
@@ -25,6 +26,7 @@
     let certsLoading = $state(true);
     let certsError = $state("");
     let badges = $state<Badge[]>([]);
+    let marqueeItems = $state<MarqueeItem[]>([]);
     let likes = $state<Record<string, number>>({});
     let userLikes = $state<Record<string, boolean>>({});
     let prefersReducedMotion = $state(false);
@@ -35,16 +37,21 @@
             certsLoading = false;
             return;
         }
-        try {
-            const r = await fetch(`${API_BASE}/api/certificates`);
-            if (!r.ok) throw new Error("HTTP " + r.status);
-            const data = await r.json();
-            const result = Array.isArray(data.certificates) ? data.certificates : (Array.isArray(data) ? data : []);
-            certificates = result.length > 0 ? result : fallbackCertificates;
-            if (result.length === 0) certsError = "No certificates found on server";
-            certsLoading = false;
-        } catch (e) {
-            certsError = String(e);
+        const ok = await staleWhileRevalidate<Certificate[]>(
+            'home:certs',
+            `${API_BASE}/api/certificates`,
+            30 * 60 * 1000,
+            (data) => {
+                certificates = data.length > 0 ? data : fallbackCertificates;
+                if (data.length === 0) certsError = "No certificates found on server";
+                certsLoading = false;
+            },
+            (raw) => {
+                const d = raw as { certificates?: Certificate[] };
+                return Array.isArray(d.certificates) ? d.certificates : (Array.isArray(raw) ? raw as Certificate[] : []);
+            },
+        );
+        if (!ok) {
             certificates = fallbackCertificates;
             certsLoading = false;
         }
@@ -65,10 +72,20 @@
         fetchCerts();
 
         if (API_BASE) {
-            fetch(`${API_BASE}/api/badges`)
-                .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
-                .then(data => { badges = data.badges ?? data ?? []; })
-                .catch(() => {});
+            staleWhileRevalidate<Badge[]>(
+                'home:badges',
+                `${API_BASE}/api/badges`,
+                30 * 60 * 1000,
+                (data) => { badges = data ?? []; },
+                (raw) => { const d = raw as { badges?: Badge[] }; return d.badges ?? d as unknown as Badge[] ?? []; },
+            );
+            staleWhileRevalidate<MarqueeItem[]>(
+                'home:marquee',
+                `${API_BASE}/api/feedback/marquee`,
+                10 * 60 * 1000,
+                (data) => { marqueeItems = data ?? []; },
+                (raw) => { const d = raw as { items?: MarqueeItem[] }; return d.items ?? []; },
+            );
             fetchProjectLikes().then(result => {
                 likes = result.likes;
                 userLikes = result.user_likes;
@@ -278,10 +295,11 @@
     </script>
 </svelte:head>
 
-<Header {profile} />
 
 <main id="main-content">
     <Hero {profile} {skills} {about} />
+
+    <FeedbackMarquee items={marqueeItems} />
 
     <section id="projects" class="section-container snap-section">
         <SectionHeader title="Featured Projects" count={projects.length} animate />

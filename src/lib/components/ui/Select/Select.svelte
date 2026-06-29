@@ -43,7 +43,7 @@
     let isOpen = $state(false);
     let searchQuery = $state('');
     let highlightedIndex = $state(0);
-    let triggerRef: HTMLButtonElement | undefined = $state();
+    let triggerRef: any = $state();
     let dropdownRef: HTMLDivElement | undefined = $state();
     let searchInputRef: HTMLInputElement | undefined = $state();
 

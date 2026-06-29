@@ -79,7 +79,7 @@
         loading = true;
         error = "";
         try {
-            const res = await fetch(`${BASE}/api/admin/badges?key=${encodeURIComponent(storedKey)}`);
+            const res = await fetch(`${BASE}/api/admin/badges`, { headers: { Authorization: `Bearer ${storedKey}` } });
             if (!res.ok) {
                 const text = await res.text();
                 throw new Error(text || `HTTP ${res.status}`);
@@ -109,13 +109,13 @@
 
         try {
             const url = editingId
-                ? `${BASE}/api/admin/badges/${editingId}?key=${encodeURIComponent(storedKey)}`
-                : `${BASE}/api/admin/badges?key=${encodeURIComponent(storedKey)}`;
+                ? `${BASE}/api/admin/badges/${editingId}`
+                : `${BASE}/api/admin/badges`;
             const method = editingId ? "PUT" : "POST";
 
             const res = await fetch(url, {
                 method,
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${storedKey}` },
                 body: JSON.stringify(body),
             });
 
@@ -142,8 +142,9 @@
         try {
             const fd = new FormData();
             fd.append("image", file);
-            const res = await fetch(`${BASE}/api/admin/certificates/upload?key=${encodeURIComponent(storedKey)}`, {
+            const res = await fetch(`${BASE}/api/admin/certificates/upload`, {
                 method: "POST",
+                headers: { Authorization: `Bearer ${storedKey}` },
                 body: fd,
             });
             if (!res.ok) {
@@ -164,8 +165,9 @@
         if (!confirm("Delete this badge?")) return;
 
         try {
-            const res = await fetch(`${BASE}/api/admin/badges/${id}?key=${encodeURIComponent(storedKey)}`, {
+            const res = await fetch(`${BASE}/api/admin/badges/${id}`, {
                 method: "DELETE",
+                headers: { Authorization: `Bearer ${storedKey}` },
             });
 
             if (!res.ok) {
@@ -288,9 +290,9 @@
     async function performReorder(reordered: Badge[]) {
         const order = reordered.map(b => b.id);
         try {
-            const res = await fetch(`${BASE}/api/admin/badges/reorder?key=${encodeURIComponent(storedKey)}`, {
+            const res = await fetch(`${BASE}/api/admin/badges/reorder`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${storedKey}` },
                 body: JSON.stringify({ order }),
             });
             if (!res.ok) throw new Error(`Reorder failed: HTTP ${res.status}`);
@@ -372,7 +374,7 @@
                             <label class="form-label">Image URL</label>
                             <div class="image-upload-row">
                                 <Input bind:value={form.image_url} placeholder="https://..." />
-                                <label class="upload-btn" class:uploading disabled={uploading}>
+                                <label class="upload-btn" class:uploading aria-disabled={uploading}>
                                     <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onchange={uploadImage} disabled={uploading} />
                                     {uploading ? "Uploading..." : "Upload"}
                                 </label>

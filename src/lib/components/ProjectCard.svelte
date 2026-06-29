@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
-import { Lightbox } from "lightbox3";
-    import { Badge, Tag, Icon } from "$lib/components/ui";
+    import { Lightbox } from "lightbox3";
+    import { Badge, Tag, Icon, type IconName } from "$lib/components/ui";
+    import ReviewSection from "$lib/components/feedback/ReviewSection.svelte";
 
     interface Image {
         src: string;
@@ -134,7 +135,7 @@ import { Lightbox } from "lightbox3";
                                 aria-label="View {img.alt} full size"
                                 onclick={(e) => {
                                     e.preventDefault();
-                                    Lightbox.instance.open(img.src, e.currentTarget);
+                                    (Lightbox as any).instance.open(img.src, e.currentTarget);
                                 }}
                             >
                                 <img
@@ -181,14 +182,9 @@ import { Lightbox } from "lightbox3";
                                 <Badge variant="offline">OFFLINE</Badge>
                             {/if}
                         </span>
-                        {#if project.githubStars}
-                            <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">★ {project.githubStars}</span>
-                        {/if}
                     </div>
                     <h3 class="project-title featured-title">{project.name}</h3>
                 </div>
-
-                <p class="project-description">{project.description}</p>
 
                 <div class="card-tags">
                     {#each project.tags.slice(0, 5) as tag}
@@ -199,10 +195,11 @@ import { Lightbox } from "lightbox3";
                     {/if}
                 </div>
 
+                <ReviewSection projectName={project.name} />
                 <div class="card-links">
                     {#each project.links as link}
                         <a href={link.url} target="_blank" rel="noopener" class="card-link">
-                            <Icon name={link.icon} size={14} />
+                            <Icon name={link.icon as IconName} size={14} />
                             <span>{link.label}</span>
                             <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
                         </a>
@@ -231,7 +228,7 @@ import { Lightbox } from "lightbox3";
                             aria-label="View {img.alt} full size"
                             onclick={(e) => {
                                 e.preventDefault();
-                                Lightbox.instance.open(img.src, e.currentTarget);
+                                (Lightbox as any).instance.open(img.src, e.currentTarget);
                             }}
                         >
                             <img
@@ -280,11 +277,8 @@ import { Lightbox } from "lightbox3";
                             <Badge variant="offline">OFFLINE</Badge>
                         {/if}
                         </span>
-                        {#if project.githubStars}
-                            <span class="github-stars-badge" aria-label="{project.githubStars} GitHub stars">★ {project.githubStars}</span>
-                        {/if}
                     </div>
-                    <h3 class="project-title">{project.name}</h3>
+                    <h3 class="project-title featured-title">{project.name}</h3>
                 </div>
 
                 <p class="project-description">{project.description}</p>
@@ -298,10 +292,11 @@ import { Lightbox } from "lightbox3";
                     {/if}
                 </div>
 
+            <ReviewSection projectName={project.name} />
             <div class="card-links">
                 {#each project.links as link}
                     <a href={link.url} target="_blank" rel="noopener" class="card-link">
-                        <Icon name={link.icon} size={14} />
+                        <Icon name={link.icon as IconName} size={14} />
                         <span>{link.label}</span>
                         <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
                     </a>
@@ -367,14 +362,14 @@ import { Lightbox } from "lightbox3";
     @media (min-width: 768px) {
         .project-card.featured {
             grid-column: span 2;
-            height: 360px;
+            height: 400px;
         }
     }
 
     @media (min-width: 1024px) {
         .project-card.featured {
             grid-column: span 3;
-            height: 360px;
+            height: 400px;
         }
     }
 
@@ -694,18 +689,7 @@ import { Lightbox } from "lightbox3";
         margin-left: auto;
     }
 
-    .github-stars-badge {
-        font-family: var(--font-body);
-        font-size: 0.65rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #f59e0b;
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        background: rgba(245, 158, 11, 0.06);
-        padding: 2px 8px;
-        margin-left: 0.5rem;
-    }
+
 
     .tag-overflow {
         font-family: var(--font-body);

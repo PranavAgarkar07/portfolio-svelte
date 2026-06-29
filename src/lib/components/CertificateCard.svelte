@@ -2,7 +2,8 @@
     import type { Certificate } from "$lib/types";
     import { Lightbox } from "lightbox3";
 
-    let { certificate, index }: { certificate: Certificate; index: number } = $props();
+    let { certificate, index }: { certificate: Certificate; index: number } =
+        $props();
 
     let thumbFailed = $state(false);
     let imageLink: HTMLAnchorElement | undefined = $state();
@@ -11,7 +12,7 @@
     function openLightbox(e: MouseEvent) {
         e.preventDefault();
         try {
-            Lightbox.instance.open(certificate.image_url, imageLink!);
+            (Lightbox as any).instance.open(certificate.image_url, imageLink!);
         } catch {
             window.open(certificate.image_url, "_blank");
         }
@@ -21,13 +22,28 @@
         if (!d) return "";
         const parts = d.split("-");
         if (parts.length < 2) return parts[0];
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ];
         const monthIndex = parseInt(parts[1], 10) - 1;
         const month = months[monthIndex] || "";
         if (!month) return parts[0];
         if (parts.length >= 3 && parts[2]) {
             const day = parseInt(parts[2], 10);
-            return isNaN(day) ? `${month} ${parts[0]}` : `${month} ${day}, ${parts[0]}`;
+            return isNaN(day)
+                ? `${month} ${parts[0]}`
+                : `${month} ${day}, ${parts[0]}`;
         }
         return `${month} ${parts[0]}`;
     }
@@ -59,24 +75,38 @@
                     class="cert-thumb"
                     loading="lazy"
                     decoding="async"
-                    onerror={() => { thumbFailed = true; }}
+                    onerror={() => {
+                        thumbFailed = true;
+                    }}
                 />
                 <span class="cert-image-overlay">
-                    <span class="cert-image-index">{String(index + 1).padStart(2, "0")}</span>
+                    <span class="cert-image-index"
+                        >{String(index + 1).padStart(2, "0")}</span
+                    >
                     <span class="cert-image-action">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="11" cy="11" r="8" /><path
+                                d="m21 21-4.35-4.35"
+                            />
                         </svg>
                         <span>View</span>
                     </span>
                 </span>
             {:else}
-                <span class="cert-image-index">{String(index + 1).padStart(2, "0")}</span>
+                <span class="cert-image-index"
+                    >{String(index + 1).padStart(2, "0")}</span
+                >
             {/if}
-            <img
-                alt="" aria-hidden="true"
-                class="cert-hidden-img"
-            />
+            <img alt="" aria-hidden="true" class="cert-hidden-img" />
         </a>
     {/if}
 
@@ -105,11 +135,26 @@
         {/if}
 
         {#if certificate.credential_url}
-            <a href={certificate.credential_url} target="_blank" rel="noopener" class="cert-credential">
+            <a
+                href={certificate.credential_url}
+                target="_blank"
+                rel="noopener"
+                class="cert-credential"
+            >
                 <span>Verify Credential</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cert-credential-icon">
-                    <path d="M7 7h10v10"/>
-                    <path d="M7 17 21 3"/>
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="cert-credential-icon"
+                >
+                    <path d="M7 7h10v10" />
+                    <path d="M7 17 21 3" />
                 </svg>
             </a>
         {/if}
@@ -181,7 +226,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        aspect-ratio: 16 / 10;
+        aspect-ratio: 4 / 3;
         background: #070a0f;
         border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         text-decoration: none;
@@ -194,20 +239,34 @@
         content: "";
         position: absolute;
         inset: 0;
-        background:
-            linear-gradient(135deg, transparent 30%, rgba(255, 68, 0, 0.04) 50%, transparent 70%);
+        background: linear-gradient(
+            135deg,
+            transparent 30%,
+            rgba(255, 68, 0, 0.04) 50%,
+            transparent 70%
+        );
         pointer-events: none;
         z-index: 1;
     }
 
     .cert-image-link.has-thumb::before {
-        background: linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 50%, transparent 100%);
+        background: linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.55) 0%,
+            rgba(0, 0, 0, 0.05) 50%,
+            transparent 100%
+        );
         z-index: 2;
         transition: opacity 0.35s ease;
     }
 
     .cert-card:hover .cert-image-link.has-thumb::before {
-        background: linear-gradient(0deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, transparent 100%);
+        background: linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.75) 0%,
+            rgba(0, 0, 0, 0.15) 55%,
+            transparent 100%
+        );
         opacity: 1;
     }
 
@@ -266,7 +325,7 @@
         color: rgba(255, 68, 0, 0.35);
         letter-spacing: -0.04em;
         line-height: 1;
-        text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
         transition: color 0.25s ease;
     }
 
@@ -295,7 +354,7 @@
         text-transform: uppercase;
         letter-spacing: 0.2em;
         color: rgba(255, 255, 255, 0.5);
-        text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
     }
 
     .cert-image-action svg {
@@ -434,7 +493,9 @@
         color: rgba(255, 255, 255, 0.25);
         text-decoration: none;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
-        transition: color 0.25s ease, gap 0.25s ease;
+        transition:
+            color 0.25s ease,
+            gap 0.25s ease;
     }
 
     .cert-credential-icon {
@@ -478,7 +539,12 @@
     }
 
     :where(:global(body.light-mode)) .cert-image-link::before {
-        background: linear-gradient(135deg, transparent 30%, rgba(217, 65, 0, 0.03) 50%, transparent 70%);
+        background: linear-gradient(
+            135deg,
+            transparent 30%,
+            rgba(217, 65, 0, 0.03) 50%,
+            transparent 70%
+        );
     }
 
     :where(:global(body.light-mode)) .cert-title {
@@ -536,6 +602,8 @@
         .cert-image-index,
         .cert-image-action,
         .cert-credential,
-        .cert-credential-icon { transition: none; }
+        .cert-credential-icon {
+            transition: none;
+        }
     }
 </style>

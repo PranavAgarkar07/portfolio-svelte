@@ -38,14 +38,14 @@ func (h *Handlers) HandleGetBadges(c *fiber.Ctx) error {
 }
 
 func (h *Handlers) HandleAdminGetBadges(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	return h.HandleGetBadges(c)
 }
 
 func (h *Handlers) HandleAdminCreateBadge(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	if h.DB == nil {
@@ -93,7 +93,7 @@ func (h *Handlers) HandleAdminCreateBadge(c *fiber.Ctx) error {
 }
 
 func (h *Handlers) HandleAdminUpdateBadge(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	if h.DB == nil {
@@ -141,7 +141,7 @@ func (h *Handlers) HandleAdminUpdateBadge(c *fiber.Ctx) error {
 }
 
 func (h *Handlers) HandleAdminDeleteBadge(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	if h.DB == nil {
@@ -165,7 +165,7 @@ func (h *Handlers) HandleAdminDeleteBadge(c *fiber.Ctx) error {
 }
 
 func (h *Handlers) HandleAdminReorderBadges(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	if h.DB == nil {

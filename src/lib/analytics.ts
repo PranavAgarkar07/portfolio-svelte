@@ -1,3 +1,5 @@
+import { browser } from "$app/environment";
+
 const SESSION_KEY = "portfolio_analytics_session";
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const ANALYTICS_BASE = BASE + "/api/v1/analytics";
@@ -78,11 +80,21 @@ function getOrCreateSessionId(): string {
 }
 
 export function getSessionId(): string | null {
+  if (!browser) return null;
   return sessionId;
 }
 
+function hasAnalyticsConsent(): boolean {
+  try {
+    return localStorage.getItem("portfolio_analytics_consent") === "true";
+  } catch {
+    return false;
+  }
+}
+
 export async function initAnalytics(): Promise<void> {
-  if (!BASE || sessionId) return;
+  if (!browser || !BASE || sessionId) return;
+  if (!hasAnalyticsConsent()) return;
 
   sessionId = getOrCreateSessionId();
 
@@ -116,7 +128,7 @@ export async function initAnalytics(): Promise<void> {
 }
 
 export function trackEvent(type: string, target: string, value?: string): void {
-  if (!BASE || !sessionId) return;
+  if (!browser || !BASE || !sessionId) return;
 
   const payload = [{
     session_id: sessionId,
@@ -170,11 +182,12 @@ async function sha256(input: string): Promise<string> {
 }
 
 export async function getVisitorToken(): Promise<string> {
+  if (!browser) return "";
   return sha256(getOrCreateVisitorId() + "|" + getFingerprint());
 }
 
 export async function fetchProjectLikes(): Promise<{ likes: Record<string, number>; user_likes: Record<string, boolean> }> {
-  if (!BASE) return { likes: {}, user_likes: {} };
+  if (!browser || !BASE) return { likes: {}, user_likes: {} };
   const token = await getVisitorToken();
   try {
     const resp = await fetch(`${BASE}/api/projects/likes?visitor_token=${encodeURIComponent(token)}`);
@@ -186,7 +199,7 @@ export async function fetchProjectLikes(): Promise<{ likes: Record<string, numbe
 }
 
 export async function toggleProjectLike(projectName: string, liked: boolean): Promise<number> {
-  if (!BASE) return -1;
+  if (!browser || !BASE) return -1;
   const visitorToken = await getVisitorToken();
   try {
     const resp = await fetch(`${BASE}/api/projects/like`, {

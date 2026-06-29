@@ -64,22 +64,21 @@ func main() {
 	}
 
 	var s3Client *s3.Client
-	if cfg.IsLambda {
-		awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithRegion(model.S3Region))
-		if err != nil {
-			slog.Warn("Failed to load AWS config", "error", err)
-		} else {
-			s3Client = s3.NewFromConfig(awsCfg)
-			slog.Info("S3 client initialized")
-		}
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithRegion(model.S3Region))
+	if err != nil {
+		slog.Warn("Failed to load AWS config, uploads will use local storage", "error", err)
+	} else {
+		s3Client = s3.NewFromConfig(awsCfg)
+		slog.Info("S3 client initialized")
 	}
 
 	app := fiber.New()
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:5174, http://localhost:4173",
+		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:5174, http://localhost:4173, http://localhost:3000",
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-		AllowHeaders: "Origin, Content-Type, Accept, X-Analytics-Key",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Analytics-Key",
+		AllowCredentials: true,
 	}))
 	app.Use(limiter.New(limiter.Config{
 		Max:        120,
@@ -136,13 +135,22 @@ func main() {
 
 func runMigrations(db *sql.DB) {
 	migrations := []string{
-		`CREATE TABLE IF NOT EXISTS contact_messages (
+		`CREATE TABLE IF NOT EXISTS blog_comments (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+			parent_id UUID REFERENCES blog_comments(id),
+			user_id UUID NOT NULL REFERENCES users(id),
+			content TEXT NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS contact_submissions (
 			id SERIAL PRIMARY KEY,
 			name TEXT NOT NULL,
 			email TEXT NOT NULL,
-			topic TEXT DEFAULT '',
-			message TEXT NOT NULL,
-			is_read BOOLEAN DEFAULT FALSE,
+			topic TEXT,
+			message TEXT,
+			read BOOLEAN NOT NULL DEFAULT FALSE,
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
 		`ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS topic TEXT DEFAULT ''`,
@@ -204,10 +212,53 @@ func runMigrations(db *sql.DB) {
 			updated_at TIMESTAMPTZ DEFAULT NOW(),
 			PRIMARY KEY (project_name, visitor_token)
 		)`,
+		`CREATE TABLE IF NOT EXISTS users (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			google_id TEXT UNIQUE NOT NULL,
+			email TEXT UNIQUE NOT NULL,
+			name TEXT NOT NULL,
+			avatar_url TEXT DEFAULT '',
+			role TEXT NOT NULL DEFAULT 'user',
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS blog_posts (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			slug TEXT UNIQUE NOT NULL,
+			title TEXT NOT NULL,
+			content_md TEXT NOT NULL,
+			excerpt TEXT DEFAULT '',
+			cover_image TEXT DEFAULT '',
+			tags TEXT[] DEFAULT '{}',
+			published BOOLEAN DEFAULT FALSE,
+			published_at TIMESTAMPTZ,
+			author_id UUID REFERENCES users(id),
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS project_reviews (
+			id SERIAL PRIMARY KEY,
+			user_id UUID NOT NULL REFERENCES users(id),
+			project_name TEXT NOT NULL,
+			rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+			comment TEXT DEFAULT '',
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			UNIQUE (user_id, project_name)
+		)`,
 	}
 	for _, m := range migrations {
 		if _, err := db.Exec(m); err != nil {
 			slog.Warn("Migration failed", "error", err, "query", m[:60])
+		}
+	}
+
+	alters := []string{
+		`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_image TEXT DEFAULT ''`,
+		`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`,
+		`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb`,
+	}
+	for _, a := range alters {
+		if _, err := db.Exec(a); err != nil {
+			slog.Warn("Alter failed", "error", err, "query", a[:60])
 		}
 	}
 }

@@ -3,7 +3,9 @@
     import { theme } from "$lib/stores/theme";
     import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
+    import { afterNavigate, goto } from "$app/navigation";
     import { initAnalytics, trackEvent } from "$lib/analytics";
+    import { init, handleCallback, loading } from "$lib/stores/auth";
     import gsap from "gsap";
     import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
     import Lenis from "lenis";
@@ -11,10 +13,42 @@
     import "lightbox3/style.css";
     import "../styles.css";
     import "../light-mode.css";
+    import Header from "$lib/components/Header.svelte";
+    import CookieConsent from "$lib/components/CookieConsent.svelte";
+    import { portfolioData } from "$lib/data";
 
     let { children } = $props();
+    let { profile } = portfolioData;
+    let lenis: Lenis | null = null;
+
+    function getDocumentTop(el: HTMLElement): number {
+        let top = 0;
+        let current: HTMLElement | null = el;
+        while (current) {
+            top += current.offsetTop;
+            current = current.offsetParent as HTMLElement | null;
+        }
+        return top;
+    }
 
     onMount(() => {
+        let cleanup: (() => void) | undefined;
+        (async () => {
+        const hash = window.location.hash.slice(1);
+        const hashParams = new URLSearchParams(hash);
+        const token = hashParams.get('token');
+        if (token) {
+            await handleCallback(token);
+            loading.set(false);
+            window.history.replaceState({}, '', window.location.pathname);
+            const redirect = localStorage.getItem('redirect_after_login');
+            if (redirect) {
+                localStorage.removeItem('redirect_after_login');
+                goto(redirect, { replaceState: true });
+            }
+        } else {
+            init();
+        }
         initAnalytics();
         trackEvent("pageview", window.location.pathname);
 
@@ -39,9 +73,10 @@
             "(prefers-reduced-motion: reduce)",
         ).matches;
 
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register(`${base}/service-worker.js`);
-        }
+        // Service worker disabled — was causing stale JS cache issues
+        // if ("serviceWorker" in navigator && import.meta.env.PROD) {
+        //     navigator.serviceWorker.register(`${base}/service-worker.js`);
+        // }
 
         if ("web-vital" in navigator === false && "PerformanceObserver" in window) {
             try {
@@ -50,18 +85,18 @@
                         if (entry.entryType === "largest-contentful-paint") {
                             console.log("LCP:", entry.startTime);
                         }
-                        if (entry.entryType === "layout-shift" && !entry.hadRecentInput) {
-                            console.log("CLS:", entry.value);
+                        if (entry.entryType === "layout-shift" && !(entry as any).hadRecentInput) {
+                            console.log("CLS:", (entry as any).value);
                         }
                         if (entry.entryType === "first-input") {
-                            console.log("FID:", entry.processingStart - entry.startTime);
+                            console.log("FID:", (entry as any).processingStart - entry.startTime);
                         }
                     }
                 }).observe({ type: "largest-contentful-paint", buffered: true });
                 new PerformanceObserver((list) => {
                     let cls = 0;
                     for (const entry of list.getEntries()) {
-                        if (!entry.hadRecentInput) cls += entry.value;
+                        if (!(entry as any).hadRecentInput) cls += (entry as any).value;
                     }
                     console.log("CLS total:", cls);
                 }).observe({ type: "layout-shift", buffered: true });
@@ -72,8 +107,6 @@
             springOpen: { stiffness: 500, damping: 40, mass: 0.8 },
             springClose: { stiffness: 400, damping: 35, mass: 0.8 },
         });
-
-        let lenis: Lenis | null = null;
 
         const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
@@ -97,17 +130,21 @@
             gsap.ticker.lagSmoothing(33, 16);
         }
 
-        function getDocumentTop(el: HTMLElement): number {
-            let top = 0;
-            let current: HTMLElement | null = el;
-            while (current) {
-                top += current.offsetTop;
-                current = current.offsetParent as HTMLElement | null;
-            }
-            return top;
+        const initialHash = window.location.hash.slice(1);
+        if (initialHash && initialHash !== 'token') {
+            requestAnimationFrame(() => {
+                const el = document.getElementById(initialHash);
+                if (el) {
+                    if (lenis) {
+                        lenis.scrollTo(getDocumentTop(el), { duration: 0 });
+                    } else {
+                        el.scrollIntoView();
+                    }
+                }
+            });
         }
 
-        function handleAnchorClick(e: MouseEvent) {
+            function handleAnchorClick(e: Event) {
             if (prefersReducedMotion) return;
             const target = e.currentTarget as HTMLAnchorElement;
             const href = target.getAttribute("href");
@@ -143,20 +180,40 @@
             cardListeners.push({ el: card, handler });
         });
 
-        return () => {
-            unsub();
-            document.querySelectorAll('a[href^="#"]').forEach((a) => {
-                a.removeEventListener("click", handleAnchorClick);
+            cleanup = () => {
+                unsub();
+                document.querySelectorAll('a[href^="#"]').forEach((a) => {
+                    a.removeEventListener("click", handleAnchorClick);
+                });
+                cardListeners.forEach(({ el, handler }) => {
+                    el.removeEventListener("mouseenter", handler);
+                });
+                lenis?.destroy();
+            };
+        })();
+        return () => cleanup?.();
+    });
+
+    afterNavigate((navigation) => {
+        const hash = (navigation.to as any)?.hash;
+        if (!hash) return;
+        const el = document.getElementById(hash);
+        if (!el) return;
+        if (lenis) {
+            const targetY = getDocumentTop(el);
+            requestAnimationFrame(() => {
+                lenis!.scrollTo(targetY, { duration: 1.2 });
             });
-            cardListeners.forEach(({ el, handler }) => {
-                el.removeEventListener("mouseenter", handler);
-            });
-            lenis?.destroy();
-        };
+        } else {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
     });
 </script>
 
 <svelte:head>
+    <!-- Content Security Policy (static-site meta-tag variant) -->
+    <meta http-equiv="content-security-policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.fontshare.com; font-src 'self' https: data:; img-src 'self' data: https:; connect-src 'self' https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com http://localhost:8080; frame-src 'none'; object-src 'none'; base-uri 'self'" />
+
     <!-- Primary Meta -->
     <title>Pranav Agarkar | Fullstack Developer</title>
     <meta name="description" content="Portfolio of Pranav Agarkar — Fullstack Developer specializing in Django, React, Svelte, and Go. Building fast, modern web apps." />
@@ -165,6 +222,7 @@
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#030405" />
     <link rel="canonical" href="https://pranavagarkar07.github.io/portfolio-svelte/" />
+    <link rel="sitemap" type="application/xml" href="https://pranavagarkar07.github.io/portfolio-svelte/sitemap.xml" />
 
     <!-- Open Graph (Facebook, LinkedIn, WhatsApp previews) -->
     <meta property="og:type" content="website" />
@@ -233,4 +291,10 @@
 
 <svelte:body />
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<Header {profile} />
+
 {@render children()}
+
+<CookieConsent />

@@ -32,7 +32,7 @@
         loading = true;
         error = "";
         try {
-            const res = await fetch(`${BASE}/api/contact/messages?key=${encodeURIComponent(storedKey)}`);
+            const res = await fetch(`${BASE}/api/contact/messages`, { headers: { Authorization: `Bearer ${storedKey}` } });
             if (!res.ok) {
                 const text = await res.text();
                 throw new Error(text || `HTTP ${res.status}`);
@@ -49,8 +49,9 @@
 
     async function markRead(id: number) {
         try {
-            const res = await fetch(`${BASE}/api/contact/messages/${id}/read?key=${encodeURIComponent(storedKey)}`, {
+            const res = await fetch(`${BASE}/api/contact/messages/${id}/read`, {
                 method: "PATCH",
+                headers: { Authorization: `Bearer ${storedKey}` },
             });
             if (!res.ok) {
                 const text = await res.text();
@@ -66,7 +67,6 @@
         localStorage.setItem("contact_admin_key", k);
         storedKey = k;
         key = "";
-        editingKey = false;
     }
 
     function clearKey() {

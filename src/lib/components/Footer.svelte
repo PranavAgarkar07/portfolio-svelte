@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Icon } from "$lib/components/ui";
+    import { Icon, type IconName } from "$lib/components/ui";
+    import { base } from "$app/paths";
 
     interface Props {
         profile: {
@@ -45,7 +46,7 @@
                             rel="noopener"
                             class="footer-social-icon"
                         >
-                            <Icon name={iconFor(social.name)} size={18} />
+                            <Icon name={iconFor(social.name) as IconName} size={18} />
                         </a>
                     {/if}
                 {/each}
@@ -59,6 +60,7 @@
                 <a href="#certifications">Certifications</a>
                 <a href="#projects">Projects</a>
                 <a href="#contact">Contact</a>
+                <a href="{base}/admin/dashboard">Login</a>
             </div>
         </div>
         <div class="footer-section info">

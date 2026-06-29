@@ -9,13 +9,18 @@ import (
 )
 
 type Config struct {
-	Port             string
-	DatabaseURL      string
-	ContactSecret    string
-	AnalyticsSecret  string
-	OpenRouterAPIKey string
-	GitHubToken      string
-	IsLambda         bool
+	Port              string
+	DatabaseURL       string
+	ContactSecret     string
+	AnalyticsSecret   string
+	OpenRouterAPIKey  string
+	GitHubToken       string
+	IsLambda          bool
+	GoogleClientID    string
+	GoogleClientSecret string
+	JWTSecret         string
+	FrontendURL       string
+	GoogleCallbackURL string
 }
 
 func Load() (*Config, error) {
@@ -24,13 +29,18 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		Port:             getEnv("PORT", "8080"),
-		DatabaseURL:      os.Getenv("DATABASE_URL"),
-		ContactSecret:    os.Getenv("CONTACT_SECRET"),
-		AnalyticsSecret:  os.Getenv("ANALYTICS_SECRET"),
-		OpenRouterAPIKey: os.Getenv("OPENROUTER_API_KEY"),
-		GitHubToken:      os.Getenv("GITHUB_TOKEN"),
-		IsLambda:         os.Getenv("AWS_LAMBDA_RUNTIME_API") != "",
+		Port:               getEnv("PORT", "8080"),
+		DatabaseURL:        os.Getenv("DATABASE_URL"),
+		ContactSecret:      os.Getenv("CONTACT_SECRET"),
+		AnalyticsSecret:    os.Getenv("ANALYTICS_SECRET"),
+		OpenRouterAPIKey:   os.Getenv("OPENROUTER_API_KEY"),
+		GitHubToken:        os.Getenv("GITHUB_TOKEN"),
+		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		JWTSecret:          os.Getenv("JWT_SECRET"),
+		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:5173"),
+		GoogleCallbackURL:  os.Getenv("GOOGLE_CALLBACK_URL"),
+		IsLambda:           os.Getenv("AWS_LAMBDA_RUNTIME_API") != "",
 	}
 
 	if cfg.AnalyticsSecret == "" {

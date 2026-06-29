@@ -1,61 +1,87 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { base } from "$app/paths";
+    import { onMount } from "svelte";
+    import { isAdmin, isAuthor, init, logout } from "$lib/stores/auth";
+    import { goto } from "$app/navigation";
 
     let { children } = $props();
 
     const navItems = [
-        { label: "Dashboard", path: `${base}/admin/dashboard`, icon: "📊" },
-        { label: "Contact", path: `${base}/admin/contact`, icon: "📬" },
-        { label: "Certificates", path: `${base}/admin/certificates`, icon: "📜" },
-        { label: "Badges", path: `${base}/admin/badges`, icon: "🏅" },
+        { label: "Dashboard", path: `${base}/admin/dashboard`, icon: "D" },
+        { label: "Contact", path: `${base}/admin/contact`, icon: "C" },
+        { label: "Certificates", path: `${base}/admin/certificates`, icon: "A" },
+        { label: "Badges", path: `${base}/admin/badges`, icon: "B" },
+        { label: "Blog", path: `${base}/admin/blog`, icon: "P" },
+        { label: "Users", path: `${base}/admin/users`, icon: "U" },
+        { label: "Reviews", path: `${base}/admin/reviews`, icon: "R" },
     ];
 
-    let currentPath = $derived($page.url.pathname);
+    let currentPath = $derived($page.url.pathname.replace(/\/$/, ''));
+    let checking = $state(true);
+
+    onMount(async () => {
+        await init();
+        checking = false;
+        if (!$isAdmin && !$isAuthor) {
+            goto(base);
+        }
+    });
 </script>
 
-<nav class="admin-nav">
-    <div class="admin-nav-inner">
-        <a href={base} class="admin-nav-brand">
-            <span class="admin-nav-icon">◈</span>
-            <span class="admin-nav-title">SENTINEL</span>
-        </a>
-        <div class="admin-nav-links">
-            {#each navItems as item}
-                <a
-                    href={item.path}
-                    class="admin-nav-link"
-                    class:active={currentPath === item.path}
+{#if checking}
+    <div class="admin-loading">Checking access...</div>
+{:else if $isAdmin || $isAuthor}
+    <nav class="admin-nav">
+        <div class="admin-nav-inner">
+            <a href={base} class="admin-nav-brand">
+                <span class="admin-nav-icon">◈</span>
+                <span class="admin-nav-title">SENTINEL</span>
+            </a>
+            <div class="admin-nav-links">
+                {#each navItems as item}
+                    <a
+                        href={item.path}
+                        class="admin-nav-link"
+                        class:active={currentPath === item.path}
+                    >
+                        <span class="admin-nav-link-icon">{item.icon}</span>
+                        <span class="admin-nav-link-label">{item.label}</span>
+                    </a>
+                {/each}
+                <button
+                    class="admin-nav-link admin-nav-logout"
+                    onclick={() => {
+                        logout();
+                        window.location.href = base;
+                    }}
                 >
-                    <span class="admin-nav-link-icon">{item.icon}</span>
-                    <span class="admin-nav-link-label">{item.label}</span>
-                </a>
-            {/each}
-            <button
-                class="admin-nav-link admin-nav-logout"
-                onclick={() => {
-                    localStorage.removeItem("contact_admin_key");
-                    window.location.reload();
-                }}
-            >
-                <span class="admin-nav-link-icon">🚪</span>
-                <span class="admin-nav-link-label">Logout</span>
-            </button>
+                    <span class="admin-nav-link-icon">🚪</span>
+                    <span class="admin-nav-link-label">Logout</span>
+                </button>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="admin-page" id="main-content">
-    {@render children()}
-</div>
+    <div class="admin-page" id="main-content">
+        {@render children()}
+    </div>
+{/if}
 
 <style>
+    .admin-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        color: var(--text-muted);
+    }
     .admin-nav {
         position: sticky;
-        top: 0;
+        top: var(--nav-height);
         z-index: 100;
-        background: #030405;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        background: var(--bg-dark);
+        border-bottom: 1px solid var(--border-color);
         padding: 0 2rem;
     }
 
@@ -93,6 +119,7 @@
         align-items: center;
         gap: 0.25rem;
         flex: 1;
+        overflow-x: auto;
     }
 
     .admin-nav-link {
@@ -101,7 +128,7 @@
         gap: 0.35rem;
         padding: 0.35rem 0.65rem;
         text-decoration: none;
-        color: #71717a;
+        color: var(--text-muted);
         font-size: 0.75rem;
         font-family: var(--font-body);
         letter-spacing: 0.05em;
@@ -109,17 +136,18 @@
         transition: all 0.15s ease;
         cursor: pointer;
         background: none;
+        white-space: nowrap;
     }
 
     .admin-nav-link:hover {
-        color: #e4e4e7;
-        border-color: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+        border-color: var(--border-color);
     }
 
     .admin-nav-link.active {
         color: var(--accent);
-        border-color: rgba(255, 68, 0, 0.2);
-        background: rgba(255, 68, 0, 0.06);
+        border-color: var(--accent-glow);
+        background: var(--accent-glow);
     }
 
     .admin-nav-link-icon {
@@ -134,6 +162,7 @@
 
     .admin-nav-logout {
         margin-left: auto;
+        flex-shrink: 0;
     }
 
     .admin-nav-logout:hover {
@@ -143,6 +172,8 @@
 
     .admin-page {
         padding-top: 1rem;
+        background: var(--bg-dark);
+        min-height: calc(100vh - 48px);
     }
 
     @media (max-width: 640px) {

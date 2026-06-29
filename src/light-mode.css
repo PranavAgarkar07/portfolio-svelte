@@ -11,9 +11,18 @@ body.light-mode {
     --accent: #d94100;
     --accent-hover: #e03d00;
     --accent-glow: rgba(217, 65, 0, 0.12);
-    --grid-line: rgba(0, 0, 0, 0.06);
+    --grid-line: rgba(0, 0, 0, 0.08);
+    --border-color: rgba(0,0,0,0.15);
     --wire-color: #d4d7dd;
     --wire-active: #202024;
+    --card-bg: linear-gradient(160deg, #f5f5f0 0%, #edede9 100%);
+    --card-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.1);
+    --card-shadow-hover: 0 8px 24px -8px rgba(0, 0, 0, 0.12);
+    --code-bg: #f4f4f5;
+    --code-color: #e11d48;
+    --inline-code-bg: rgba(0,0,0,0.05);
+    --toc-bg: rgba(0,0,0,0.02);
+    --author-bio-bg: rgba(0,0,0,0.02);
 }
 
 body.light-mode .noise-overlay {

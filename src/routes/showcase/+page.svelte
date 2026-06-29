@@ -276,7 +276,7 @@
 			</div>
 			<div class="demo-item">
 				<span class="demo-label">Disabled</span>
-				<Input label="Username" placeholder="Not editable" disabled />
+				<Input label="Username" placeholder="Not editable" />
 			</div>
 			<div class="demo-item">
 				<span class="demo-label">Date</span>

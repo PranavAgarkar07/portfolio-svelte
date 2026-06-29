@@ -47,7 +47,7 @@ func (h *Handlers) HandleSubmitContact(c *fiber.Ctx) error {
 }
 
 func (h *Handlers) HandleAdminContact(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).SendString("Unauthorized")
 	}
 	if h.DB == nil {
@@ -127,7 +127,7 @@ tr:hover { background: #16213e; }
 }
 
 func (h *Handlers) HandleGetMessages(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	if h.DB == nil {
@@ -164,7 +164,7 @@ func (h *Handlers) HandleGetMessages(c *fiber.Ctx) error {
 }
 
 func (h *Handlers) HandleMarkRead(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
+	if !h.checkAdminKey(c) {
 		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
 	if h.DB == nil {

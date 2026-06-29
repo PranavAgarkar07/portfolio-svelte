@@ -5,6 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"dev:backend": "cd backend && go run .",
+		"dev:all": "cd backend && go run . & vite dev; kill %1 2>/dev/null",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",

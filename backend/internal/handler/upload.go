@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -32,50 +33,46 @@ var allowedMIME = map[string]bool{
 	"image/webp": true,
 }
 
-func (h *Handlers) HandleAdminUploadImage(c *fiber.Ctx) error {
-	if c.Query("key") != h.Config.ContactSecret {
-		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
-	}
-
+func (h *Handlers) handleUpload(c *fiber.Ctx) (string, string, error) {
 	file, err := c.FormFile("image")
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "no image file provided"})
+		return "", "", fiber.NewError(400, "no image file provided")
 	}
 
 	mimeType := file.Header.Get("Content-Type")
 	if !allowedMIME[mimeType] {
-		return c.Status(400).JSON(fiber.Map{"error": "invalid MIME type, use PNG/JPG/GIF/WEBP"})
+		return "", "", fiber.NewError(400, "invalid MIME type, use PNG/JPG/GIF/WEBP")
 	}
 
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	allowedExt := map[string]bool{".png": true, ".jpg": true, ".jpeg": true, ".gif": true, ".webp": true}
 	if !allowedExt[ext] {
-		return c.Status(400).JSON(fiber.Map{"error": "unsupported format, use PNG/JPG/JPEG/GIF/WEBP"})
+		return "", "", fiber.NewError(400, "unsupported format, use PNG/JPG/JPEG/GIF/WEBP")
 	}
 
 	if file.Size > 10<<20 {
-		return c.Status(400).JSON(fiber.Map{"error": "file too large, max 10MB"})
+		return "", "", fiber.NewError(400, "file too large, max 10MB")
 	}
 
 	src, err := file.Open()
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to read file"})
+		return "", "", fiber.NewError(500, "failed to read file")
 	}
 	defer src.Close()
 
 	sniff := make([]byte, 512)
 	if _, err := io.ReadFull(src, sniff); err != nil && err != io.ErrUnexpectedEOF {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to validate file"})
+		return "", "", fiber.NewError(500, "failed to validate file")
 	}
 	sniffMIME := http.DetectContentType(sniff)
 	if !allowedMIME[sniffMIME] {
-		return c.Status(400).JSON(fiber.Map{"error": "file content does not match image type"})
+		return "", "", fiber.NewError(400, "file content does not match image type")
 	}
 
 	src.Seek(0, io.SeekStart)
 	data, err := io.ReadAll(src)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to read file data"})
+		return "", "", fiber.NewError(500, "failed to read file data")
 	}
 
 	hash := sha256.Sum256(data)
@@ -88,12 +85,12 @@ func (h *Handlers) HandleAdminUploadImage(c *fiber.Ctx) error {
 		const maxThumbWidth = 640
 		bounds := img.Bounds()
 		w := bounds.Dx()
-		h := bounds.Dy()
+		hh := bounds.Dy()
 
-		thumbW, thumbH := w, h
+		thumbW, thumbH := w, hh
 		if w > maxThumbWidth {
 			thumbW = maxThumbWidth
-			thumbH = h * maxThumbWidth / w
+			thumbH = hh * maxThumbWidth / w
 		}
 
 		thumb := image.NewRGBA(image.Rect(0, 0, thumbW, thumbH))
@@ -115,11 +112,8 @@ func (h *Handlers) HandleAdminUploadImage(c *fiber.Ctx) error {
 		})
 		if err != nil {
 			slog.Error("Failed to upload to S3", "error", err)
-			return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
+			return "", "", fiber.NewError(500, "failed to save image")
 		}
-
-		url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/uploads/%s", model.S3Bucket, model.S3Region, filename)
-		result := fiber.Map{"url": url, "filename": filename}
 		if thumbData != nil {
 			h.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
 				Bucket:      aws.String(model.S3Bucket),
@@ -127,18 +121,16 @@ func (h *Handlers) HandleAdminUploadImage(c *fiber.Ctx) error {
 				Body:        bytes.NewReader(thumbData),
 				ContentType: aws.String("image/jpeg"),
 			})
-			thumbURL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/thumbs/%s", model.S3Bucket, model.S3Region, thumbFilename)
-			result["thumbUrl"] = thumbURL
 		}
-		return c.JSON(result)
+		url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/uploads/%s", model.S3Bucket, model.S3Region, filename)
+		return url, filename, nil
 	}
 
 	savePath := filepath.Join("static", "uploads", filename)
 	if err := os.WriteFile(savePath, data, 0644); err != nil {
 		slog.Error("Failed to save uploaded image", "error", err)
-		return c.Status(500).JSON(fiber.Map{"error": "failed to save image"})
+		return "", "", fiber.NewError(500, "failed to save image")
 	}
-
 	if thumbData != nil {
 		thumbSavePath := filepath.Join("static", "thumbs", thumbFilename)
 		os.MkdirAll(filepath.Dir(thumbSavePath), 0755)
@@ -152,10 +144,32 @@ func (h *Handlers) HandleAdminUploadImage(c *fiber.Ctx) error {
 		scheme = "https"
 	}
 	url := fmt.Sprintf("%s://%s/static/uploads/%s", scheme, c.Hostname(), filename)
-	result := fiber.Map{"url": url, "filename": filename}
-	if thumbData != nil {
-		thumbURL := fmt.Sprintf("%s://%s/static/thumbs/%s", scheme, c.Hostname(), thumbFilename)
-		result["thumbUrl"] = thumbURL
+	return url, filename, nil
+}
+
+func (h *Handlers) HandleAdminUploadImage(c *fiber.Ctx) error {
+	if !h.checkAdminKey(c) {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
 	}
-	return c.JSON(result)
+	url, _, err := h.handleUpload(c)
+	if err != nil {
+		var fe *fiber.Error
+		if errors.As(err, &fe) {
+			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
+		}
+		return ErrInternal(c)
+	}
+	return c.JSON(fiber.Map{"url": url})
+}
+
+func (h *Handlers) HandleBlogUploadImage(c *fiber.Ctx) error {
+	url, _, err := h.handleUpload(c)
+	if err != nil {
+		var fe *fiber.Error
+		if errors.As(err, &fe) {
+			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
+		}
+		return ErrInternal(c)
+	}
+	return c.JSON(fiber.Map{"url": url})
 }
