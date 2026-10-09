@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -104,29 +105,38 @@ func (h *Handlers) handleUpload(c *fiber.Ctx) (string, string, error) {
 	}
 
 	if h.S3Client != nil {
-		_, err = h.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
+		// B-P0-4: S3 calls get timeouts so a slow bucket cannot hold the
+		// request (and shutdown) forever. Thumb failure is logged only.
+		putCtx, putCancel := context.WithTimeout(context.Background(), 15*time.Second)
+		_, err = h.S3Client.PutObject(putCtx, &s3.PutObjectInput{
 			Bucket:      aws.String(model.S3Bucket),
 			Key:         aws.String("static/uploads/" + filename),
 			Body:        bytes.NewReader(data),
 			ContentType: aws.String(mimeType),
 		})
+		putCancel()
 		if err != nil {
 			slog.Error("Failed to upload to S3", "error", err)
 			return "", "", fiber.NewError(500, "failed to save image")
 		}
 		if thumbData != nil {
-			h.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
+			thumbCtx, thumbCancel := context.WithTimeout(context.Background(), 15*time.Second)
+			if _, err := h.S3Client.PutObject(thumbCtx, &s3.PutObjectInput{
 				Bucket:      aws.String(model.S3Bucket),
 				Key:         aws.String("static/thumbs/" + thumbFilename),
 				Body:        bytes.NewReader(thumbData),
 				ContentType: aws.String("image/jpeg"),
-			})
+			}); err != nil {
+				slog.Warn("Failed to upload thumbnail to S3", "error", err)
+			}
+			thumbCancel()
 		}
 		url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/static/uploads/%s", model.S3Bucket, model.S3Region, filename)
 		return url, filename, nil
 	}
 
 	savePath := filepath.Join("static", "uploads", filename)
+	os.MkdirAll(filepath.Dir(savePath), 0755)
 	if err := os.WriteFile(savePath, data, 0644); err != nil {
 		slog.Error("Failed to save uploaded image", "error", err)
 		return "", "", fiber.NewError(500, "failed to save image")

@@ -84,10 +84,18 @@ func (a *AuthHandler) HandleGoogleCallback(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "missing authorization code"})
 	}
 
-	if state != "" {
-		a.stateMu.Lock()
+	if state == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "missing OAuth state"})
+	}
+
+	a.stateMu.Lock()
+	_, ok := a.states[state]
+	if ok {
 		delete(a.states, state)
-		a.stateMu.Unlock()
+	}
+	a.stateMu.Unlock()
+	if !ok {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid OAuth state"})
 	}
 
 	token, err := a.OAuthConfig.Exchange(context.Background(), code)

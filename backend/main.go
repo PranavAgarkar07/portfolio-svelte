@@ -45,9 +45,15 @@ func main() {
 				db.Close()
 				db = nil
 			} else {
-				slog.Info("Database connected successfully")
-				db.SetMaxOpenConns(10)
-				db.SetMaxIdleConns(5)
+			slog.Info("Database connected successfully")
+			// B-P0-2: Lambda concurrent executions each open their own pool;
+			// keep it small there (Neon free tier, use a pooler in prod).
+			maxOpen, maxIdle := 10, 5
+			if cfg.IsLambda || os.Getenv("IS_LAMBDA") == "true" {
+				maxOpen, maxIdle = 3, 1
+			}
+			db.SetMaxOpenConns(maxOpen)
+			db.SetMaxIdleConns(maxIdle)
 				db.SetConnMaxLifetime(30 * time.Minute)
 				db.SetConnMaxIdleTime(5 * time.Minute)
 
@@ -64,25 +70,55 @@ func main() {
 	}
 
 	var s3Client *s3.Client
-	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithRegion(model.S3Region))
-	if err != nil {
-		slog.Warn("Failed to load AWS config, uploads will use local storage", "error", err)
-	} else {
-		s3Client = s3.NewFromConfig(awsCfg)
-		slog.Info("S3 client initialized")
-	}
+	// B-P0-1: S3 config load is lazy with a timeout — the IMDS/STS chain can
+	// block boot for seconds on Render/Lambda without an IAM role. A nil
+	// client falls back to local storage in the upload handler.
+	func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		awsCfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(model.S3Region))
+		if err != nil {
+			slog.Warn("Failed to load AWS config, uploads will use local storage", "error", err)
+		} else {
+			s3Client = s3.NewFromConfig(awsCfg)
+			slog.Info("S3 client initialized")
+		}
+	}()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		BodyLimit:      4 * 1024 * 1024,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   15 * time.Second,
+		IdleTimeout:    60 * time.Second,
+		ProxyHeader:    fiber.HeaderXForwardedFor,
+		EnablePrintRoutes: false,
+	})
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:5174, http://localhost:4173, http://localhost:3000",
+		AllowOrigins: "https://pranavagarkar07.github.io, http://localhost:5173, http://localhost:5174, http://localhost:4173, http://localhost:3000, http://127.0.0.1:5173, http://127.0.0.1:3000",
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Analytics-Key",
 		AllowCredentials: true,
 	}))
+	// B-P0-3: health checks, preflights and static assets must not consume
+	// the per-IP rate-limit quota.
+	skipLimiter := func(c *fiber.Ctx) bool {
+		if c.Method() == fiber.MethodOptions {
+			return true
+		}
+		p := c.Path()
+		if p == "/healthz" || p == "/" {
+			return true
+		}
+		if len(p) >= 7 && (p[:7] == "/static" || p[:7] == "/badges") {
+			return true
+		}
+		return false
+	}
 	app.Use(limiter.New(limiter.Config{
 		Max:        120,
 		Expiration: 1 * time.Minute,
+		Next:       skipLimiter,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()
 		},
@@ -201,8 +237,16 @@ func runMigrations(db *sql.DB) {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts)`,
 		`CREATE INDEX IF NOT EXISTS idx_events_type_target ON events(type, target)`,
+		`CREATE INDEX IF NOT EXISTS idx_events_type_target_ts ON events(type, target, ts)`,
+		`CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_sessions_ip ON sessions(ip_hash)`,
+		`CREATE INDEX IF NOT EXISTS idx_comments_post ON blog_comments(post_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_comments_parent ON blog_comments(parent_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_likes_visitor ON project_likes(visitor_token)`,
+		`CREATE INDEX IF NOT EXISTS idx_reviews_project ON project_reviews(project_name)`,
+		`CREATE INDEX IF NOT EXISTS idx_posts_published ON blog_posts(published, published_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`,
 		`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS source TEXT DEFAULT ''`,
 		`CREATE TABLE IF NOT EXISTS project_likes (
 			project_name TEXT NOT NULL,

@@ -37,6 +37,9 @@ func errResponse(c *fiber.Ctx, status int, code, message string) error {
 }
 
 func (h *Handlers) checkAdminKey(c *fiber.Ctx) bool {
+	if h.Config.ContactSecret == "" {
+		return false
+	}
 	auth := c.Get("Authorization")
 	if strings.HasPrefix(auth, "Bearer ") && strings.TrimPrefix(auth, "Bearer ") == h.Config.ContactSecret {
 		return true

@@ -26,13 +26,22 @@ func (h *Handlers) HandleSubmitContact(c *fiber.Ctx) error {
 	if strings.TrimSpace(sub.Name) == "" {
 		return c.Status(400).JSON(fiber.Map{"error": "name is required"})
 	}
+	if len(sub.Name) > 100 {
+		return c.Status(400).JSON(fiber.Map{"error": "name too long (max 100 characters)"})
+	}
 
 	if !emailRegex.MatchString(sub.Email) {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid email address"})
 	}
+	if len(sub.Email) > 254 {
+		return c.Status(400).JSON(fiber.Map{"error": "email too long (max 254 characters)"})
+	}
 
 	if len(strings.TrimSpace(sub.Message)) < 10 {
 		return c.Status(400).JSON(fiber.Map{"error": "message must be at least 10 characters"})
+	}
+	if len(sub.Message) > 5000 {
+		return c.Status(400).JSON(fiber.Map{"error": "message too long (max 5000 characters)"})
 	}
 
 	if len(sub.Topic) > 200 {
