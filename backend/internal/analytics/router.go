@@ -12,7 +12,8 @@ func RegisterRoutes(app *fiber.App, db *sql.DB, secret string) {
 
 	startRateCleanup()
 
-	CleanupOldData(db)
+	// B-P0-1: old-data cleanup is I/O bound — never block boot on it.
+	go CleanupOldData(db)
 	go func() {
 		ticker := time.NewTicker(24 * time.Hour)
 		for range ticker.C {

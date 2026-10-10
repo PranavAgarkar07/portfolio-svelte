@@ -9,6 +9,8 @@ export default defineConfig({
 				manualChunks(id: string) {
 					if (id.includes('node_modules/gsap')) return 'vendor-gsap';
 					if (id.includes('node_modules/lenis')) return 'vendor-lenis';
+					if (id.includes('node_modules/lightbox3')) return 'vendor-lightbox';
+					if (id.includes('node_modules/@humanspeak/svelte-motion')) return 'vendor-motion';
 				}
 			}
 		}

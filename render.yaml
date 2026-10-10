@@ -7,6 +7,7 @@ services:
     rootDir: backend # Correct key for monorepo subdirectory
     buildCommand: go build -o server main.go
     startCommand: ./server
+    healthCheckPath: /healthz
     envVars:
       - key: GITHUB_TOKEN
         sync: false
