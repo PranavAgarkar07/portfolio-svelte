@@ -1,9 +1,9 @@
 <script lang="ts">
     import { theme } from "$lib/stores/theme";
     import { scrollY } from "$lib/stores/scroll";
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { base } from "$app/paths";
-    import { goto } from "$app/navigation";
+    import { goto, afterNavigate } from "$app/navigation";
     import { page } from "$app/stores";
     import { trackEvent } from "$lib/analytics";
 
@@ -48,6 +48,43 @@
     let isDark = $derived($theme === "dark");
 
     let onBlogPage = $derived($page.url.pathname.startsWith(`${base}/blog`));
+
+    // Scroll-spy: only the 5 nav sections compete, and only one can win at a
+    // time (narrow active band near viewport top). Re-bound on every
+    // navigation because Header persists across routes in the root layout.
+    const spyIds = navigationItems.map((i) => i.id);
+    let spyObserver: IntersectionObserver | null = null;
+
+    function refreshSpy() {
+        spyObserver?.disconnect();
+        activeSection = "";
+        // Blog pages have no spy sections — only the Blog link highlights.
+        if (onBlogPage) return;
+        const targets = spyIds
+            .map((id) => document.getElementById(id))
+            .filter((el): el is HTMLElement => el !== null);
+        if (!spyObserver) {
+            spyObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            activeSection = entry.target.id;
+                        }
+                    });
+                },
+                { rootMargin: "-40% 0px -55% 0px", threshold: 0 },
+            );
+        }
+        targets.forEach((t) => spyObserver!.observe(t));
+        // Optimistic highlight for deep links (e.g. /#skills) until the
+        // observer takes over.
+        const hash = window.location.hash.slice(1);
+        if (hash && spyIds.includes(hash)) activeSection = hash;
+    }
+
+    afterNavigate(() => {
+        void tick().then(refreshSpy);
+    });
 
     function toggleTheme() {
         theme.toggle();
@@ -119,26 +156,14 @@
         };
         window.addEventListener("scroll", onNativeScroll);
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        activeSection = entry.target.id;
-                    }
-                });
-            },
-            { threshold: 0.5 },
-        );
-
-        document.querySelectorAll("section").forEach((section) => {
-            observer.observe(section);
-        });
+        refreshSpy();
 
         return () => {
             unsubScroll();
             window.removeEventListener("scroll", onNativeScroll);
             window.removeEventListener("resize", updateDocHeight);
-            observer.disconnect();
+            spyObserver?.disconnect();
+            spyObserver = null;
         };
     });
 </script>

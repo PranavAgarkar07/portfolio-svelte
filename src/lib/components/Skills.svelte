@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import gsap from "gsap";
-    import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+    import { ensureGsap, motionAllowed } from "$lib/motion";
     import { SectionHeader } from "$lib/components/ui";
     import DevLog from "./DevLog.svelte";
 
@@ -10,32 +9,40 @@
 
     onMount(() => {
         prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (prefersReducedMotion) return;
-        gsap.registerPlugin(ScrollTrigger);
-        gsap.defaults({ overwrite: "auto" });
+        if (!motionAllowed()) return;
+        let cancelled = false;
+        (async () => {
+            const mods = await ensureGsap();
+            if (cancelled || !mods) return;
+            const { gsap, ScrollTrigger } = mods;
 
-        gsap.set(".skill-category-card", { y: 40, opacity: 0 });
-        ScrollTrigger.create({
-            trigger: "#skills", start: "top 85%", once: true,
-            onEnter: () => { gsap.to(".skill-category-card", {
-                y: 0, opacity: 1,
-                stagger: 0.1,
-                ease: "power3.out", duration: 0.6,
-            });}
-        });
-
-        const skillCards = gsap.utils.toArray(".skill-card");
-        if (skillCards.length > 0) {
-            gsap.set(skillCards, { y: 20, opacity: 0 });
-            ScrollTrigger.create({
-                trigger: "#skills", start: "top 75%", once: true,
-                onEnter: () => { gsap.to(skillCards, {
-                    y: 0, opacity: 1,
-                    stagger: 0.03,
-                    ease: "power3.out", duration: 0.4,
-                });}
+            const catTrigger = ScrollTrigger.create({
+                trigger: "#skills", start: "top 85%", once: true,
+                onEnter: () => { gsap.fromTo(".skill-category-card",
+                    { y: 40, opacity: 0 },
+                    { y: 0, opacity: 1,
+                        stagger: 0.1,
+                        ease: "power3.out", duration: 0.6, overwrite: "auto",
+                    });}
             });
-        }
+
+            const skillCards = gsap.utils.toArray(".skill-card");
+            let cardTrigger: { kill: () => void } | null = null;
+            if (skillCards.length > 0) {
+                cardTrigger = ScrollTrigger.create({
+                    trigger: "#skills", start: "top 75%", once: true,
+                    onEnter: () => { gsap.fromTo(skillCards,
+                        { y: 20, opacity: 0 },
+                        { y: 0, opacity: 1,
+                            stagger: 0.03,
+                            ease: "power3.out", duration: 0.4, overwrite: "auto",
+                        });}
+                });
+            }
+            void catTrigger;
+            void cardTrigger;
+        })();
+        return () => { cancelled = true; };
     });
 </script>
 

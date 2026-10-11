@@ -23,6 +23,9 @@
     let heroReady = $state(false);
 
     onMount(() => {
+        // F-P0-2: mark JS so hidden pre-ready states only apply with JS on.
+        // Without JS the content below stays default-visible.
+        document.documentElement.classList.add("js");
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         requestAnimationFrame(() => { heroReady = true; });
 
@@ -137,8 +140,8 @@
                 <span class="marquee-label">TECH STACK</span>
                 <div class="marquee-track">
                     <div class="marquee-content">
-                        {#each [...marqueeTechList, ...marqueeTechList] as tech}
-                            <span class="marquee-item">
+                        {#each [...marqueeTechList, ...marqueeTechList] as tech, i}
+                            <span class="marquee-item" aria-hidden={i >= marqueeTechList.length ? "true" : undefined}>
                                 <span class="marquee-dot"></span>
                                 {tech}
                             </span>
@@ -150,7 +153,7 @@
 
         <div class="hero-right-col">
             <div class="hero-avatar-card">
-                <img src={profile.avatar} alt={profile.name} width="280" height="280" loading="eager" decoding="async" />
+                <img src={profile.avatar} alt={profile.name} width="280" height="280" loading="eager" fetchpriority="high" decoding="async" />
                 <div class="hero-stats-mini" aria-label="Quick stats">
                     {#each about.stats.slice(0, 3) as stat}
                         <div class="hero-stat-row">
@@ -283,8 +286,9 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        opacity: 0;
-        transform: translateY(10px);
+        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
+        opacity: 1;
+        transform: none;
         transition: opacity 0.8s ease, transform 0.8s ease;
         align-self: flex-start;
 
@@ -294,6 +298,10 @@
         border-left: 4px solid var(--accent);
         padding: 6px 14px;
         box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+    }
+    :global(html.js) .hero-status:not(.hero-ready) {
+        opacity: 0;
+        transform: translateY(10px);
     }
     
     :global(body.light-mode) .hero-status {
@@ -385,10 +393,15 @@
         letter-spacing: -0.04em;
         text-transform: uppercase;
         color: var(--text-primary);
-        opacity: 0;
-        transform: translateY(40px);
+        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
+        opacity: 1;
+        transform: none;
         transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         transition-delay: 0.2s;
+    }
+    :global(html.js) .hero-name:not(.hero-ready) .hero-name-text {
+        opacity: 0;
+        transform: translateY(40px);
     }
     
     .hero-name.hero-ready .hero-name-text {
@@ -402,9 +415,13 @@
     
     .hero-tagline-wrap {
         margin-bottom: 2.5rem;
-        opacity: 0;
+        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
+        opacity: 1;
         transition: opacity 0.6s ease;
         transition-delay: 0.8s;
+    }
+    :global(html.js) .hero-tagline-wrap:not(.hero-ready) {
+        opacity: 0;
     }
     
     .hero-tagline-wrap.hero-ready {
@@ -422,10 +439,15 @@
     .cta-group {
         display: flex;
         gap: 1rem;
-        opacity: 0;
-        transform: translateY(20px);
+        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
+        opacity: 1;
+        transform: none;
         transition: opacity 0.6s ease, transform 0.6s ease;
         transition-delay: 1s;
+    }
+    :global(html.js) .cta-group:not(.hero-ready) {
+        opacity: 0;
+        transform: translateY(20px);
     }
     
     .cta-group.hero-ready {
@@ -440,10 +462,15 @@
         margin-top: 3rem;
         width: 100%;
         max-width: 600px;
-        opacity: 0;
-        transform: translateY(10px);
+        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
+        opacity: 1;
+        transform: none;
         transition: opacity 0.6s ease, transform 0.6s ease;
         transition-delay: 2.5s;
+    }
+    :global(html.js) .tech-marquee:not(.hero-ready) {
+        opacity: 0;
+        transform: translateY(10px);
     }
     .tech-marquee.hero-ready {
         opacity: 1;
@@ -517,9 +544,13 @@
         align-items: center;
         gap: 0.5rem;
         z-index: 1;
-        opacity: 0;
+        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
+        opacity: 1;
         transition: opacity 0.8s ease;
         transition-delay: 1.2s;
+    }
+    :global(html.js) .hero-scroll:not(.hero-ready) {
+        opacity: 0;
     }
     
     .hero-scroll.hero-ready {

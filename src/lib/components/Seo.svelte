@@ -27,6 +27,7 @@
 
   const canonicalUrl = canonical || url;
   const siteTitle = title === SITE.title ? title : `${title} — ${SITE.name}`;
+  const safeJsonLd = jsonld ? JSON.stringify(jsonld).replace(/</g, '\\u003c') : '';
 
   $effect(() => {
     if (typeof document !== 'undefined') {
@@ -59,6 +60,6 @@
   <meta name="twitter:creator" content={SITE.twitter} />
 
   {#if jsonld}
-    {@html `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>`}
+    {@html `<script type="application/ld+json">${safeJsonLd}</script>`}
   {/if}
 </svelte:head>

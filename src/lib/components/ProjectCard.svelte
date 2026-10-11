@@ -22,12 +22,13 @@
             links: Array<{ label: string; url: string; icon: string }>;
         };
         index: number;
+        eager?: boolean;
         liked?: boolean;
         likeCount?: number;
         onLike?: (liked: boolean) => void;
     }
 
-    let { project, index, liked = false, likeCount = 0, onLike }: Props = $props();
+    let { project, index, eager = false, liked = false, likeCount = 0, onLike }: Props = $props();
     let currentSlide = $state(0);
     let carousel = $state<HTMLDivElement | null>(null);
     let cardEl = $state<HTMLElement | null>(null);
@@ -36,6 +37,10 @@
     let touchStartX = 0;
 
     function handleKeyDown(e: KeyboardEvent) {
+        // H-3: only hijack arrows when focus is inside the carousel, so
+        // typing in the nested ReviewSection textarea/modal is unaffected.
+        const t = e.target as HTMLElement | null;
+        if (!t || !t.closest?.(".carousel-track, .carousel-btn, .carousel-dots")) return;
         if (e.key === 'ArrowLeft') prev();
         if (e.key === 'ArrowRight') next();
     }
@@ -47,27 +52,41 @@
         reducedMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
-        if (carousel) {
-            carousel.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-            carousel.addEventListener('touchend', (e) => {
-                const diff = touchStartX - e.changedTouches[0].screenX;
-                if (Math.abs(diff) > 50) {
-                    diff > 0 ? next() : prev();
-                }
-            }, { passive: true });
+        const el = carousel;
+        const onTouchStart = (e: TouchEvent) => {
+            touchStartX = e.changedTouches[0].screenX;
+        };
+        const onTouchEnd = (e: TouchEvent) => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) {
+                diff > 0 ? next() : prev();
+            }
+        };
+        if (el) {
+            el.addEventListener('touchstart', onTouchStart, { passive: true });
+            el.addEventListener('touchend', onTouchEnd, { passive: true });
         }
+        return () => {
+            el?.removeEventListener('touchstart', onTouchStart);
+            el?.removeEventListener('touchend', onTouchEnd);
+        };
     });
 
+    let parallaxRaf = 0;
     function handleMouseMove(e: MouseEvent) {
         if (reducedMotion || !cardEl || !watermarkEl) return;
-        watermarkEl.style.transition = "none";
-        const rect = cardEl.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-        const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-        const factor = 10;
-        watermarkEl.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        if (parallaxRaf) return;
+        const cx = e.clientX, cy = e.clientY;
+        parallaxRaf = requestAnimationFrame(() => {
+            parallaxRaf = 0;
+            if (!cardEl || !watermarkEl) return;
+            watermarkEl.style.transition = "none";
+            const rect = cardEl.getBoundingClientRect();
+            const x = ((cx - rect.left) / rect.width - 0.5) * 2;
+            const y = ((cy - rect.top) / rect.height - 0.5) * 2;
+            const factor = 10;
+            watermarkEl.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        });
     }
 
     function handleMouseLeave() {
@@ -142,7 +161,8 @@
                                     src={img.src}
                                     alt={img.alt}
                                     class="carousel-img"
-                                    loading="lazy"
+                                    loading={eager && i === 0 ? "eager" : "lazy"}
+                                    fetchpriority={eager && i === 0 ? "high" : "auto"}
                                     decoding="async"
                                 />
                             </a>
@@ -235,7 +255,8 @@
                                 src={img.src}
                                 alt={img.alt}
                                 class="carousel-img"
-                                loading={i === 0 ? "eager" : "lazy"}
+                                loading={eager && i === 0 ? "eager" : "lazy"}
+                                fetchpriority={eager && i === 0 ? "high" : "auto"}
                                 decoding="async"
                             />
                         </a>
