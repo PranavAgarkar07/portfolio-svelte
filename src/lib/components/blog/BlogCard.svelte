@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import type { BlogPost } from '$lib/types';
 
   let { post }: { post: BlogPost } = $props();
@@ -10,7 +11,7 @@
   }
 </script>
 
-<a href="/blog/{post.slug}" class="blog-card">
+<a href="{base}/blog/{post.slug}" class="blog-card">
   {#if post.cover_image}
     <div class="card-image">
       <img src={post.cover_image} alt={post.title} loading="lazy" />

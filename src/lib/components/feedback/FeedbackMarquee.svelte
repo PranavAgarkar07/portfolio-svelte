@@ -31,7 +31,7 @@
     <div class="marquee-track">
       <div class="marquee-content">
         {#each duped as item, i}
-          <div class="marquee-item" title={item.comment ? `"${item.comment}"` : ''}>
+          <div class="marquee-item" title={item.comment ? `"${item.comment}"` : ''} aria-hidden={i >= items.length ? "true" : undefined}>
             <div class="marquee-avatar-wrap">
               {#if item.avatar_url}
                 <img
@@ -88,6 +88,9 @@
   @keyframes scroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-33.33%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-content { animation: none; }
   }
   .marquee-item {
     display: flex;

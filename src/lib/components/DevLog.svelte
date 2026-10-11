@@ -8,7 +8,8 @@
     let loading = $state(true);
     const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api/status";
 
-    onMount(async () => {
+    onMount(() => {
+        let mounted = true;
         const fetchStatus = async (timeoutMs: number, attemptNumber: number) => {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -28,25 +29,33 @@
             }
         };
 
+        (async () => {
         try {
             const data = await fetchStatus(8000, 1);
+            if (!mounted) return;
             status = data.summary;
             lastUpdate = data.last_update;
             source = data.source;
             loading = false;
         } catch {
+            if (!mounted) return;
             status = "Waking up server...";
             try {
-                const data = await fetchStatus(30000, 2);
+                // P1: 30s → 15s second attempt; server sleep rarely needs more.
+                const data = await fetchStatus(15000, 2);
+                if (!mounted) return;
                 status = data.summary;
                 lastUpdate = data.last_update;
                 source = data.source;
                 loading = false;
             } catch {
+                if (!mounted) return;
                 status = "System Offline";
                 loading = false;
             }
         }
+        })();
+        return () => { mounted = false; };
     });
 
     function formatSource(src: string) {

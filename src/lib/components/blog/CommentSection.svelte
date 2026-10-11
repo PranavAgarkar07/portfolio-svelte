@@ -51,8 +51,8 @@
         cacheKey,
         `${BASE}/api/blog/${slug}/comments`,
         2 * 60 * 1000,
-        (data) => { comments = data; loading = false; },
-        (raw) => (raw as { comments: BlogComment[] }).comments ?? [],
+        (data) => { comments = Array.isArray(data) ? data : []; loading = false; },
+        (raw) => { const d = (raw as { comments?: BlogComment[] } | null); const list = d?.comments; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as BlogComment[]); return []; },
       );
       if (!ok) throw new Error('Failed to load comments');
     } catch (e) {

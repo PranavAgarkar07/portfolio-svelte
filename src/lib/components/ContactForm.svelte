@@ -1,6 +1,7 @@
 <script lang="ts">
     import { browser } from "$app/environment";
     import { trackEvent } from "$lib/analytics";
+    import { warmBackend } from "$lib/warmup";
 
     const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
     const API_URL = BASE_URL + "/api/contact";
@@ -68,18 +69,19 @@
     }
 
     async function wakeServer(): Promise<boolean> {
+        // F-P0-4: shared deduped warmup (5s timeout, 30s cooldown) instead of
+        // the old 3x(5s+3s) ~24s loop. Falls back to one legacy retry.
         waking = true;
-        for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-                const ctrl = new AbortController();
-                const id = setTimeout(() => ctrl.abort(), 5000);
-                const res = await fetch(HEALTH_URL, { signal: ctrl.signal });
-                clearTimeout(id);
-                if (res.ok) return true;
-            } catch {
-                if (attempt === 0) serverDown = true;
-            }
-            if (attempt < 2) await new Promise(r => setTimeout(r, 3000));
+        if (!BASE_URL) return false;
+        try {
+            if (await warmBackend(HEALTH_URL, 5000)) return true;
+        } catch {
+            serverDown = true;
+        }
+        try {
+            if (await warmBackend(HEALTH_URL, 8000)) return true;
+        } catch {
+            serverDown = true;
         }
         return false;
     }
@@ -100,11 +102,19 @@
         }
 
         try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: name.trim(), email: email.trim(), topic, message: message.trim() }),
-            });
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 10000);
+            let res: Response;
+            try {
+                res = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: name.trim(), email: email.trim(), topic, message: message.trim() }),
+                    signal: ctrl.signal,
+                });
+            } finally {
+                clearTimeout(timer);
+            }
             if (res.ok) {
                 success = true;
                 trackEvent("form", "form_submit");
