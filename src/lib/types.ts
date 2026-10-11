@@ -90,7 +90,7 @@ export interface BlogComment {
   content: string;
   created_at: string;
   updated_at: string;
-  replies: BlogComment[];
+  replies?: BlogComment[] | null;
 }
 
 export interface MarqueeItem {

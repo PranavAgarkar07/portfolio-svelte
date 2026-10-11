@@ -37,7 +37,7 @@
         ...rest
     }: Props = $props();
 
-    let btnRef: any = $state();
+    let btnRef: any = $state(null);
 
     function handleRipple(e: MouseEvent) {
         if (!ripple || disabled) return;

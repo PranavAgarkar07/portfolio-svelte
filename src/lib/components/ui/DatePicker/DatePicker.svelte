@@ -37,7 +37,7 @@
     }: Props = $props();
 
     let isOpen = $state(false);
-    let triggerRef: any = $state();
+    let triggerRef: any = $state(null);
     let dropdownRef: HTMLDivElement | undefined = $state();
 
     let viewYear = $state(new Date().getFullYear());

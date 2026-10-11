@@ -26,7 +26,7 @@
     let badgeDisplay = $derived(badge !== undefined ? String(badge).padStart(2, '0') : '');
     let badgeChars = $derived(badgeDisplay.split(''));
 
-    let cardEl: any = $state();
+    let cardEl: any = $state(null);
     let badgeEl: HTMLElement | undefined = $state();
     let rafId: number | undefined;
     let targetX = 0;
