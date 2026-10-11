@@ -54,6 +54,12 @@ html {
     scroll-behavior: smooth;
 }
 
+/* P1-4: Lenis provides smooth wheel on desktop — native CSS smoothing
+   would double-smooth and jank. JS adds .lenis-active when Lenis runs. */
+html.lenis-active {
+    scroll-behavior: auto;
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
@@ -637,6 +643,12 @@ section {
 
 .skill-icon {
     font-size: 2rem;
+    /* P1-4: fixed box so devicon font swap doesn't shift layout (CLS). */
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 2px;
     color: var(--text-primary);
     transition: transform 0.2s ease, color 0.2s ease;

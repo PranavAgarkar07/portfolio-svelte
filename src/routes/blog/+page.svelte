@@ -3,12 +3,14 @@
   import type { BlogPost } from '$lib/types';
   import BlogCard from '$lib/components/blog/BlogCard.svelte';
   import Seo from '$lib/components/Seo.svelte';
+  import { SITE } from '$lib/config';
   import { staleWhileRevalidate } from '$lib/utils/cache';
 
   const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
   let posts = $state<BlogPost[]>([]);
   let loading = $state(true);
+  let loadError = $state('');
   let selectedTag = $state('');
 
   let allTags = $derived(() => {
@@ -24,17 +26,24 @@
     return posts.filter(p => (p.tags || []).includes(selectedTag));
   });
 
-  onMount(async () => {
+  async function loadPosts() {
     if (!BASE) { loading = false; return; }
+    loading = true;
+    loadError = '';
     const ok = await staleWhileRevalidate<BlogPost[]>(
       'blog:list',
       `${BASE}/api/blog`,
       5 * 60 * 1000,
-      (data) => { posts = data; loading = false; },
-      (raw) => (raw as { posts: BlogPost[] }).posts ?? [],
+      (data) => { posts = Array.isArray(data) ? data : []; loading = false; },
+      (raw) => { const d = (raw as { posts?: BlogPost[] } | null); const list = d?.posts; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as BlogPost[]); return []; },
     );
-    if (!ok) loading = false;
-  });
+    if (!ok) {
+      loading = false;
+      if (posts.length === 0) loadError = 'Failed to load posts. Check your connection and try again.';
+    }
+  }
+
+  onMount(loadPosts);
 </script>
 
 <svelte:head>
@@ -44,10 +53,10 @@
 <Seo
   title="Blog"
   description="Thoughts, tutorials, and updates on fullstack development with Django, React, Svelte, Go, and modern web technologies."
-  url="{import.meta.env.SITE_URL || 'https://pranavagarkar07.github.io/portfolio-svelte'}/blog"
+  url="{SITE.url}/blog"
 />
 
-<div class="blog-page">
+<main id="main-content" class="blog-page">
   <header class="blog-header">
     <h1 class="blog-heading">Blog</h1>
     <p class="blog-subtitle">Thoughts, tutorials, and updates</p>
@@ -59,12 +68,14 @@
         class="tag-filter"
         class:active={!selectedTag}
         onclick={() => selectedTag = ''}
+        aria-pressed={!selectedTag}
       >All</button>
       {#each allTags() as tag}
         <button
           class="tag-filter"
           class:active={selectedTag === tag}
           onclick={() => selectedTag = tag}
+          aria-pressed={selectedTag === tag}
         >{tag}</button>
       {/each}
     </div>
@@ -72,6 +83,13 @@
 
   {#if loading}
     <div class="blog-loading">Loading...</div>
+  {:else if loadError && filtered().length === 0}
+    <div class="blog-empty" role="alert">
+      {loadError}
+      <div style="margin-top:1rem">
+        <button class="tag-filter" onclick={loadPosts}>Retry</button>
+      </div>
+    </div>
   {:else if filtered().length > 0}
     <div class="blog-grid">
       {#each filtered() as post}
@@ -87,7 +105,7 @@
       {/if}
     </div>
   {/if}
-</div>
+</main>
 
 <style>
   .blog-page {

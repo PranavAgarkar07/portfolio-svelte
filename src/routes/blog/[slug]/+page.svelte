@@ -15,16 +15,20 @@
 
   let post = $state<BlogPost | null>(null);
   let loading = $state(true);
+  let loadError = $state('');
   let rendered = $state('');
   let headings = $state<Array<{ level: number; text: string; id: string }>>([]);
   let activeHeading = $state('');
   let readProgress = $state(0);
 
-  onMount(() => {
+  function loadPost() {
     const slug = $page.params.slug;
     if (!BASE || !slug) { loading = false; return; }
+    loading = true;
+    loadError = '';
 
-    function applyPost(p: BlogPost) {
+    function applyPost(p: BlogPost | null) {
+      if (!p) return;
       post = p;
       if (p?.content_md) {
         rendered = renderMarkdown(p.content_md);
@@ -37,8 +41,12 @@
       `${BASE}/api/blog/${encodeURIComponent(slug)}`,
       5 * 60 * 1000,
       (data) => { applyPost(data); loading = false; },
-      (raw) => (raw as { post: BlogPost }).post ?? null,
-    ).then(ok => { if (!ok && !post) loading = false; });
+      (raw) => { const d = (raw as { post?: BlogPost } | null); const p = d?.post; if (p && typeof p === 'object') return p; if (raw && typeof raw === 'object' && 'slug' in (raw as Record<string, unknown>)) return (raw as BlogPost); return (null as unknown as BlogPost); },
+    ).then(ok => { if (!ok && !post) { loading = false; loadError = 'Failed to load post. Check your connection and try again.'; } });
+  }
+
+  onMount(() => {
+    loadPost();
 
     const onScroll = () => {
       const scrollTop = window.scrollY;
@@ -112,7 +120,7 @@
   />
 {/if}
 
-<div class="blog-post-page">
+<main id="main-content" class="blog-post-page">
   {#if loading}
     <div class="post-loading">Loading...</div>
   {:else if post}
@@ -196,11 +204,15 @@
 
     <CommentSection slug={post.slug} />
 
-    <a href="/blog" class="back-link">&larr; Back to Blog</a>
+    <a href="{base}/blog" class="back-link">&larr; Back to Blog</a>
   {:else}
-    <div class="post-error">Post not found.</div>
+    <div class="post-error" role="alert">{loadError || 'Post not found.'}
+      {#if loadError}
+        <div style="margin-top:1rem"><button class="back-link" onclick={loadPost}>Retry</button></div>
+      {/if}
+    </div>
   {/if}
-</div>
+</main>
 
 <style>
   .blog-post-page {

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import gsap from "gsap";
-    import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+    import { ensureGsap, motionAllowed } from "$lib/motion";
 
     import { theme } from "$lib/stores/theme";
     import { portfolioData, fallbackCertificates } from "$lib/data";
@@ -13,7 +12,13 @@
     import Skills from "$lib/components/Skills.svelte";
     import Footer from "$lib/components/Footer.svelte";
     import ContactForm from "$lib/components/ContactForm.svelte";
-    import { Icon, SectionHeader, Card, Skeleton } from "$lib/components/ui";
+    // P1-6: direct imports — the ui barrel re-exports motion-heavy
+    // components (Input/Select/DatePicker) that would join this chunk.
+    import Icon from "$lib/components/ui/Icon/Icon.svelte";
+    import SectionHeader from "$lib/components/ui/SectionHeader/SectionHeader.svelte";
+    import Card from "$lib/components/ui/Card/Card.svelte";
+    import Skeleton from "$lib/components/ui/Skeleton/Skeleton.svelte";
+    import type { IconName } from "$lib/components/ui/Icon/Icon.svelte";
     import type { Certificate, Badge, MarqueeItem } from "$lib/types";
     import { fetchProjectLikes, toggleProjectLike } from "$lib/analytics";
     import FeedbackMarquee from "$lib/components/feedback/FeedbackMarquee.svelte";
@@ -37,24 +42,62 @@
             certsLoading = false;
             return;
         }
-        const ok = await staleWhileRevalidate<Certificate[]>(
-            'home:certs',
-            `${API_BASE}/api/certificates`,
-            30 * 60 * 1000,
-            (data) => {
-                certificates = data.length > 0 ? data : fallbackCertificates;
-                if (data.length === 0) certsError = "No certificates found on server";
-                certsLoading = false;
-            },
+        // F-P0-4: critical fetch gets an AbortController timeout (8s).
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        try {
+            const ok = await staleWhileRevalidate<Certificate[]>(
+                'home:certs',
+                `${API_BASE}/api/certificates`,
+                30 * 60 * 1000,
+                (data) => {
+                    certificates = data.length > 0 ? data : fallbackCertificates;
+                    if (data.length === 0) certsError = "No certificates found on server";
+                    certsLoading = false;
+                },
             (raw) => {
-                const d = raw as { certificates?: Certificate[] };
-                return Array.isArray(d.certificates) ? d.certificates : (Array.isArray(raw) ? raw as Certificate[] : []);
+                const d = (raw as { certificates?: Certificate[] } | null);
+                if (Array.isArray(raw)) return raw as Certificate[];
+                const list = d?.certificates;
+                return Array.isArray(list) ? list : [];
             },
-        );
-        if (!ok) {
-            certificates = fallbackCertificates;
-            certsLoading = false;
+                { signal: ctrl.signal },
+            );
+            if (!ok) {
+                certificates = fallbackCertificates;
+                certsLoading = false;
+            }
+        } finally {
+            clearTimeout(timer);
         }
+    }
+
+    // F-P0-4: below-fold fetches (badges, marquee, likes) — deferred until
+    // the projects section nears the viewport. Single-fire guard.
+    let belowFoldFired = false;
+    function loadBelowFold() {
+        if (belowFoldFired || !API_BASE) return;
+        belowFoldFired = true;
+        void Promise.allSettled([
+            staleWhileRevalidate<Badge[]>(
+                'home:badges',
+                `${API_BASE}/api/badges`,
+                30 * 60 * 1000,
+                (data) => { badges = data ?? []; },
+                (raw) => { const d = (raw as { badges?: Badge[] } | null); const list = d?.badges; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as Badge[]); return []; },
+            ),
+            staleWhileRevalidate<MarqueeItem[]>(
+                'home:marquee',
+                `${API_BASE}/api/feedback/marquee`,
+                10 * 60 * 1000,
+                (data) => { marqueeItems = data ?? []; },
+                (raw) => { const d = (raw as { items?: MarqueeItem[] } | null); const list = d?.items; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as MarqueeItem[]); return []; },
+            ),
+            fetchProjectLikes().then(result => {
+                likes = result.likes;
+                userLikes = result.user_likes;
+            }).catch(() => {}),
+        ]);
     }
 
     const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
@@ -66,46 +109,66 @@
 
     onMount(() => {
         prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        gsap.registerPlugin(ScrollTrigger);
-        gsap.defaults({ overwrite: "auto" });
 
-        fetchCerts();
+        // F-P0-4: critical fetch first (certs); everything below the fold
+        // (badges, marquee, likes) waits for the projects section.
+        void fetchCerts();
 
-        if (API_BASE) {
-            staleWhileRevalidate<Badge[]>(
-                'home:badges',
-                `${API_BASE}/api/badges`,
-                30 * 60 * 1000,
-                (data) => { badges = data ?? []; },
-                (raw) => { const d = raw as { badges?: Badge[] }; return d.badges ?? d as unknown as Badge[] ?? []; },
-            );
-            staleWhileRevalidate<MarqueeItem[]>(
-                'home:marquee',
-                `${API_BASE}/api/feedback/marquee`,
-                10 * 60 * 1000,
-                (data) => { marqueeItems = data ?? []; },
-                (raw) => { const d = raw as { items?: MarqueeItem[] }; return d.items ?? []; },
-            );
-            fetchProjectLikes().then(result => {
-                likes = result.likes;
-                userLikes = result.user_likes;
-            }).catch(() => {});
+        let belowFoldObserver: IntersectionObserver | null = null;
+        let belowFoldFallback: ReturnType<typeof setTimeout> | undefined;
+        if (API_BASE && !belowFoldFired) {
+            const fire = () => {
+                belowFoldObserver?.disconnect();
+                belowFoldObserver = null;
+                if (belowFoldFallback) clearTimeout(belowFoldFallback);
+                loadBelowFold();
+            };
+            if ("IntersectionObserver" in window) {
+                const target = document.querySelector("#projects");
+                if (target) {
+                    belowFoldObserver = new IntersectionObserver(
+                        (entries) => {
+                            if (entries.some((e) => e.isIntersecting)) fire();
+                        },
+                        { rootMargin: "400px 0px" },
+                    );
+                    belowFoldObserver.observe(target);
+                    // Fallback: never leave below-fold data unfetched.
+                    belowFoldFallback = setTimeout(fire, 8000);
+                } else {
+                    loadBelowFold();
+                }
+            } else {
+                loadBelowFold();
+            }
         }
 
-        if (prefersReducedMotion) return;
-        gsap.registerPlugin(ScrollTrigger);
-        gsap.defaults({ overwrite: "auto" });
+        // F-P0-1/F-P0-2: motion + reveals load dynamically and only when
+        // allowed. Content is default-visible; gsap.from() is used so a
+        // missing/failed animation can never leave content hidden.
+        let destroyed = false;
+        let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+        let progressBar: HTMLDivElement | null = null;
+        let scrollTriggers: Array<{ kill: () => void }> = [];
+        const onResize = (refresh: () => void) => () => {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(refresh, 200);
+        };
+        let handleResize: (() => void) | null = null;
 
-        let resizeTimer: ReturnType<typeof setTimeout>;
-        window.addEventListener("resize", () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
-        });
+        (async () => {
+            if (!motionAllowed()) return;
+            const mods = await ensureGsap();
+            if (destroyed || !mods) return;
+            const { gsap, ScrollTrigger } = mods;
+
+            handleResize = onResize(() => ScrollTrigger.refresh());
+            window.addEventListener("resize", handleResize);
 
         // ──────────────────────────────────────────────
         // 1. READING PROGRESS BAR
         // ──────────────────────────────────────────────
-        const progressBar = document.createElement("div");
+        progressBar = document.createElement("div");
         Object.assign(progressBar.style, {
             position: "fixed", top: "0", left: "0", width: "0%", height: "2px",
             background: "linear-gradient(90deg, var(--accent), #ff8800, var(--accent))",
@@ -113,134 +176,121 @@
             transition: "transform 0.1s linear",
         });
         document.body.prepend(progressBar);
-        ScrollTrigger.create({ trigger: "body", start: "top top", end: "bottom bottom", onUpdate: self => {
-                progressBar.style.transform = `scaleX(${self.progress})`;
-        }});
+        scrollTriggers.push(ScrollTrigger.create({ trigger: "body", start: "top top", end: "bottom bottom", onUpdate: (self: { progress: number }) => {
+                if (progressBar) progressBar.style.transform = `scaleX(${self.progress})`;
+        }}));
 
         // ──────────────────────────────────────────────
-        // 6. PROJECTS — STAGGER REVEAL
+        // 6. PROJECTS — STAGGER REVEAL (from: default-visible)
         // ──────────────────────────────────────────────
-        gsap.set(".project-card", {
-            y: 40,
-            opacity: 0,
-        });
-        ScrollTrigger.create({
+        scrollTriggers.push(ScrollTrigger.create({
             trigger: "#projects", start: "top 85%", once: true,
-            onEnter: () => { gsap.to(".project-card", {
-                y: 0, opacity: 1,
-                stagger: 0.08,
-                ease: "power3.out", duration: 0.6,
-            });}
-        });
+            onEnter: () => { gsap.fromTo(".project-card",
+                { y: 40, opacity: 0 },
+                { y: 0, opacity: 1,
+                    stagger: 0.08,
+                    ease: "power3.out", duration: 0.6,
+                    overwrite: "auto",
+                });}
+        }));
 
-        gsap.set(".about-visual-col", { x: -30, opacity: 0 });
-        gsap.set(".about-content-col", { x: 30, opacity: 0 });
-        ScrollTrigger.create({
+        // About columns
+        scrollTriggers.push(ScrollTrigger.create({
             trigger: "#about", start: "top 80%", once: true,
             onEnter: () => {
-                gsap.to(".about-visual-col", {
-                    x: 0, opacity: 1,
-                    ease: "power3.out", duration: 0.6,
-                });
-                gsap.to(".about-content-col", {
-                    x: 0, opacity: 1,
-                    ease: "power3.out", duration: 0.6, delay: 0.08,
+                gsap.fromTo(".about-visual-col",
+                    { x: -30, opacity: 0 },
+                    { x: 0, opacity: 1,
+                        ease: "power3.out", duration: 0.6, overwrite: "auto",
+                    });
+                gsap.fromTo(".about-content-col",
+                    { x: 30, opacity: 0 },
+                    { x: 0, opacity: 1,
+                        ease: "power3.out", duration: 0.6, delay: 0.08, overwrite: "auto",
+                    });
+                // Spec rows sweep up (batched: inside #about trigger)
+                gsap.utils.toArray(".about-spec-row").forEach((row: HTMLElement) => {
+                    gsap.fromTo(row as HTMLElement,
+                        { y: 25, opacity: 0 },
+                        { y: 0, opacity: 1, ease: "power3.out", duration: 0.5, overwrite: "auto" });
                 });
             }
-        });
-
-        // About specs — sweep up (batched: inside #about trigger)
-        gsap.set(".about-spec-row", { y: 25, opacity: 0 });
+        }));
 
         // ──────────────────────────────────────────────
         // 11. ABOUT — METRICS COUNT-UP
         // ──────────────────────────────────────────────
-        gsap.set(".about-metric", { y: 20, opacity: 0 });
-        ScrollTrigger.create({
+        scrollTriggers.push(ScrollTrigger.create({
             trigger: "#about", start: "top 75%", once: true,
             onEnter: () => {
-                // Spec rows
-                gsap.utils.toArray(".about-spec-row").forEach((row: any) => {
-                    gsap.to(row, { y: 0, opacity: 1, ease: "power3.out", duration: 0.5 });
-                });
                 // Count-up metrics
-                gsap.utils.toArray<HTMLElement>(".about-metric-value").forEach((el) => {
+                (gsap.utils.toArray(".about-metric-value") as HTMLElement[]).forEach((el: HTMLElement) => {
                     const raw = el.textContent || "0";
                     const num = parseFloat(raw.replace(/[^0-9.]/g, ""));
                     if (isNaN(num)) return;
                     const suffix = raw.replace(/[0-9.]/g, "");
-                    let obj = { val: 0 };
+                    const obj = { val: 0 };
                     gsap.to(obj, {
                         val: num, duration: 1.5, ease: "power3.out",
                         onUpdate: () => { el.textContent = Math.round(obj.val) + suffix; },
                     });
                 });
                 // Metrics fade up
-                gsap.to(".about-metric", {
-                    y: 0, opacity: 1,
-                    stagger: 0.08, ease: "power3.out", duration: 0.5,
-                });
+                gsap.fromTo(".about-metric",
+                    { y: 20, opacity: 0 },
+                    { y: 0, opacity: 1,
+                        stagger: 0.08, ease: "power3.out", duration: 0.5, overwrite: "auto",
+                    });
             }
-        });
+        }));
 
         // ──────────────────────────────────────────────
         // 12-13. CONTACT — ALL (batched: 1 trigger instead of 7)
         // ──────────────────────────────────────────────
-        gsap.set(".contact-info", { y: 15, opacity: 0 });
-        gsap.set(".contact-form-container", { y: 15, opacity: 0 });
-        gsap.set(".info-item", { y: 10, opacity: 0 });
-        gsap.set(".social-link", { y: 10, opacity: 0 });
 
         // Contact section single trigger
-        ScrollTrigger.create({
+        scrollTriggers.push(ScrollTrigger.create({
             trigger: "#contact", start: "top 85%", once: true,
             onEnter: () => {
                 // Simple fade up
-                gsap.to(".contact-info", { y: 0, opacity: 1, ease: "power3.out", duration: 0.5 });
-                gsap.to(".contact-form-container", {
-                    y: 0, opacity: 1, ease: "power3.out", duration: 0.5, delay: 0.1,
-                });
-                gsap.to(".info-item", {
-                    y: 0, opacity: 1, ease: "power3.out", duration: 0.4,
-                    stagger: 0.05,
-                });
-                gsap.to(".social-link", {
-                    y: 0, opacity: 1, ease: "power3.out", duration: 0.4,
-                    stagger: 0.04,
-                });
+                gsap.fromTo(".contact-info",
+                    { y: 15, opacity: 0 },
+                    { y: 0, opacity: 1, ease: "power3.out", duration: 0.5, overwrite: "auto" });
+                gsap.fromTo(".contact-form-container",
+                    { y: 15, opacity: 0 },
+                    { y: 0, opacity: 1, ease: "power3.out", duration: 0.5, delay: 0.1, overwrite: "auto" });
+                gsap.fromTo(".info-item",
+                    { y: 10, opacity: 0 },
+                    { y: 0, opacity: 1, ease: "power3.out", duration: 0.4,
+                        stagger: 0.05, overwrite: "auto",
+                    });
+                gsap.fromTo(".social-link",
+                    { y: 10, opacity: 0 },
+                    { y: 0, opacity: 1, ease: "power3.out", duration: 0.4,
+                        stagger: 0.04, overwrite: "auto",
+                    });
             }
-        });
+        }));
 
         // ──────────────────────────────────────────────
-        // 14. SAFETY — recover stuck hidden elements (mobile + reduced motion)
+        // 14. SAFETY — 1s only: refresh triggers so stuck reveals recover.
+        // No clipPath/opacity forcing (content is default-visible).
         // ──────────────────────────────────────────────
-        function forceVisibility() {
-            ScrollTrigger.refresh();
-            const selectors = [
-                ".section-header", ".project-card",
-                ".about-visual-col", ".about-content-col", ".about-spec-row",
-                ".about-metric", ".contact-info", ".contact-form-container",
-                ".info-item", ".social-link",
-                ".hero-status", ".hero-scroll"
-            ];
-            document.querySelectorAll(selectors.join(",")).forEach(el => {
-                gsap.set(el, {
-                    opacity: 1, y: 0, x: 0, scale: 1,
-                    clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-                });
-            });
-            gsap.set(".hero-name-text", {
-                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-            });
-        }
+        setTimeout(() => {
+            if (destroyed) return;
+            try { ScrollTrigger.refresh(); } catch {}
+        }, 1000);
+        })();
 
-        const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
-        if (isMobile || prefersReducedMotion) {
-            setTimeout(forceVisibility, 500);
-            if (isMobile) {
-                window.addEventListener("touchstart", () => ScrollTrigger.refresh(), { once: true });
-            }
-        }
+        return () => {
+            destroyed = true;
+            belowFoldObserver?.disconnect();
+            if (belowFoldFallback) clearTimeout(belowFoldFallback);
+            if (handleResize) window.removeEventListener("resize", handleResize);
+            if (resizeTimer) clearTimeout(resizeTimer);
+            scrollTriggers.forEach((t) => { try { t.kill(); } catch {} });
+            progressBar?.remove();
+        };
     });
 
 
@@ -277,6 +327,7 @@
     <meta property="twitter:image" content={coverImage} />
 
     <!-- Structured Data (JSON-LD) -->
+    {@html `<noscript><style>.blur-segment,.hero-status,.hero-name-text,.hero-tagline-wrap,.cta-group,.tech-marquee,.hero-scroll,.project-card,.about-visual-col,.about-content-col,.about-spec-row,.about-metric,.contact-info,.contact-form-container,.info-item,.social-link,.skill-category-card,.skill-card{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important}</style></noscript>`}
     <script type="application/ld+json">
         {
             "@context": "https://schema.org",
@@ -305,7 +356,7 @@
         <SectionHeader title="Featured Projects" count={projects.length} animate />
         <div class="projects-grid" style="margin-top: 1.5rem">
             {#each projects as project, i}
-                <ProjectCard {project} index={i} liked={userLikes[project.name] ?? false} likeCount={likes[project.name] ?? 0} onLike={(liked) => {
+                <ProjectCard {project} index={i} eager={i === 0} liked={userLikes[project.name] ?? false} likeCount={likes[project.name] ?? 0} onLike={(liked) => {
                     const name = project.name;
                     const prevLikes = likes;
                     userLikes = { ...userLikes, [name]: liked };
@@ -414,7 +465,7 @@
                                     class="social-link"
                                     aria-label={social.label}
                                 >
-                                    <Icon name={social.icon as any} size={18} />
+                                    <Icon name={social.icon as IconName} size={18} />
                                 </a>
                             {/each}
                         </div>

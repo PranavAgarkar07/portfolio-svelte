@@ -6,11 +6,7 @@
     import { afterNavigate, goto } from "$app/navigation";
     import { initAnalytics, trackEvent } from "$lib/analytics";
     import { init, handleCallback, loading } from "$lib/stores/auth";
-    import gsap from "gsap";
-    import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
-    import Lenis from "lenis";
-    import { Lightbox } from "lightbox3";
-    import "lightbox3/style.css";
+    import type Lenis from "lenis";
     import "../styles.css";
     import "../light-mode.css";
     import Header from "$lib/components/Header.svelte";
@@ -19,6 +15,8 @@
 
     let { children } = $props();
     let { profile } = portfolioData;
+    // Lenis instance is dynamically imported (F-P0-1) — type-only here so
+    // the root layout never statically bundles gsap/lenis/lightbox.
     let lenis: Lenis | null = null;
 
     function getDocumentTop(el: HTMLElement): number {
@@ -44,7 +42,9 @@
             const redirect = localStorage.getItem('redirect_after_login');
             if (redirect) {
                 localStorage.removeItem('redirect_after_login');
-                goto(redirect, { replaceState: true });
+                if (redirect.startsWith('/') && !redirect.startsWith('//') || redirect.startsWith(base + '/') || redirect === base || redirect === `${base}/`) {
+                    goto(redirect, { replaceState: true });
+                }
             }
         } else {
             init();
@@ -82,52 +82,74 @@
             try {
                 new PerformanceObserver((list) => {
                     for (const entry of list.getEntries()) {
+                        const perfEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number; processingStart?: number };
                         if (entry.entryType === "largest-contentful-paint") {
                             console.log("LCP:", entry.startTime);
                         }
-                        if (entry.entryType === "layout-shift" && !(entry as any).hadRecentInput) {
-                            console.log("CLS:", (entry as any).value);
+                        if (entry.entryType === "layout-shift" && !perfEntry.hadRecentInput) {
+                            console.log("CLS:", perfEntry.value);
                         }
                         if (entry.entryType === "first-input") {
-                            console.log("FID:", (entry as any).processingStart - entry.startTime);
+                            console.log("FID:", (perfEntry.processingStart ?? 0) - entry.startTime);
                         }
                     }
                 }).observe({ type: "largest-contentful-paint", buffered: true });
                 new PerformanceObserver((list) => {
                     let cls = 0;
                     for (const entry of list.getEntries()) {
-                        if (!(entry as any).hadRecentInput) cls += (entry as any).value;
+                        const perfEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number };
+                        if (!perfEntry.hadRecentInput) cls += (perfEntry.value ?? 0);
                     }
                     console.log("CLS total:", cls);
                 }).observe({ type: "layout-shift", buffered: true });
             } catch {}
         }
 
-        Lightbox.init({
-            springOpen: { stiffness: 500, damping: 40, mass: 0.8 },
-            springClose: { stiffness: 400, damping: 35, mass: 0.8 },
-        });
+        // F-P0-1: lightbox3 is dynamically imported only when lightbox
+        // targets exist on the page (keeps it out of /admin + touch paths).
+        if (document.querySelector("[data-lightbox]")) {
+            try {
+                const [{ Lightbox }] = await Promise.all([
+                    import("lightbox3"),
+                    import("lightbox3/style.css"),
+                ]);
+                Lightbox.init({
+                    springOpen: { stiffness: 500, damping: 40, mass: 0.8 },
+                    springClose: { stiffness: 400, damping: 35, mass: 0.8 },
+                });
+            } catch {}
+        }
 
         const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
+        // F-P0-1: gsap/lenis dynamically imported, gated on full-motion desktop.
         if (!prefersReducedMotion && !isTouchDevice) {
-            gsap.registerPlugin(ScrollTrigger);
+            try {
+                const [{ default: Lenis }, motion] = await Promise.all([
+                    import("lenis"),
+                    import("$lib/motion"),
+                ]);
+                const mods = await motion.ensureGsap();
+                if (mods) {
+                    const { gsap, ScrollTrigger } = mods;
+                    document.documentElement.classList.add("lenis-active");
+                    lenis = new Lenis({
+                        duration: 1.2,
+                        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                        orientation: "vertical",
+                        gestureOrientation: "vertical",
+                        smoothWheel: true,
+                    });
 
-            lenis = new Lenis({
-                duration: 1.2,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                orientation: "vertical",
-                gestureOrientation: "vertical",
-                smoothWheel: true,
-            });
+                    lenis.on("scroll", ScrollTrigger.update);
 
-            lenis.on("scroll", ScrollTrigger.update);
-
-            gsap.ticker.add((time) => {
-                lenis!.raf(time * 1000);
-                scrollY.set(lenis!.scroll);
-            });
-            gsap.ticker.lagSmoothing(33, 16);
+                    gsap.ticker.add((time: number) => {
+                        lenis!.raf(time * 1000);
+                        scrollY.set(lenis!.scroll);
+                    });
+                    gsap.ticker.lagSmoothing(33, 16);
+                }
+            } catch {}
         }
 
         const initialHash = window.location.hash.slice(1);
@@ -188,6 +210,7 @@
                 cardListeners.forEach(({ el, handler }) => {
                     el.removeEventListener("mouseenter", handler);
                 });
+                document.documentElement.classList.remove("lenis-active");
                 lenis?.destroy();
             };
         })();
@@ -195,7 +218,7 @@
     });
 
     afterNavigate((navigation) => {
-        const hash = (navigation.to as any)?.hash;
+        const hash = (navigation.to as { hash?: string } | null)?.hash;
         if (!hash) return;
         const el = document.getElementById(hash);
         if (!el) return;
@@ -212,7 +235,7 @@
 
 <svelte:head>
     <!-- Content Security Policy (static-site meta-tag variant) -->
-    <meta http-equiv="content-security-policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.fontshare.com; font-src 'self' https: data:; img-src 'self' data: https:; connect-src 'self' https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com http://localhost:8080; frame-src 'none'; object-src 'none'; base-uri 'self'" />
+    <meta http-equiv="content-security-policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.fontshare.com; font-src 'self' https: data:; img-src 'self' data: https:; connect-src 'self' https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com https://sentinel-backend-4x3i.onrender.com http://localhost:8080; frame-src 'none'; object-src 'none'; base-uri 'self'" />
 
     <!-- Primary Meta -->
     <title>Pranav Agarkar | Fullstack Developer</title>
@@ -258,7 +281,7 @@
             "https://www.linkedin.com/in/pranav-agarkar-344291257/",
             "https://x.com/PranavAgarkar18"
         ]
-    })}</script>`}
+    }).replace(/</g, '\\u003c')}</script>`}
 
     <!-- Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
