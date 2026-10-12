@@ -111,11 +111,19 @@ export async function initAnalytics(): Promise<void> {
   };
 
   try {
-    const resp = await fetch(`${ANALYTICS_BASE}/session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    let resp: Response;
+    try {
+      resp = await fetch(`${ANALYTICS_BASE}/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!resp.ok) {
       const text = await resp.text().catch(() => "");
       console.warn("analytics: session POST failed", resp.status, text);
@@ -138,10 +146,12 @@ export function trackEvent(type: string, target: string, value?: string): void {
     ts: Date.now(),
   }];
 
+  // P1-5: keepalive so pageview/click events survive pagehide.
   fetch(`${ANALYTICS_BASE}/e`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    keepalive: true,
   }).then(r => {
     if (!r.ok) r.text().then(t => console.warn("analytics: events POST failed", r.status, t));
   }).catch(() => {});
@@ -181,16 +191,40 @@ async function sha256(input: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).slice(0, 16).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// P1-5: memoize the visitor token — crypto.subtle.digest per call was
+// recomputed on every likes fetch/toggle.
+let visitorTokenPromise: Promise<string> | null = null;
+
 export async function getVisitorToken(): Promise<string> {
   if (!browser) return "";
-  return sha256(getOrCreateVisitorId() + "|" + getFingerprint());
+  if (!visitorTokenPromise) {
+    visitorTokenPromise = (async () => {
+      try {
+        return await sha256(getOrCreateVisitorId() + "|" + getFingerprint());
+      } catch {
+        visitorTokenPromise = null;
+        return getOrCreateVisitorId();
+      }
+    })();
+  }
+  return visitorTokenPromise;
+}
+
+async function fetchJsonWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 8000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function fetchProjectLikes(): Promise<{ likes: Record<string, number>; user_likes: Record<string, boolean> }> {
   if (!browser || !BASE) return { likes: {}, user_likes: {} };
   const token = await getVisitorToken();
   try {
-    const resp = await fetch(`${BASE}/api/projects/likes?visitor_token=${encodeURIComponent(token)}`);
+    const resp = await fetchJsonWithTimeout(`${BASE}/api/projects/likes?visitor_token=${encodeURIComponent(token)}`);
     if (!resp.ok) return { likes: {}, user_likes: {} };
     return resp.json();
   } catch {
@@ -202,7 +236,7 @@ export async function toggleProjectLike(projectName: string, liked: boolean): Pr
   if (!browser || !BASE) return -1;
   const visitorToken = await getVisitorToken();
   try {
-    const resp = await fetch(`${BASE}/api/projects/like`, {
+    const resp = await fetchJsonWithTimeout(`${BASE}/api/projects/like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ project_name: projectName, visitor_token: visitorToken, liked }),

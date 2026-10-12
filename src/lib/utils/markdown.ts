@@ -1,3 +1,26 @@
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function safeHref(raw: string): string {
+  const url = raw.trim();
+  if (/^(https?:\/\/|mailto:[^\s"']+|#[^\s"']*|\/[^\s"']*)$/i.test(url)) return escapeAttr(url);
+  if (/^[^:\s"'][\w\-./?#@+%&=;:~]*$/.test(url)) return escapeAttr(url);
+  return '#';
+}
+
+function safeImgSrc(raw: string): string {
+  const url = raw.trim();
+  if (/^https?:\/\/[^\s"']+$/i.test(url)) return escapeAttr(url);
+  if (/^\/[^\s"']*$/.test(url)) return escapeAttr(url);
+  if (/^[^:\s"'][\w\-./?#@+%&=;:~]*$/.test(url)) return escapeAttr(url);
+  return '';
+}
+
 export function renderMarkdown(md: string): string {
   let html = md.replace(/[&<>]/g, escapeHtml);
 
@@ -17,8 +40,14 @@ export function renderMarkdown(md: string): string {
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
 
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt: string, src: string) => {
+    const safe = safeImgSrc(src);
+    if (!safe) return escapeAttr(alt);
+    return `<img src="${safe}" alt="${escapeAttr(alt)}" loading="lazy" />`;
+  });
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text: string, href: string) => {
+    return `<a href="${safeHref(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+  });
 
   html = html.replace(/^---$/gm, '<hr />');
 
