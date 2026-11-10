@@ -1,16 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { BlogPost } from '$lib/types';
   import BlogCard from '$lib/components/blog/BlogCard.svelte';
   import Seo from '$lib/components/Seo.svelte';
   import { SITE } from '$lib/config';
-  import { staleWhileRevalidate } from '$lib/utils/cache';
+  import { blogData } from '$data/blog';
 
-  const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const posts: BlogPost[] = blogData;
 
-  let posts = $state<BlogPost[]>([]);
-  let loading = $state(true);
-  let loadError = $state('');
   let selectedTag = $state('');
 
   let allTags = $derived(() => {
@@ -25,25 +21,6 @@
     if (!selectedTag) return posts;
     return posts.filter(p => (p.tags || []).includes(selectedTag));
   });
-
-  async function loadPosts() {
-    if (!BASE) { loading = false; return; }
-    loading = true;
-    loadError = '';
-    const ok = await staleWhileRevalidate<BlogPost[]>(
-      'blog:list',
-      `${BASE}/api/blog`,
-      5 * 60 * 1000,
-      (data) => { posts = Array.isArray(data) ? data : []; loading = false; },
-      (raw) => { const d = (raw as { posts?: BlogPost[] } | null); const list = d?.posts; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as BlogPost[]); return []; },
-    );
-    if (!ok) {
-      loading = false;
-      if (posts.length === 0) loadError = 'Failed to load posts. Check your connection and try again.';
-    }
-  }
-
-  onMount(loadPosts);
 </script>
 
 <svelte:head>
@@ -81,16 +58,7 @@
     </div>
   {/if}
 
-  {#if loading}
-    <div class="blog-loading">Loading...</div>
-  {:else if loadError && filtered().length === 0}
-    <div class="blog-empty" role="alert">
-      {loadError}
-      <div style="margin-top:1rem">
-        <button class="tag-filter" onclick={loadPosts}>Retry</button>
-      </div>
-    </div>
-  {:else if filtered().length > 0}
+  {#if filtered().length > 0}
     <div class="blog-grid">
       {#each filtered() as post}
         <BlogCard {post} />

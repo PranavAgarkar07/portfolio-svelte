@@ -3,7 +3,8 @@
     import { ensureGsap, motionAllowed } from "$lib/motion";
 
     import { theme } from "$lib/stores/theme";
-    import { portfolioData, fallbackCertificates } from "$lib/data";
+    import { portfolioData } from "$lib/data";
+    import { certsData } from '$data/certs';
     import Hero from "$lib/components/Hero.svelte";
     import About from "$lib/components/About.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
@@ -27,50 +28,12 @@
     const { profile, about, skills, projects } = portfolioData;
     const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-    let certificates = $state<Certificate[]>([]);
-    let certsLoading = $state(true);
-    let certsError = $state("");
+    let certificates = $state<Certificate[]>(certsData);
     let badges = $state<Badge[]>([]);
     let marqueeItems = $state<MarqueeItem[]>([]);
     let likes = $state<Record<string, number>>({});
     let userLikes = $state<Record<string, boolean>>({});
     let prefersReducedMotion = $state(false);
-
-    async function fetchCerts() {
-        if (!API_BASE) {
-            certificates = fallbackCertificates;
-            certsLoading = false;
-            return;
-        }
-        // F-P0-4: critical fetch gets an AbortController timeout (8s).
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
-        try {
-            const ok = await staleWhileRevalidate<Certificate[]>(
-                'home:certs',
-                `${API_BASE}/api/certificates`,
-                30 * 60 * 1000,
-                (data) => {
-                    certificates = data.length > 0 ? data : fallbackCertificates;
-                    if (data.length === 0) certsError = "No certificates found on server";
-                    certsLoading = false;
-                },
-            (raw) => {
-                const d = (raw as { certificates?: Certificate[] } | null);
-                if (Array.isArray(raw)) return raw as Certificate[];
-                const list = d?.certificates;
-                return Array.isArray(list) ? list : [];
-            },
-                { signal: ctrl.signal },
-            );
-            if (!ok) {
-                certificates = fallbackCertificates;
-                certsLoading = false;
-            }
-        } finally {
-            clearTimeout(timer);
-        }
-    }
 
     // F-P0-4: below-fold fetches (badges, marquee, likes) — deferred until
     // the projects section nears the viewport. Single-fire guard.
@@ -112,7 +75,6 @@
 
         // F-P0-4: critical fetch first (certs); everything below the fold
         // (badges, marquee, likes) waits for the projects section.
-        void fetchCerts();
 
         let belowFoldObserver: IntersectionObserver | null = null;
         let belowFoldFallback: ReturnType<typeof setTimeout> | undefined;
@@ -379,28 +341,8 @@
     <About {profile} {about} {badges} />
 
     <section id="certifications" class="section-container snap-section">
-        <SectionHeader title="Certifications" count={certsLoading ? undefined : certificates.length} animate />
-        {#if certsLoading}
-            <div class="certs-skeleton-grid">
-                {#each Array(3) as _, i}
-                    <div class="cert-card-wrap">
-                        <div class="cert-skeleton">
-                            <div class="skeleton-thumb"></div>
-                            <div class="skeleton-body">
-                                <Skeleton width="40%" height="10px" />
-                                <Skeleton width="85%" height="16px" />
-                                <Skeleton width="55%" height="10px" />
-                                <div class="skeleton-tags">
-                                    <Skeleton width="50px" height="18px" />
-                                    <Skeleton width="60px" height="18px" />
-                                </div>
-                                <Skeleton width="110px" height="24px" />
-                            </div>
-                        </div>
-                    </div>
-                {/each}
-            </div>
-        {:else if certificates.length > 0}
+        <SectionHeader title="Certifications" count={certificates.length} animate />
+        {#if certificates.length > 0}
             <div class="certs-grid">
                 {#each certificates as cert, i}
                     <div class="cert-card-wrap">
@@ -408,13 +350,8 @@
                     </div>
                 {/each}
             </div>
-        {:else if certsError}
-            <div class="certs-error">
-                <span class="certs-error-text">&#9888; Failed to load certificates</span>
-                <button class="certs-retry-btn" onclick={() => { certsLoading = true; certsError = ''; fetchCerts(); }}>
-                    Retry
-                </button>
-            </div>
+        {:else}
+            <div class="certs-empty">No certificates yet.</div>
         {/if}
     </section>
 

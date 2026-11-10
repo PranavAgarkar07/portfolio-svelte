@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { base } from '$app/paths';
   import { user, isLoggedIn } from '$lib/stores/auth';
@@ -8,64 +7,28 @@
   import CommentSection from '$lib/components/blog/CommentSection.svelte';
   import ImageGallery from '$lib/components/blog/ImageGallery.svelte';
   import Seo from '$lib/components/Seo.svelte';
-  import { staleWhileRevalidate } from '$lib/utils/cache';
+  import { blogData } from '$data/blog';
   import { SITE } from '$lib/config';
 
-  const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const allPosts: BlogPost[] = blogData;
 
+  const slug = $page.params.slug;
   let post = $state<BlogPost | null>(null);
-  let loading = $state(true);
-  let loadError = $state('');
   let rendered = $state('');
   let headings = $state<Array<{ level: number; text: string; id: string }>>([]);
   let activeHeading = $state('');
   let readProgress = $state(0);
 
-  function loadPost() {
-    const slug = $page.params.slug;
-    if (!BASE || !slug) { loading = false; return; }
-    loading = true;
-    loadError = '';
-
-    function applyPost(p: BlogPost | null) {
-      if (!p) return;
-      post = p;
-      if (p?.content_md) {
-        rendered = renderMarkdown(p.content_md);
-        headings = extractHeadings(p.content_md);
+  if (slug) {
+    const found = allPosts.find((p: BlogPost) => p.slug === slug);
+    if (found) {
+      post = found;
+      if (found.content_md) {
+        rendered = renderMarkdown(found.content_md);
+        headings = extractHeadings(found.content_md);
       }
     }
-
-    staleWhileRevalidate<BlogPost>(
-      `blog:post:${slug}`,
-      `${BASE}/api/blog/${encodeURIComponent(slug)}`,
-      5 * 60 * 1000,
-      (data) => { applyPost(data); loading = false; },
-      (raw) => { const d = (raw as { post?: BlogPost } | null); const p = d?.post; if (p && typeof p === 'object') return p; if (raw && typeof raw === 'object' && 'slug' in (raw as Record<string, unknown>)) return (raw as BlogPost); return (null as unknown as BlogPost); },
-    ).then(ok => { if (!ok && !post) { loading = false; loadError = 'Failed to load post. Check your connection and try again.'; } });
   }
-
-  onMount(() => {
-    loadPost();
-
-    const onScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      readProgress = docHeight > 0 ? Math.min(scrollTop / docHeight * 100, 100) : 0;
-
-      for (const h of headings) {
-        const el = document.getElementById(h.id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 120) {
-            activeHeading = h.id;
-          }
-        }
-      }
-    };
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  });
 
   function scrollTo(id: string) {
     const el = document.getElementById(id);
@@ -74,6 +37,27 @@
 
   function shareUrl() {
     return `${SITE.url}/blog/${post?.slug}`;
+  }
+
+  const onScroll = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    readProgress = docHeight > 0 ? Math.min(scrollTop / docHeight * 100, 100) : 0;
+
+    for (const h of headings) {
+      const el = document.getElementById(h.id);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= 120) {
+          activeHeading = h.id;
+        }
+      }
+    }
+  };
+
+  // Initialize scroll state
+  if (typeof window !== 'undefined') {
+    window.addEventListener('scroll', onScroll);
   }
 </script>
 
@@ -121,9 +105,7 @@
 {/if}
 
 <main id="main-content" class="blog-post-page">
-  {#if loading}
-    <div class="post-loading">Loading...</div>
-  {:else if post}
+  {#if post}
     <div class="reading-progress" style="width: {readProgress}%"></div>
 
     {#if post.cover_image}
@@ -206,11 +188,7 @@
 
     <a href="{base}/blog" class="back-link">&larr; Back to Blog</a>
   {:else}
-    <div class="post-error" role="alert">{loadError || 'Post not found.'}
-      {#if loadError}
-        <div style="margin-top:1rem"><button class="back-link" onclick={loadPost}>Retry</button></div>
-      {/if}
-    </div>
+    <div class="post-error" role="alert">Post not found.</div>
   {/if}
 </main>
 
