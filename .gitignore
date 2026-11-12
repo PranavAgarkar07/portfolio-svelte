@@ -31,4 +31,8 @@ DEPLOY.md
 # Agent skills
 .agents/
 .opencode/
-skills-lock.jsonbackend/bootstrap
+.planning/
+skills-lock.json
+
+# Go bootstrap binary
+backend/bootstrap
