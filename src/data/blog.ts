@@ -1,0 +1,19 @@
+import type { BlogPost } from '$lib/types';
+
+export const blogData: BlogPost[] = [
+  {
+    id: "fully-frontend-portfolio",
+    slug: "fully-frontend-portfolio",
+    title: "Building a Fully Frontend Portfolio",
+    content_md: "# Building a Fully Frontend Portfolio\n\nThis post walks through the migration from a Go + Neon + S3 backend to a fully static frontend hosted on GitHub Pages.\n\n## Why go static?\n\nThe previous stack had a Go Fiber backend on Render (sleeping after 15 minutes), Neon Postgres, and AWS S3 for image storage. Each added cost, complexity, and cold-start latency.\n\n## The new stack\n\n- **Hosting:** GitHub Pages (`adapter-static`)\n- **Content:** Markdown files with YAML frontmatter, committed to Git\n- **Images:** Committed to `static/images/` with lazy loading\n- **Contact:** `mailto:` redirect\n- **Comments:** giscus (GitHub Discussions)\n- **Analytics:** Client-side `localStorage` only\n\n## Build pipeline\n\nA small Node script (`scripts/build-content.js`) parses markdown frontmatter and emits `src/data/blog.json` and `src/data/certs.json`. Svelte components import these JSON files directly — no API calls, no backend.",
+    excerpt: "How I migrated my portfolio to a static-only stack on GitHub Pages — markdown + JSON content, no backend server.",
+    cover_image: "/images/blog/fullyStatic.png",
+    tags: ["svelte","static","portfolio"],
+    published: true,
+    published_at: "2026-11-09",
+    created_at: "2026-11-09",
+    updated_at: "2026-11-09",
+  }
+];
+
+export default blogData;

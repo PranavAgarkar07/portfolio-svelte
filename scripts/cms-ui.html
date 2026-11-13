@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PortfolioCMS — offline</title>
+<style>
+  :root {
+    --bg: #0a0e14; --panel: #131a23; --panel2: #161d28;
+    --line: #2a3140; --txt: #e8edf4; --mut: #66728a; --acc: #ff4400;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg); color: var(--txt);
+    font: 14px/1.5 ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+    padding: 24px; min-height: 100vh;
+  }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  h1 { font-size: 15px; letter-spacing: .12em; text-transform: uppercase; }
+  h1 b { color: var(--acc); }
+  .tabs { display: flex; gap: 8px; margin-left: auto; }
+  .tab {
+    border: 1.5px solid var(--line); background: transparent; color: var(--mut);
+    font: inherit; padding: 8px 18px; cursor: pointer; text-transform: uppercase; letter-spacing: .1em;
+  }
+  .tab.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); padding: 16px; }
+  .panel + .panel { margin-top: 16px; }
+  label { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--mut); margin: 12px 0 4px; }
+  label:first-child { margin-top: 0; }
+  input, select, textarea {
+    width: 100%; background: var(--panel2); border: 1px solid var(--line);
+    color: var(--txt); font: inherit; padding: 8px 10px; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--acc); }
+  textarea#body { min-height: 420px; resize: vertical; line-height: 1.6; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn {
+    background: var(--acc); border: none; color: #fff; font: inherit;
+    padding: 10px 18px; cursor: pointer; text-transform: uppercase; letter-spacing: .1em;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.45); margin-top: 16px;
+  }
+  .btn.ghost { background: transparent; border: 1.5px solid var(--line); color: var(--mut); box-shadow: none; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+  .btn:hover { filter: brightness(1.08); }
+  #console {
+    background: #0d1117; border: 1px solid var(--line); padding: 12px;
+    font-size: 12px; color: var(--mut); white-space: pre-wrap; min-height: 74px; margin-top: 4px;
+  }
+  #console b { color: var(--acc); }
+  #dropzone-toast { display: none; }
+  #drop-overlay {
+    display: none; position: fixed; inset: 0; z-index: 50;
+    background: rgba(10, 14, 20, .88); border: 3px dashed var(--acc);
+    align-items: center; justify-content: center; flex-direction: column; gap: 10px;
+  }
+  #drop-overlay.on { display: flex; }
+  #drop-overlay .big { font-size: 22px; letter-spacing: .2em; text-transform: uppercase; color: var(--acc); }
+  #drop-overlay .sm { color: var(--mut); }
+  .coverprev { margin-top: 8px; max-width: 100%; border: 1px solid var(--line); display: none; }
+  .postlist { width: 100%; font-size: 12px; }
+  .thumbbox {
+    border: 1px dashed var(--line); padding: 14px; display: flex; gap: 12px; align-items: center; margin-top: 8px;
+    color: var(--mut); font-size: 12px; min-height: 86px;
+  }
+  .thumbbox img { max-height: 72px; border: 1px solid var(--line); }
+  .chk { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 12px; color: var(--mut); }
+  .chk input { width: auto; }
+  small.dim { color: var(--mut); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><b>~/cms</b> — portfolio offline</h1>
+  <div class="tabs">
+    <button class="tab on" id="tab-blog" onclick="setTab('blog')">Blog</button>
+    <button class="tab" id="tab-certs" onclick="setTab('certs')">Certificates</button>
+  </div>
+</header>
+
+<div id="drop-overlay">
+  <div class="big" id="drop-big">⬒ drop image</div>
+  <div class="sm" id="drop-sm"></div>
+</div>
+
+<!-- ══ BLOG ══ -->
+<div id="tab-blog-page">
+  <div class="grid">
+    <div class="panel">
+      <label>Existing posts</label>
+      <select class="postlist" id="postlist" onchange="loadPost(this.value)"><option value="">— new post —</option></select>
+      <button class="btn ghost" style="margin-top:8px" onclick="newPost()">＋ new post</button>
+
+      <label>Slug (url + filename)</label><input id="f-slug" placeholder="my-new-post" />
+      <label>Title</label><input id="f-title" placeholder="My New Post" oninput="autoSlug()" />
+      <div class="row2">
+        <div><label>Date</label><input id="f-date" placeholder="2026-11-10" /></div>
+        <div><label>Tags (comma)</label><input id="f-tags" placeholder="svelte, static" /></div>
+      </div>
+      <label>Summary (card excerpt)</label><input id="f-summary" placeholder="One line shown on the listing card." />
+      <div class="chk"><input type="checkbox" id="f-published" checked /> <span>published</span></div>
+
+      <label>Cover path</label><input id="f-cover" placeholder="/images/blog/<slug>.jpg" oninput="coverPrev()" />
+      <img id="coverprev" class="coverprev" alt="cover preview" />
+      <div class="chk"><input type="checkbox" id="next-is-cover" /> <span>next drop replaces cover</span></div>
+
+      <button class="btn" onclick="savePost()">save post → build</button>
+      <small class="dim" style="display:block;margin-top:10px">
+        images: drop anywhere on the page.<br>first drop → cover · later drops → inline ![]()<br>(tick “next drop replaces cover” to redo)
+      </small>
+    </div>
+
+    <div class="panel">
+      <label>Body (markdown)</label>
+      <textarea id="body" spellcheck="false" placeholder="# My New Post
+
+Write here. Supports headings, ```code``` (copy buttons), tables, blockquotes…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CERTS ══ -->
+<div id="tab-certs-page" style="display:none">
+  <div class="grid">
+    <div class="panel">
+      <label>Category</label>
+      <select id="c-cat" onchange="refreshCertUI()"></select>
+      <label>Existing certificates (this folder)</label>
+      <select class="postlist" id="certlist" onchange="loadCert(this.value)"><option value="">— new certificate —</option></select>
+
+      <label>Title</label><input id="c-title" />
+      <label>Issuer</label><input id="c-issuer" />
+      <div class="row2">
+        <div><label>Date</label><input id="c-date" placeholder="2026-10-06" /></div>
+        <div><label>Verified</label>
+          <select id="c-verified"><option value="1">yes</option><option value="">no</option></select>
+        </div>
+      </div>
+      <label>Note</label><input id="c-note" placeholder="QR-verified · Score 80/100" />
+      <label>Credential url</label><input id="c-url" placeholder="https://..." />
+      <label>Tags</label><input id="c-tags" placeholder="Machine Learning, Certification" />
+
+      <button class="btn" onclick="saveCert()">save certificate → build</button>
+      <small class="dim" style="display:block;margin-top:10px">
+        documents: drop image or pdf anywhere.<br>pdf → automatic first-page thumbnail.<br>filename derived: title_issuer_date
+      </small>
+    </div>
+
+    <div class="panel">
+      <label>Document</label>
+      <div class="thumbbox" id="c-thumbbox">drop a certificate image or pdf (or click and choose) <input type="file" id="c-file" style="display:none" onchange="filePicked(this.files[0])" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.pdf" /></div>
+      <div style="margin-top:10px"><small class="dim">resolved file:</small> <span id="c-fileout" style="color:var(--acc)">—</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <label>build output</label>
+  <div id="console">ready.</div>
+</div>
+<p style="margin-top:14px;color:var(--mut);font-size:11px">
+  preview: run <b style="color:var(--txt)">npm run dev</b> and open
+  <a style="color:var(--acc)" href="http://localhost:5173/" target="_blank">localhost:5173</a> ·
+  publish: <b style="color:var(--txt)">npm run deploy</b> · all files land in <b style="color:var(--txt)">content/</b> + <b style="color:var(--txt)">static/</b>
+</p>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let tab = 'blog';
+let certFile = '';
+
+function log(m) { $('console').textContent = (m + '').trimEnd(); window.scrollTo(0, document.body.scrollHeight); }
+function toast(e) { log('⚠ ' + (e?.error || e?.message || e)); }
+
+function setTab(t) {
+  tab = t;
+  $('tab-blog').classList.toggle('on', t === 'blog');
+  $('tab-certs').classList.toggle('on', t === 'certs');
+  $('tab-blog-page').style.display = t === 'blog' ? '' : 'none';
+  $('tab-certs-page').style.display = t === 'certs' ? '' : 'none';
+  nextDropEcho();
+}
+
+/* ── drag & drop anywhere ── */
+const ov = $('drop-overlay');
+let dragDepth = 0;
+window.addEventListener('dragenter', (e) => { e.preventDefault(); dragDepth++; ov.classList.add('on'); nextDropEcho(); });
+window.addEventListener('dragleave', (e) => { e.preventDefault(); if (--dragDepth <= 0) { dragDepth = 0; ov.classList.remove('on'); } });
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => {
+  e.preventDefault(); dragDepth = 0; ov.classList.remove('on');
+  const f = e.dataTransfer?.files?.[0];
+  if (f) handleFile(f);
+});
+
+function nextDropEcho() {
+  const coverEmpty = !$('f-cover').value;
+  const forceCover = $('next-is-cover')?.checked;
+  const willCover = tab === 'blog' && (coverEmpty || forceCover);
+  $('drop-big').textContent = tab === 'blog' ? (willCover ? '⬒ → cover' : '⬒ → inline image') : '⬒ → certificate document';
+  $('drop-sm').textContent = tab === 'blog'
+    ? (willCover ? 'static/images/blog/<slug>.<ext>' : 'appended as ![]() at end of body')
+    : 'static/certs/<category>/ via title_issuer_date';
+}
+
+function handleFile(f) {
+  if (tab === 'blog') return uploadBlogImage(f);
+  return uploadCertDoc(f);
+}
+
+/* ── blog ── */
+async function uploadBlogImage(f) {
+  const slug = $('f-slug').value.trim();
+  if (!slug) return log('⚠ fill the slug first — filename comes from it');
+  if (!/\.(jpe?g|png|webp|gif|svg|avif)$/i.test(f.name)) return log('⚠ not an image — pdfs belong to the CERTS tab');
+  const mode = !$('f-cover').value || $('next-is-cover').checked ? 'cover' : 'inline';
+  const fd = new FormData();
+  fd.append('file', f, f.name);
+  fd.append('dest', 'blog');
+  fd.append('slug', slug);
+  fd.append('mode', mode);
+  const r = await (await fetch('/api/image', { method: 'POST', body: fd })).json();
+  if (r.error) return toast(r);
+  if (r.mode === 'cover') {
+    $('f-cover').value = r.url;
+    $('next-is-cover').checked = false;
+    coverPrev();
+    log(`<b>cover saved</b> → static/images/blog/${r.name}\n${r.build?.out || ''}`);
+  } else {
+    const b = $('body');
+    b.value = b.value.trimEnd() + `\n\n![${slug} image](${r.url})\n`;
+    log(`<b>inline saved</b> → ${r.url}\nappended at end of body\n${r.build?.out || ''}`);
+  }
+  nextDropEcho();
+}
+
+function autoSlug() {
+  if (!$('postlist').value) $('f-slug').value = $('f-title').value.toLowerCase()
+    .replace(/['"`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function coverPrev() {
+  const el = $('coverprev');
+  if (!$('f-cover').value) { el.style.display = 'none'; return; }
+  el.src = '/static' + $('f-cover').value + '?t=' + Date.now();
+  el.style.display = 'block';
+}
+
+async function refreshPosts() {
+  const list = await (await fetch('/api/blog')).json();
+  const sel = $('postlist');
+  sel.innerHTML = '<option value="">— new post —</option>' +
+    list.map((p) => `<option value="${p.file}">${p.date || '????'} · ${p.title || p.file}</option>`).join('');
+}
+
+async function loadPost(file) {
+  if (!file) return newPost();
+  const p = await (await fetch('/api/blog-file?file=' + encodeURIComponent(file))).json();
+  if (p.error) return toast(p);
+  $('f-slug').value = p.slug; $('f-title').value = p.title; $('f-date').value = p.date;
+  $('f-summary').value = p.summary; $('f-cover').value = p.cover;
+  $('f-tags').value = (p.tags || []).join(', '); $('f-published').checked = p.published;
+  $('body').value = p.body; $('next-is-cover').checked = false;
+  coverPrev(); nextDropEcho(); log('loaded ' + file);
+}
+
+function newPost() {
+  ['f-slug', 'f-title', 'f-date', 'f-summary', 'f-cover', 'f-tags'].forEach((id) => ($(id).value = ''));
+  $('f-published').checked = true; $('f-tags').value = '';
+  $('body').value = ''; $('coverprev').style.display = 'none';
+  $('postlist').value = ''; nextDropEcho();
+}
+
+async function savePost() {
+  const payload = {
+    slug: $('f-slug').value.trim(),
+    title: $('f-title').value.trim(),
+    date: $('f-date').value.trim(),
+    summary: $('f-summary').value.trim(),
+    tags: $('f-tags').value.split(',').map((t) => t.trim()).filter(Boolean),
+    published: $('f-published').checked,
+    cover: $('f-cover').value.trim(),
+    body: $('body').value,
+  };
+  if (!payload.slug || !payload.date) return log('⚠ slug + date are required');
+  const r = await (await fetch('/api/blog-save', { method: 'POST', body: JSON.stringify(payload) })).json();
+  if (r.error) return toast(r);
+  log(`<b>saved</b> content/blog/${payload.slug}.md\n${r.build?.out || ''}`);
+  refreshPosts();
+  $('postlist').value = payload.slug + '.md';
+}
+
+/* ── certs ── */
+let CERTS = {};
+async function refreshCerts() {
+  CERTS = await (await fetch('/api/certs')).json();
+  const sel = $('c-cat');
+  sel.innerHTML = Object.keys(CERTS).map((c) => `<option>${c}</option>`).join('');
+  refreshCertUI();
+}
+
+function refreshCertUI() {
+  const cat = $('c-cat').value;
+  const sel = $('certlist');
+  sel.innerHTML = '<option value="">— new certificate —</option>' +
+    (CERTS[cat] || []).map((c) => `<option value="${c.file}">${c.date || '????'} · ${c.title}</option>`).join('');
+  $('c-fileout').textContent = certFile || '—';
+}
+
+function loadCert(file) {
+  if (!file) return newCert();
+  const c = (CERTS[$('c-cat').value] || []).find((x) => x.file === file);
+  if (!c) return;
+  $('c-title').value = c.title || ''; $('c-issuer').value = c.issuer || '';
+  $('c-date').value = c.date || ''; $('c-note').value = c.note || '';
+  $('c-url').value = c.credential_url || ''; $('c-tags').value = (c.tags || []).join(', ');
+  $('c-verified').value = c.is_verified ? '1' : '';
+  certFile = `certs/${$('c-cat').value}/${c.file}`;
+  $('c-fileout').textContent = certFile;
+  const ext = c.file.split('.').pop().toLowerCase();
+  if (ext === 'pdf') {
+    const name = c.file.slice(0, -4);
+    $('c-thumbbox').innerHTML =
+      `<img src="/static/certs/thumbs/${name}.jpg?t=${Date.now()}" alt="thumb" onerror="this.replaceWith('thumbnail missing — drop the pdf again')" /><span>${c.file}</span>`;
+  } else {
+    $('c-thumbbox').innerHTML = `<img src="/static/certs/${$('c-cat').value}/${c.file}?t=${Date.now()}" alt="doc" /><span>${c.file}</span>`;
+  }
+}
+
+function newCert() {
+  ['c-title', 'c-issuer', 'c-date', 'c-note', 'c-url', 'c-tags'].forEach((id) => ($(id).value = ''));
+  $('c-verified').value = '1';$('certlist').value = '';
+  certFile = ''; $('c-fileout').textContent = '—';
+  $('c-thumbbox').innerHTML = 'drop a certificate image or pdf <input type="file" id="c-file" style="display:none" onchange="filePicked(this.files[0])" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.pdf" />';
+}
+
+function filePicked(f) { if (f) uploadCertDoc(f); }
+$('c-thumbbox').addEventListener('click', (e) => { if (e.target.tagName !== 'IMG') $('c-file')?.click(); });
+
+async function uploadCertDoc(f) {
+  const title = $('c-title').value.trim();
+  if (!title) return log('⚠ fill the title first — filename comes from it');
+  if (!/\.(jpe?g|png|webp|gif|svg|avif|pdf)$/i.test(f.name)) return log('⚠ unsupported type');
+  const fd = new FormData();
+  fd.append('file', f, f.name);
+  fd.append('category', $('c-cat').value);
+  fd.append('title', title);
+  fd.append('issuer', $('c-issuer').value.trim());
+  fd.append('date', $('c-date').value.trim());
+  const r = await (await fetch('/api/cert-doc', { method: 'POST', body: fd })).json();
+  if (r.error) return toast(r);
+  certFile = r.file;
+  $('c-fileout').textContent = certFile;
+  refreshCertUI();
+  if (r.name.endsWith('.pdf')) {
+    const name = r.name.slice(0, -4);
+    $('c-thumbbox').innerHTML =
+      `<img src="/static/certs/thumbs/${name}.jpg?t=${Date.now()}" alt="thumb" onerror="this.replaceWith('thumbnail failed — see log')" /><span>${r.name}</span>`;
+  } else {
+    $('c-thumbbox').innerHTML = `<img src="/static/certs/${$('c-cat').value}/${r.name}?t=${Date.now()}" alt="doc" /><span>${r.name}</span>`;
+  }
+  log(`<b>doc saved</b> → static/${certFile}\n${r.thumbError ? '⚠ ' + r.thumbError : 'pdf thumbnail generated ✓'}`);
+}
+
+async function saveCert() {
+  const payload = {
+    category: $('c-cat').value,
+    title: $('c-title').value.trim(),
+    issuer: $('c-issuer').value.trim(),
+    date: $('c-date').value.trim(),
+    note: $('c-note').value.trim(),
+    credential_url: $('c-url').value.trim(),
+    tags: $('c-tags').value.split(',').map((t) => t.trim()).filter(Boolean),
+    is_verified: $('c-verified').value === '1',
+    file: certFile,
+  };
+  if (!payload.title) return log('⚠ title required');
+  const r = await (await fetch('/api/cert-save', { method: 'POST', body: JSON.stringify(payload) })).json();
+  if (r.error) return toast(r);
+  log(`<b>saved</b> content/certs/${payload.category}/${r.file}\n${r.build?.out || ''}`);
+  CERTS = await (await fetch('/api/certs')).json();
+  refreshCertUI();
+  await refreshCerts();
+}
+
+/* boot */
+refreshPosts();
+refreshCerts();
+</script>
+</body>
+</html>

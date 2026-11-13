@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "title": "NPTEL — Privacy and Security in Online Social Media",
+    "issuer": "NPTEL (IIT Kharagpur)",
+    "date": "2024-10",
+    "credential_url": "https://archive.nptel.ac.in/noc/Ecertificate/",
+    "image_url": "/images/certs/cert-nptl.png",
+    "thumb_url": "/images/certs/cert-nptl.png",
+    "tags": [
+      "Security",
+      "Social Media",
+      "Privacy"
+    ],
+    "is_verified": true,
+    "display_order": 1,
+    "created_at": "2024-10-01T00:00:00Z"
+  }
+]
