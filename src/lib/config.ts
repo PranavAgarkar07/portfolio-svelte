@@ -1,4 +1,3 @@
-const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const PROD = import.meta.env.PROD;
 
 export const SITE = {
@@ -13,7 +12,6 @@ export const SITE = {
   image: PROD
     ? 'https://pranavagarkar07.github.io/portfolio-svelte/og-image.png'
     : 'http://localhost:5173/portfolio-svelte/og-image.png',
-  apiBase: BASE,
 };
 
-export const STATIC_ROUTES = ['', '/about', '/projects', '/blog', '/contact'];
+export const STATIC_ROUTES = ['', '/blog', '/showcase'];

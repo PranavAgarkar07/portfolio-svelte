@@ -234,67 +234,7 @@ body.light-mode .skill-level-bar {
     background: rgba(0, 0, 0, 0.08);
 }
 
-/* DevLog */
-body.light-mode .activity-card {
-    background: #ffffff;
-    border: 2px solid #d4d6da;
-    border-left: 4px solid #d4d6da;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-
-body.light-mode .activity-card::before {
-    display: block;
-    background: repeating-linear-gradient(45deg,
-            transparent,
-            transparent 10px,
-            rgba(0, 0, 0, 0.03) 10px,
-            rgba(0, 0, 0, 0.03) 20px);
-}
-
-body.light-mode .activity-card:hover {
-    background: #ffffff;
-    border-color: #18181b;
-    border-left-color: var(--accent);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
-
-body.light-mode .activity-card .card-header {
-    border-bottom: 1px dashed var(--wire-color);
-}
-
-body.light-mode .activity-card .status-dot {
-    background-color: #d4d6da;
-    border: 1px solid #a1a1aa;
-}
-
-body.light-mode .activity-card .status-dot.pulsing {
-    background-color: var(--accent);
-    border-color: var(--accent);
-}
-
-body.light-mode .activity-card .meta {
-    background: var(--surface-dark);
-    color: #52525b;
-    border: 1px solid var(--wire-color);
-}
-
-body.light-mode .activity-card .skeleton-text {
-    background: rgba(0, 0, 0, 0.06);
-}
-
 /* Hero */
-body.light-mode .hero-status-dot.available {
-    background: #008f5e;
-}
-
-body.light-mode .hero-status-value {
-    color: var(--text-primary);
-}
-
-body.light-mode .hero-status-value.available {
-    color: #008f5e;
-}
-
 body.light-mode .hero-scroll-line line {
     stroke: var(--accent);
 }

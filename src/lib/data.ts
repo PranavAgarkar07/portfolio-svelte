@@ -2,13 +2,13 @@ import avatar from "$lib/assets/avatar.webp";
 
 // Portfolio Data
 export const portfolioData = {
-  profile: {
-    name: "Pranav Agarkar",
+    profile: {
+        name: "Pranav Agarkar",
     role: "Fullstack Developer",
     tagline:
-      "Building secure, high-throughput backends with Django and Go. 2+ years of full-stack experience turning complex problems into production-ready systems.",
+        "B.Tech CSE student building production-grade systems — P2P networking tools, encrypted APIs, and ML-powered dashboards. Seeking internships & early-career SDE roles.",
     location: "Solapur, India",
-    status: "Open to Opportunities",
+    status: "Seeking Internships & SDE Roles",
     socials: [
       {
         name: "GitHub",
@@ -30,7 +30,7 @@ export const portfolioData = {
       },
       {
         name: "Resume",
-        url: "./Pranav_Agarkar_Resume.pdf",
+        url: "/Pranav_Agarkar_Resume.pdf",
         label: "RESUME",
         icon: "file",
       },
@@ -38,92 +38,47 @@ export const portfolioData = {
     avatar: avatar, // Asset path
   },
   about: {
-    bio: "2nd Year CSE student at Walchand Institute of Technology, Solapur. I build full-stack applications with Django and React/Svelte, focusing on clean architecture, secure data handling, and modern UI/UX. From encrypted task managers to offline P2P file transfer systems—I enjoy solving real problems with code.",
+    bio: "3rd Year B.Tech CSE student (9.0 CGPA) at Walchand Institute of Technology, Solapur. I build production-grade systems with Go, Django, and modern frontend frameworks. From zero-knowledge encrypted task APIs to offline P2P file transfer with AES-256-GCM and auto-discovery — I engineer secure, real-world solutions. AICTE internship in Generative AI & Agentic Systems (2026). Open to internships and early-career SDE roles across India.",
     stats: [
-      { label: "EXPERIENCE", value: "2+ Years" },
-      { label: "EDUCATION", value: "B.Tech CSE" },
-      { label: "TECH STACK", value: "Full Stack" },
-      { label: "STATUS", value: "Available" },
+      { label: "CGPA", value: "9.0 / 10" },
+      { label: "GRADUATION", value: "May 2028" },
+      { label: "FOCUS", value: "Systems + Web" },
+      { label: "LOCATION", value: "Solapur / Remote" },
     ],
   },
   skills: [
     {
-      category: "Core Stack",
+      category: "Languages",
       items: [
-        {
-          name: "Python",
-          icon: "devicon-python-plain",
-          level: "Expert",
-          projects: ["TaskVault Lite", "KisanRakshak"],
-        },
-        {
-          name: "Django",
-          icon: "devicon-django-plain",
-          level: "Expert",
-          projects: ["TaskVault Lite", "KisanRakshak"],
-        },
-        { name: "Linux", icon: "devicon-linux-plain", level: "Expert" },
-        {
-          name: "React",
-          icon: "devicon-react-original colored",
-          level: "Proficient",
-          projects: ["TaskVault Lite", "KisanRakshak"],
-        },
-      ],
-    },
-    {
-      category: "Proficient",
-      items: [
+        { name: "Python", icon: "devicon-python-plain", level: "Expert", projects: ["TaskVault Lite", "KisanRakshak"] },
+        { name: "Go", icon: "devicon-go-original-wordmark colored", level: "Proficient", projects: ["BeamSync", "KisanRakshak"] },
+        { name: "JavaScript", icon: "devicon-javascript-plain colored", level: "Proficient", projects: ["TaskVault Lite", "KisanRakshak"] },
         { name: "C", icon: "devicon-c-plain colored", level: "Proficient" },
-        {
-          name: "JavaScript",
-          icon: "devicon-javascript-plain colored",
-          level: "Proficient",
-          projects: ["TaskVault Lite", "KisanRakshak"],
-        },
-        { name: "Git", icon: "devicon-git-plain colored", level: "Proficient" },
-        {
-          name: "HTML5/CSS3",
-          icon: "devicon-html5-plain colored",
-          level: "Expert",
-        },
+        { name: "Kotlin", icon: "devicon-kotlin-plain colored", level: "Familiar", projects: ["BeamSync Mobile"] },
+        { name: "Bash", icon: "devicon-bash-plain", level: "Proficient" },
+        { name: "SQL", icon: "devicon-postgresql-plain colored", level: "Proficient" },
       ],
     },
     {
-      category: "Exploring",
+      category: "Backend & Systems",
       items: [
-        {
-          name: "Go",
-          icon: "devicon-go-original-wordmark colored",
-          level: "Proficient",
-          projects: ["BeamSync", "KisanRakshak"],
-        },
-        {
-          name: "Svelte",
-          icon: "devicon-svelte-plain colored",
-          level: "Proficient",
-          projects: ["BeamSync", "Portfolio"],
-        },
-        {
-          name: "Docker",
-          icon: "devicon-docker-plain colored",
-          level: "Familiar",
-        },
-        {
-          name: "AWS",
-          icon: "devicon-amazonwebservices-plain-wordmark colored",
-          level: "Familiar",
-        },
-        {
-          name: "K8s",
-          icon: "devicon-kubernetes-plain colored",
-          level: "Familiar",
-        },
-        {
-          name: "Rust",
-          icon: "devicon-rust-plain",
-          level: "Familiar",
-        },
+        { name: "Django", icon: "devicon-django-plain", level: "Expert", projects: ["TaskVault Lite", "KisanRakshak"] },
+        { name: "Django REST", icon: "devicon-django-plain", level: "Expert", projects: ["TaskVault Lite"] },
+        { name: "Linux", icon: "devicon-linux-plain", level: "Expert" },
+        { name: "Git", icon: "devicon-git-plain colored", level: "Proficient" },
+        { name: "Docker", icon: "devicon-docker-plain colored", level: "Familiar" },
+        { name: "AWS", icon: "devicon-amazonwebservices-plain-wordmark colored", level: "Familiar" },
+        { name: "K8s", icon: "devicon-kubernetes-plain colored", level: "Familiar" },
+      ],
+    },
+    {
+      category: "Frontend & ML",
+      items: [
+        { name: "React", icon: "devicon-react-original colored", level: "Proficient", projects: ["TaskVault Lite", "KisanRakshak"] },
+        { name: "Svelte", icon: "devicon-svelte-plain colored", level: "Proficient", projects: ["BeamSync", "Portfolio"] },
+        { name: "HTML5/CSS3", icon: "devicon-html5-plain colored", level: "Expert" },
+        { name: "XGBoost / ML", icon: "devicon-python-plain", level: "Familiar", projects: ["KisanRakshak"] },
+        { name: "Rust", icon: "devicon-rust-plain", level: "Familiar" },
       ],
     },
   ],
@@ -291,60 +246,3 @@ export const portfolioData = {
     },
   ],
 };
-
-export const fallbackCertificates = [
-  {
-    id: 1,
-    title: "NPTEL — Privacy and Security in Online Social Media",
-    issuer: "NPTEL (IIT Kharagpur)",
-    date: "2024-10",
-    credential_url: "https://archive.nptel.ac.in/noc/Ecertificate/",
-    image_url:
-      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-nptl.png",
-    tags: ["Security", "Social Media", "Privacy"],
-    is_verified: true,
-    display_order: 1,
-    created_at: "2024-10-01T00:00:00Z",
-  },
-  {
-    id: 2,
-    title: "Red Hat — Python Programming",
-    issuer: "Red Hat Academy",
-    date: "2024-08",
-    credential_url:
-      "https://www.redhat.com/en/services/training-and-certification",
-    image_url:
-      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-python.png",
-    tags: ["Python", "Red Hat"],
-    is_verified: true,
-    display_order: 2,
-    created_at: "2024-08-01T00:00:00Z",
-  },
-  {
-    id: 3,
-    title: "Red Hat — Linux Essentials",
-    issuer: "Red Hat Academy",
-    date: "2024-06",
-    credential_url:
-      "https://www.redhat.com/en/services/training-and-certification",
-    image_url:
-      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-redhat-linux.png",
-    tags: ["Linux", "Red Hat"],
-    is_verified: true,
-    display_order: 3,
-    created_at: "2024-06-01T00:00:00Z",
-  },
-  {
-    id: 4,
-    title: "Joomla! — Web Development Basics",
-    issuer: "Joomla! Official",
-    date: "2024-04",
-    credential_url: "https://www.joomla.org/",
-    image_url:
-      "https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com/static/cert-joomla.jpeg",
-    tags: ["Joomla", "CMS", "Web Development"],
-    is_verified: false,
-    display_order: 4,
-    created_at: "2024-04-01T00:00:00Z",
-  },
-];

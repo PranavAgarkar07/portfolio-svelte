@@ -1,8 +1,7 @@
 import { browser } from "$app/environment";
 
 const SESSION_KEY = "portfolio_analytics_session";
-const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-const ANALYTICS_BASE = BASE + "/api/v1/analytics";
+const EVENTS_KEY = "portfolio_analytics_events";
 
 let sessionId: string | null = null;
 
@@ -81,6 +80,7 @@ function getOrCreateSessionId(): string {
 
 export function getSessionId(): string | null {
   if (!browser) return null;
+  if (!sessionId) sessionId = getOrCreateSessionId();
   return sessionId;
 }
 
@@ -92,159 +92,84 @@ function hasAnalyticsConsent(): boolean {
   }
 }
 
-export async function initAnalytics(): Promise<void> {
-  if (!browser || !BASE || sessionId) return;
+export function initAnalytics(): void {
+  if (!browser) return;
   if (!hasAnalyticsConsent()) return;
-
   sessionId = getOrCreateSessionId();
+}
 
-  const payload = {
-    id: sessionId,
-    country: "",
-    city: "",
-    referrer: document.referrer || "",
+export function pageview(path: string): void {
+  if (!browser || !hasAnalyticsConsent()) return;
+  const session = getSessionId();
+  if (!session) return;
+  const event: AnalyticsEvent = {
+    type: "pageview",
+    path,
+    session_id: session,
+    ts: Date.now(),
+    referrer: document.referrer,
     source: getSource(),
     device: getDeviceType(),
     os: getOS(),
     browser: getBrowser(),
     theme: getTheme(),
   };
-
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
-    let resp: Response;
-    try {
-      resp = await fetch(`${ANALYTICS_BASE}/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: ctrl.signal,
-      });
-    } finally {
-      clearTimeout(timer);
-    }
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      console.warn("analytics: session POST failed", resp.status, text);
-      sessionId = null;
-    }
-  } catch (e) {
-    console.warn("analytics: session POST error", e);
-    sessionId = null;
-  }
+  pushEvent(event);
 }
 
-export function trackEvent(type: string, target: string, value?: string): void {
-  if (!browser || !BASE || !sessionId) return;
-
-  const payload = [{
-    session_id: sessionId,
-    type,
-    target,
-    value: value || "",
+export function event(name: string, data?: Record<string, string>): void {
+  if (!browser || !hasAnalyticsConsent()) return;
+  const session = getSessionId();
+  if (!session) return;
+  const event: AnalyticsEvent = {
+    type: "event",
+    name,
+    data,
+    session_id: session,
     ts: Date.now(),
-  }];
-
-  // P1-5: keepalive so pageview/click events survive pagehide.
-  fetch(`${ANALYTICS_BASE}/e`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    keepalive: true,
-  }).then(r => {
-    if (!r.ok) r.text().then(t => console.warn("analytics: events POST failed", r.status, t));
-  }).catch(() => {});
+  };
+  pushEvent(event);
 }
 
-// --- Project Likes ---
-
-const VISITOR_KEY = "portfolio_visitor_id";
-
-function getOrCreateVisitorId(): string {
+export function dumpAnalytics(): AnalyticsEvent[] {
+  if (!browser) return [];
   try {
-    let id = localStorage.getItem(VISITOR_KEY);
-    if (!id) {
-      id = generateUUID();
-      localStorage.setItem(VISITOR_KEY, id);
-    }
-    return id;
+    const raw = localStorage.getItem(EVENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return generateUUID();
+    return [];
   }
 }
 
-function getFingerprint(): string {
-  return [
-    navigator.userAgent,
-    screen.width,
-    screen.height,
-    screen.colorDepth,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    navigator.platform,
-    navigator.language,
-  ].join("|");
-}
-
-async function sha256(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf)).slice(0, 16).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-// P1-5: memoize the visitor token — crypto.subtle.digest per call was
-// recomputed on every likes fetch/toggle.
-let visitorTokenPromise: Promise<string> | null = null;
-
-export async function getVisitorToken(): Promise<string> {
-  if (!browser) return "";
-  if (!visitorTokenPromise) {
-    visitorTokenPromise = (async () => {
-      try {
-        return await sha256(getOrCreateVisitorId() + "|" + getFingerprint());
-      } catch {
-        visitorTokenPromise = null;
-        return getOrCreateVisitorId();
-      }
-    })();
-  }
-  return visitorTokenPromise;
-}
-
-async function fetchJsonWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 8000): Promise<Response> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+export function clearAnalytics(): void {
+  if (!browser) return;
   try {
-    return await fetch(url, { ...init, signal: ctrl.signal });
-  } finally {
-    clearTimeout(timer);
-  }
+    localStorage.removeItem(EVENTS_KEY);
+  } catch {}
 }
 
-export async function fetchProjectLikes(): Promise<{ likes: Record<string, number>; user_likes: Record<string, boolean> }> {
-  if (!browser || !BASE) return { likes: {}, user_likes: {} };
-  const token = await getVisitorToken();
-  try {
-    const resp = await fetchJsonWithTimeout(`${BASE}/api/projects/likes?visitor_token=${encodeURIComponent(token)}`);
-    if (!resp.ok) return { likes: {}, user_likes: {} };
-    return resp.json();
-  } catch {
-    return { likes: {}, user_likes: {} };
-  }
+interface AnalyticsEvent {
+  type: "pageview" | "event";
+  session_id: string;
+  ts: number;
+  path?: string;
+  name?: string;
+  data?: Record<string, string>;
+  referrer?: string;
+  source?: string;
+  device?: string;
+  os?: string;
+  browser?: string;
+  theme?: string;
 }
 
-export async function toggleProjectLike(projectName: string, liked: boolean): Promise<number> {
-  if (!browser || !BASE) return -1;
-  const visitorToken = await getVisitorToken();
+function pushEvent(event: AnalyticsEvent): void {
   try {
-    const resp = await fetchJsonWithTimeout(`${BASE}/api/projects/like`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_name: projectName, visitor_token: visitorToken, liked }),
-    });
-    if (!resp.ok) return -1;
-    const data = await resp.json();
-    return data.likes;
-  } catch {
-    return -1;
-  }
+    const raw = localStorage.getItem(EVENTS_KEY);
+    const events: AnalyticsEvent[] = raw ? JSON.parse(raw) : [];
+    events.push(event);
+    // Keep only last 500 events to avoid unbounded growth
+    if (events.length > 500) events.splice(0, events.length - 500);
+    localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+  } catch {}
 }

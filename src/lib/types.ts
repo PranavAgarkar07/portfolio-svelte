@@ -1,17 +1,23 @@
-export interface DevLogResponse {
-  summary: string;
-  last_update: string;
-  source: "cache" | "live" | "stale-cache";
-}
-
 export interface Certificate {
   id: number;
   title: string;
   issuer: string;
   date: string;
+  /** Source folder, e.g. "01_Internships" (mirrors the documents directory). */
+  category: string;
+  /** Human-readable category name. */
+  category_label: string;
+  /** Folder-order rank (01 → 1) used for the default showcase sorting. */
+  category_rank: number;
+  /** Document type: "pdf" opens in a new tab; "image" opens in the lightbox. */
+  kind: "pdf" | "image";
+  /** Static path of the actual document (committed to static/certs/). */
+  file_url: string;
+  /** Small evidence line, e.g. "AICTE ID 2335036 · 6 weeks". */
+  note: string;
   credential_url: string;
+  /** Display thumbnail — generated first-page JPG for PDFs, the file itself for images. */
   image_url: string;
-  thumb_url?: string;
   tags: string[];
   is_verified: boolean;
   display_order: number;

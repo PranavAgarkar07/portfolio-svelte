@@ -37,11 +37,6 @@ sw.addEventListener("fetch", (event) => {
 
 	if (event.request.method !== "GET") return;
 
-	if (event.request.url.includes("/api/")) {
-		event.respondWith(networkFirst(event.request));
-		return;
-	}
-
 	if (
 		event.request.url.includes("/_app/immutable/") ||
 		event.request.url.match(/\.(js|css|woff2?|png|webp|svg|jpg|jpeg)$/)

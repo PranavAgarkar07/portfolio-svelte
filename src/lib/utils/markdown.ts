@@ -1,3 +1,6 @@
+import DOMPurify from 'dompurify';
+import { base } from '$app/paths';
+
 function escapeAttr(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -16,8 +19,10 @@ function safeHref(raw: string): string {
 function safeImgSrc(raw: string): string {
   const url = raw.trim();
   if (/^https?:\/\/[^\s"']+$/i.test(url)) return escapeAttr(url);
-  if (/^\/[^\s"']*$/.test(url)) return escapeAttr(url);
-  if (/^[^:\s"'][\w\-./?#@+%&=;:~]*$/.test(url)) return escapeAttr(url);
+  // Root-absolute URLs point at GitHub Pages domain root — every static asset
+  // actually lives under the site's base path, so prefix it.
+  if (/^\/[^\s"']*$/.test(url)) return escapeAttr(`${base}${url}`);
+  if (/^[^:\s"'][\w\-./?#@+%&=;:~]*$/.test(url)) return escapeAttr(`${base}/${url}`);
   return '';
 }
 
@@ -25,7 +30,7 @@ export function renderMarkdown(md: string): string {
   let html = md.replace(/[&<>]/g, escapeHtml);
 
   html = html.replace(/^```(\w*)\n([\s\S]*?)```$/gm, (_, lang, code) => {
-    const langAttr = lang ? ` class="lang-${lang}"` : '';
+    const langAttr = lang ? ` class="lang-${escapeHtml(lang)}"` : '';
     return `<pre><code${langAttr}>${code.trim()}</code></pre>`;
   });
 
@@ -81,7 +86,22 @@ export function renderMarkdown(md: string): string {
   html = html.replace(/<blockquote>\s*<p>/g, '<blockquote><p>');
   html = html.replace(/<\/p>\s*<\/blockquote>/g, '</p></blockquote>');
 
-  return '<p>' + html + '</p>';
+  return '<p>' + sanitizeHtml(html) + '</p>';
+}
+
+/**
+ * DOMPurify is a browser binding — under SSR prerender its `.sanitize`
+ * is unavailable. Server output is safe regardless: the pipeline escapes
+ * all raw input, hrefs and srcs are allowlisted, and the client re-runs
+ * this same function with DOMPurify on hydration.
+ */
+function sanitizeHtml(h: string) {
+  try {
+    if (typeof DOMPurify.sanitize === 'function') return DOMPurify.sanitize(h);
+  } catch {
+    /* fall through */
+  }
+  return h;
 }
 
 function escapeHtml(s: string): string {

@@ -14,10 +14,17 @@ const config = {
 			strict: true
 		}),
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/portfolio-svelte' : ''
+			base: process.env.NODE_ENV === 'production' ? '/portfolio-svelte' : '',
+			// Emit base-absolute URLs (/portfolio-svelte/blog…) for every link —
+			// the default per-page-relative mode resolves wrongly when a page is
+			// served at an unexpected URL (e.g. 404.html fallback, /blog w/o slash).
+			relative: false
 		},
 		prerender: {
 			handleMissingId: 'ignore'
+		},
+		alias: {
+			'$data': 'src/data'
 		}
 	}
 };
