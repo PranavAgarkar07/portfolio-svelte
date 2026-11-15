@@ -16,7 +16,7 @@
         "Email:    pranavagarkar8@gmail.com",
         "GitHub:   github.com/PranavAgarkar07",
         "LinkedIn: linkedin.com/in/pranavagarkar",
-        "Resume:   ./Pranav_Agarkar_Resume.pdf",
+        "Resume:   /Pranav_Agarkar_Resume.pdf",
     ];
 
     const commands: Record<string, () => string | string[] | void> = {
@@ -60,7 +60,7 @@
     };
 
     function openMail() {
-        window.location.href = "mailto:pranavagarkar8@gmail.com";
+        window.open("mailto:pranavagarkar8@gmail.com", '_blank');
         return "Opening mail client...";
     }
 

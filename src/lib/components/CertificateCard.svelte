@@ -11,6 +11,10 @@
 
     function openLightbox(e: MouseEvent) {
         e.preventDefault();
+        if (certificate.kind === "pdf") {
+            window.open(certificate.file_url, "_blank");
+            return;
+        }
         try {
             (Lightbox as any).instance.open(certificate.image_url, imageLink!);
         } catch {
@@ -48,7 +52,9 @@
         return `${month} ${parts[0]}`;
     }
 
-    let showThumb = $derived(!!certificate.thumb_url && !thumbFailed);
+    let showThumb = $derived(!!certificate.image_url && !thumbFailed);
+    const isPdf = $derived(certificate.kind === "pdf");
+    const openLabel = $derived(isPdf ? "PDF" : "View");
 </script>
 
 <article
@@ -59,18 +65,20 @@
 >
     {#if certificate.image_url}
         <a
-            href={certificate.image_url}
+            href={isPdf ? certificate.file_url : certificate.image_url}
             class="cert-image-link"
-            data-lightbox="certificates"
+            data-lightbox={isPdf ? undefined : "certificates"}
             data-caption="{certificate.title} — {certificate.issuer}"
-            aria-label="View {certificate.title} certificate"
+            aria-label={isPdf
+                ? `Open ${certificate.title} certificate (PDF) in a new tab`
+                : `View ${certificate.title} certificate`}
             tabindex="0"
             bind:this={imageLink}
             onclick={openLightbox}
         >
             {#if showThumb}
                 <img
-                    src={certificate.thumb_url}
+                    src={certificate.image_url}
                     alt="{certificate.title} certificate"
                     class="cert-thumb"
                     loading="lazy"
@@ -79,10 +87,15 @@
                         thumbFailed = true;
                     }}
                 />
+                <!-- Persistent chips: always visible (incl. touch, where the
+                     hover-only overlay stays hidden) -->
+                <span class="cert-chip cert-chip-type" class:accent={isPdf}>
+                    {isPdf ? "PDF" : "Image"}
+                </span>
+                <span class="cert-chip cert-chip-idx" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                </span>
                 <span class="cert-image-overlay">
-                    <span class="cert-image-index"
-                        >{String(index + 1).padStart(2, "0")}</span
-                    >
                     <span class="cert-image-action">
                         <svg
                             width="14"
@@ -98,7 +111,7 @@
                                 d="m21 21-4.35-4.35"
                             />
                         </svg>
-                        <span>View</span>
+                        <span>{openLabel}</span>
                     </span>
                 </span>
             {:else}
@@ -112,12 +125,26 @@
 
     <div class="cert-content">
         <div class="cert-meta">
+            <span class="cert-cat">{certificate.category_label}</span>
             {#if certificate.date}
                 <time class="cert-date">{formatDate(certificate.date)}</time>
             {/if}
             {#if certificate.is_verified}
                 <span class="cert-verified">
-                    <span class="cert-verified-dot"></span>
+                    <svg
+                        class="cert-verified-check"
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="3.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
                     Verified
                 </span>
             {/if}
@@ -125,6 +152,10 @@
 
         <h3 class="cert-title">{certificate.title}</h3>
         <p class="cert-issuer">{certificate.issuer}</p>
+
+        {#if certificate.note}
+            <p class="cert-note">{certificate.note}</p>
+        {/if}
 
         {#if certificate.tags && certificate.tags.length > 0}
             <div class="cert-tags">
@@ -195,7 +226,6 @@
         content: "";
         position: absolute;
         inset: -1px;
-        border-radius: inherit;
         pointer-events: none;
         opacity: 0;
         transition: opacity 0.35s ease;
@@ -206,9 +236,10 @@
         border-color: rgba(255, 68, 0, 0.25);
         border-left-color: var(--accent, #ff4400);
         transform: translateY(-4px);
+        /* Neobrutalist offset shadow — matches the site's hero language */
         box-shadow:
-            0 8px 32px rgba(255, 68, 0, 0.06),
-            0 2px 8px rgba(0, 0, 0, 0.2);
+            5px 5px 0 rgba(0, 0, 0, 0.4),
+            0 10px 28px rgba(0, 0, 0, 0.25);
     }
 
     .cert-card:hover::after {
@@ -226,6 +257,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Landscape 4:3 frame (w:h) — every certificate in the set is a
+           landscape document (A4-landscape ≈1.41, letter-landscape ≈1.29),
+           so the horizontal frame shows each one essentially complete */
         aspect-ratio: 4 / 3;
         background: #070a0f;
         border-bottom: 1px solid rgba(255, 255, 255, 0.03);
@@ -277,22 +311,63 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        /* contain, not cover — the complete certificate stays visible;
+           certs deviate ≤ ~6% from 4:3, so letterbox bars stay minimal */
+        object-fit: contain;
         z-index: 0;
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .cert-card:hover .cert-thumb {
         transform: scale(1.04);
     }
 
-    /* ── Image overlay (index + action on hover) ── */
+    /* ── Persistent chips (type + index) ── */
+
+    .cert-chip {
+        position: absolute;
+        top: 10px;
+        z-index: 4;
+        font-family: var(--font-body);
+        font-size: 0.52rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        line-height: 1;
+        padding: 4px 8px;
+        color: rgba(255, 255, 255, 0.8);
+        background: #0a0d13;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        pointer-events: none;
+    }
+
+    .cert-chip-type {
+        left: 10px;
+    }
+
+    .cert-chip-type.accent {
+        color: var(--accent, #ff4400);
+        border-color: rgba(255, 68, 0, 0.55);
+        background: rgba(255, 68, 0, 0.1);
+    }
+
+    .cert-chip-idx {
+        right: 10px;
+        font-family: var(--font-heading);
+        color: rgba(255, 255, 255, 0.55);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .cert-card:hover .cert-chip-idx {
+        color: rgba(255, 255, 255, 0.85);
+        border-color: rgba(255, 68, 0, 0.4);
+    }
+
+    /* ── Image overlay (hover action) ── */
 
     .cert-image-overlay {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
+        justify-content: center;
         position: relative;
         z-index: 3;
         transform: translateY(6px);
@@ -308,11 +383,50 @@
         opacity: 1;
     }
 
-    /* Hover not needed on touch — keep hints visible */
+    /* Hover not needed on touch — chips stay visible instead */
     @media (hover: none) and (pointer: coarse) {
         .cert-image-overlay {
-            transform: translateY(0);
-            opacity: 0;
+            display: none;
+        }
+    }
+
+    /* ═══════════════════════ Mobile ═══════════════════════ */
+
+    @media (max-width: 768px) {
+        .cert-content {
+            padding: 0.9rem 0.95rem 1rem;
+        }
+
+        .cert-title {
+            font-size: 0.875rem;
+        }
+
+        .cert-credential {
+            padding-top: 0.6rem;
+            padding-bottom: 0.4rem;
+        }
+
+        .cert-meta {
+            row-gap: 0.35rem;
+        }
+
+        .cert-image-index {
+            font-size: clamp(1.9rem, 7vw, 2.5rem);
+        }
+    }
+
+    /* Very small screens (320–380px) */
+    @media (max-width: 380px) {
+        .cert-content {
+            padding: 0.8rem 0.85rem 0.9rem;
+        }
+
+        .cert-title {
+            font-size: 0.82rem;
+        }
+
+        .cert-tags {
+            gap: 2px;
         }
     }
 
@@ -403,6 +517,27 @@
         opacity: 0.55;
     }
 
+    .cert-cat {
+        display: inline-block;
+        font-family: var(--font-heading);
+        font-size: 0.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        padding: 2px 7px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .cert-note {
+        font-family: var(--font-body);
+        font-size: 0.55rem;
+        letter-spacing: 0.04em;
+        color: var(--text-muted, rgba(255, 255, 255, 0.3));
+        line-height: 1.4;
+    }
+
     .cert-verified {
         display: inline-flex;
         align-items: center;
@@ -416,14 +551,11 @@
         padding: 2px 7px;
         border: 1px solid rgba(255, 68, 0, 0.15);
         background: rgba(255, 68, 0, 0.05);
-        border-radius: 3px;
     }
 
-    .cert-verified-dot {
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background: var(--accent, #ff4400);
+    .cert-verified-check {
+        width: 10px;
+        height: 10px;
         flex-shrink: 0;
     }
 
@@ -465,11 +597,11 @@
 
     .cert-tag {
         font-family: var(--font-body);
-        font-size: 0.5rem;
+        font-size: 0.55rem;
         font-weight: 500;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.38);
         padding: 2px 6px;
         border: 1px solid rgba(255, 255, 255, 0.05);
         background: rgba(255, 255, 255, 0.015);
@@ -486,26 +618,28 @@
         padding-top: 0.7rem;
         padding-bottom: 0.5rem;
         font-family: var(--font-heading);
-        font-size: 0.5rem;
+        font-size: 0.55rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: rgba(255, 255, 255, 0.25);
+        color: rgba(255, 255, 255, 0.42);
         text-decoration: none;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
         transition:
             color 0.25s ease,
-            gap 0.25s ease;
+            gap 0.25s ease,
+            border-color 0.25s ease;
     }
 
     .cert-credential-icon {
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        opacity: 0.35;
+        opacity: 0.45;
     }
 
     .cert-credential:hover {
         color: var(--accent, #ff4400);
         gap: 7px;
+        border-top-color: rgba(255, 68, 0, 0.3);
     }
 
     .cert-credential:hover .cert-credential-icon {
@@ -525,8 +659,8 @@
         border-color: rgba(217, 65, 0, 0.15);
         border-left-color: var(--light-accent, #d94100);
         box-shadow:
-            0 8px 32px rgba(217, 65, 0, 0.06),
-            0 2px 8px rgba(0, 0, 0, 0.04);
+            5px 5px 0 rgba(0, 0, 0, 0.14),
+            0 10px 28px rgba(217, 65, 0, 0.06);
     }
 
     :where(:global(body.light-mode)) .cert-card::after {
@@ -557,23 +691,52 @@
         color: var(--light-accent, #d94100);
     }
 
-    :where(:global(body.light-mode)) .cert-verified-dot {
-        background: var(--light-accent, #d94100);
+    :where(:global(body.light-mode)) .cert-chip {
+        color: rgba(0, 0, 0, 0.6);
+        background: rgba(255, 255, 255, 0.88);
+        border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    :where(:global(body.light-mode)) .cert-chip-type.accent {
+        color: var(--light-accent, #d94100);
+        border-color: rgba(217, 65, 0, 0.4);
+        background: rgba(217, 65, 0, 0.06);
+    }
+
+    :where(:global(body.light-mode)) .cert-chip-idx {
+        color: rgba(0, 0, 0, 0.45);
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    :where(:global(body.light-mode)) .cert-card:hover .cert-chip-idx {
+        color: rgba(0, 0, 0, 0.75);
+        border-color: rgba(217, 65, 0, 0.4);
     }
 
     :where(:global(body.light-mode)) .cert-tag {
         border-color: rgba(0, 0, 0, 0.05);
         background: rgba(0, 0, 0, 0.015);
-        color: rgba(0, 0, 0, 0.35);
+        color: rgba(0, 0, 0, 0.45);
+    }
+
+    :where(:global(body.light-mode)) .cert-cat {
+        border-color: rgba(0, 0, 0, 0.08);
+        background: rgba(0, 0, 0, 0.02);
+        color: rgba(0, 0, 0, 0.55);
+    }
+
+    :where(:global(body.light-mode)) .cert-note {
+        color: rgba(0, 0, 0, 0.45);
     }
 
     :where(:global(body.light-mode)) .cert-credential {
-        color: rgba(0, 0, 0, 0.2);
+        color: rgba(0, 0, 0, 0.37);
         border-top-color: rgba(0, 0, 0, 0.04);
     }
 
     :where(:global(body.light-mode)) .cert-credential:hover {
         color: var(--light-accent, #d94100);
+        border-top-color: rgba(217, 65, 0, 0.3);
     }
 
     :where(:global(body.light-mode)) .cert-image-index {
@@ -598,6 +761,7 @@
         .cert-card,
         .cert-card::after,
         .cert-thumb,
+        .cert-chip,
         .cert-image-overlay,
         .cert-image-index,
         .cert-image-action,

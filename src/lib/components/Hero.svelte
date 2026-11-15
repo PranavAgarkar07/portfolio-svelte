@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import BlurText from "./BlurText.svelte";
+    import { base } from "$app/paths";
 
     interface Props {
         profile: {
@@ -86,21 +87,6 @@
 
     <div class="hero-inner">
         <div class="hero-left-col">
-            <div class="hero-status" class:hero-ready={heroReady}>
-                <span class="hero-status-icon" class:available={profile.status.includes("Open")}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
-                        <path d="M4 7h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                        <path d="M7 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                </span>
-                <span class="hero-status-value" class:available={profile.status.includes("Open")}>{profile.status}</span>
-                <span class="hero-status-divider" aria-hidden="true">//</span>
-                <span class="hero-status-role">{profile.role}</span>
-                <span class="hero-status-divider" aria-hidden="true">//</span>
-                <span class="hero-status-exp">2+ Years</span>
-            </div>
-
             <h1 class="hero-name" class:hero-ready={heroReady}>
                 <span class="hero-name-line hero-name-line--first">
                     <span class="hero-name-text">{nameParts[0]}</span>
@@ -109,6 +95,11 @@
                     <span class="hero-name-text">{nameParts.slice(1).join(" ") || nameParts[0]}</span>
                 </span>
             </h1>
+
+            <div class="hero-availability" class:hero-ready={heroReady}>
+                <span class="avail-dot"></span>
+                <span class="avail-text">Seeking Internships &amp; SDE Roles · Open to Remote &amp; Relocation (Pune / Bengaluru)</span>
+            </div>
 
             <div class="hero-tagline-wrap" class:hero-ready={heroReady}>
                 <BlurText
@@ -126,6 +117,15 @@
                     <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 9l6 6 6-6"/>
                     </svg>
+                </a>
+                <a href="{base}/Pranav_Agarkar_Resume.pdf" target="_blank" rel="noopener" download class="btn btn-resume">
+                    <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <polyline points="9 15 12 18 15 15"></polyline>
+                    </svg>
+                    <span class="btn-label">Resume PDF</span>
                 </a>
                 <a href="#contact" class="btn btn-secondary">
                     <span class="btn-label">Contact Me</span>
@@ -153,7 +153,7 @@
 
         <div class="hero-right-col">
             <div class="hero-avatar-card">
-                <img src={profile.avatar} alt={profile.name} width="280" height="280" loading="eager" fetchpriority="high" decoding="async" />
+                <img src={profile.avatar} alt={profile.name} width="280" height="280" sizes="(max-width: 600px) 280px, 280px" loading="eager" fetchpriority="high" decoding="async" />
                 <div class="hero-stats-mini" aria-label="Quick stats">
                     {#each about.stats.slice(0, 3) as stat}
                         <div class="hero-stat-row">
@@ -274,98 +274,6 @@
             letter-spacing: 0.04em;
             color: var(--text-primary);
         }
-    }
-    
-    .hero-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 2rem;
-        font-family: var(--font-body);
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        /* F-P0-2: default-visible; hidden pre-ready state only under html.js */
-        opacity: 1;
-        transform: none;
-        transition: opacity 0.8s ease, transform 0.8s ease;
-        align-self: flex-start;
-
-        /* Neobrutalist design */
-        background: #111922;
-        border: 1.5px solid rgba(255, 255, 255, 0.08);
-        border-left: 4px solid var(--accent);
-        padding: 6px 14px;
-        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
-    }
-    :global(html.js) .hero-status:not(.hero-ready) {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    
-    :global(body.light-mode) .hero-status {
-        background: #e4e8ed;
-        border-color: rgba(0, 0, 0, 0.08);
-        border-left-color: var(--accent);
-        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
-    }
-    
-    .hero-status.hero-ready {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    @media (max-width: 600px) {
-        .hero-status {
-            font-size: 0.65rem;
-            letter-spacing: 0.08em;
-            gap: 0.45rem;
-            padding: 5px 12px;
-        }
-        .hero-status-divider,
-        .hero-status-role,
-        .hero-status-exp {
-            display: none;
-        }
-    }
-    
-    .hero-status-icon {
-        width: 14px; height: 14px; flex-shrink: 0;
-        color: var(--text-secondary);
-    }
-    
-    .hero-status-icon.available {
-        color: #00ffaa;
-        animation: statusPulse 2s ease-in-out infinite;
-        filter: drop-shadow(0 0 6px rgba(0, 255, 170, 0.3));
-    }
-    
-    .hero-status-value {
-        font-weight: 600;
-    }
-    
-    .hero-status-value.available {
-        color: #00ffaa;
-    }
-    
-    .hero-status-divider {
-        color: var(--accent);
-        opacity: 0.4;
-        font-size: 0.65rem;
-    }
-    
-    .hero-status-role {
-        color: var(--text-secondary);
-        font-weight: 400;
-    }
-    
-    .hero-status-exp {
-        font-family: var(--font-heading);
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: var(--accent);
-        letter-spacing: 0.08em;
     }
     
     .hero-name {
@@ -565,10 +473,6 @@
     }
     
     /* ─── KEYFRAMES ─── */
-    @keyframes statusPulse {
-        0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(0, 255, 170, 0.3)); }
-        50% { opacity: 0.7; filter: drop-shadow(0 0 2px rgba(0, 255, 170, 0.2)); }
-    }
     
     @keyframes scrollPulse {
         0%, 100% { opacity: 1; transform: scaleY(1); }
@@ -582,12 +486,69 @@
     :global(.btn-primary.idle-pulse) {
         animation: idlePulse 2s ease-in-out 3;
     }
-    :global(body.light-mode) .hero-status-icon.available {
-        color: var(--light-accent, #d94100);
-        filter: drop-shadow(0 0 4px rgba(217, 65, 0, 0.2));
+
+    /* ── RESUME CTA BUTTON ── */
+    .btn-resume {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.1rem;
+        font-family: var(--font-body);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: none;
+        border: 1.5px solid var(--accent);
+        color: var(--accent);
+        background: transparent;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
     }
-    :global(body.light-mode) .hero-status-value.available {
-        color: var(--light-accent, #d94100);
+    .btn-resume:hover {
+        background: var(--accent);
+        color: #000;
     }
 
+    /* ── AVAILABILITY BADGE ── */
+    .hero-availability {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        transition-delay: 0.1s;
+    }
+    :global(html.js) .hero-availability:not(.hero-ready) {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    .hero-availability.hero-ready {
+        opacity: 1;
+        transform: none;
+    }
+    .avail-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 6px #22c55e88;
+        flex-shrink: 0;
+        animation: avail-pulse 2s ease-in-out infinite;
+    }
+    @keyframes avail-pulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 6px #22c55e88; }
+        50% { opacity: 0.7; box-shadow: 0 0 12px #22c55ecc; }
+    }
+    .avail-text {
+        font-family: var(--font-body);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+    }
 </style>

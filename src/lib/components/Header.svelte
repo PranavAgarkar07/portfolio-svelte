@@ -4,8 +4,7 @@
     import { onMount, tick } from "svelte";
     import { base } from "$app/paths";
     import { goto, afterNavigate } from "$app/navigation";
-    import { page } from "$app/stores";
-    import { trackEvent } from "$lib/analytics";
+    import { event } from "$lib/analytics";
 
     function navigateToSection(id: string) {
         goto(`${base}/#${id}`);
@@ -20,7 +19,7 @@
         { id: "projects", title: "Projects" },
         { id: "skills", title: "Skills" },
         { id: "about", title: "About" },
-        { id: "certifications", title: "Certifications" },
+        { id: "certifications", title: "Certs" },
         { id: "contact", title: "Contact" },
     ];
 
@@ -33,8 +32,8 @@
 
     let { profile }: Props = $props();
     let resumeUrl = $derived(
-        profile.socials.find((s) => s.name === "Resume")?.url ||
-            "/Pranav_Agarkar_Resume.pdf",
+        base + (profile.socials.find((s) => s.name === "Resume")?.url ||
+            "/Pranav_Agarkar_Resume.pdf"),
     );
     let mobileMenuOpen = $state(false);
     let activeSection = $state("");
@@ -47,8 +46,6 @@
 
     let isDark = $derived($theme === "dark");
 
-    let onBlogPage = $derived($page.url.pathname.startsWith(`${base}/blog`));
-
     // Scroll-spy: only the 5 nav sections compete, and only one can win at a
     // time (narrow active band near viewport top). Re-bound on every
     // navigation because Header persists across routes in the root layout.
@@ -58,8 +55,6 @@
     function refreshSpy() {
         spyObserver?.disconnect();
         activeSection = "";
-        // Blog pages have no spy sections — only the Blog link highlights.
-        if (onBlogPage) return;
         const targets = spyIds
             .map((id) => document.getElementById(id))
             .filter((el): el is HTMLElement => el !== null);
@@ -197,9 +192,6 @@
                     >
                 </li>
             {/each}
-            <li class="desktop-only nav-blog-li">
-                <a href="{base}/blog" class="nav-blog-link" class:active-section={onBlogPage} onclick={closeMenu}>Blog</a>
-            </li>
             <li class="nav-resume-li mobile-only">
                 <button
                     class="nav-link-btn"
@@ -234,7 +226,7 @@
                     class="nav-resume-link"
                     onclick={() => {
                         closeMenu();
-                        trackEvent("click", "resume_pdf");
+                        event("click", { target: "resume_pdf" });
                     }}
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -255,7 +247,7 @@
                 rel="noopener"
                 class="desktop-only header-resume-btn"
                 aria-label="Download Resume"
-                onclick={() => trackEvent("click", "resume_pdf")}
+                onclick={() => event("click", { target: "resume_pdf" })}
             >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -396,20 +388,6 @@
         gap: 0.35rem;
         margin-left: auto;
         flex-shrink: 0;
-    }
-
-    .nav-blog-link {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        padding: 0.3rem 0.5rem;
-        font-family: var(--font-body);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        transition: color 0.2s ease;
-    }
-    .nav-blog-link:hover,
-    .nav-blog-link.active-section {
-        color: var(--accent);
     }
 
     .header-resume-btn {
@@ -808,13 +786,6 @@
             color: var(--accent);
             opacity: 1;
             transform: translateX(0);
-        }
-        .nav-blog-link:hover,
-        .nav-blog-link:focus-visible {
-            color: var(--text-muted);
-        }
-        .nav-blog-link.active-section {
-            color: var(--accent);
         }
         .header-resume-btn:hover {
             opacity: 1;

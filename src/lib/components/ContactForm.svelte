@@ -1,21 +1,15 @@
 <script lang="ts">
-    import { browser } from "$app/environment";
-    import { trackEvent } from "$lib/analytics";
-    import { warmBackend } from "$lib/warmup";
-
-    const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-    const API_URL = BASE_URL + "/api/contact";
-    const HEALTH_URL = BASE_URL + "/healthz";
+    const MAILTO = "mailto:pranavagarkar8@gmail.com";
+    const EMAIL = "pranavagarkar8@gmail.com";
 
     let name = $state("");
     let email = $state("");
     let topic = $state("general");
     let message = $state("");
     let submitting = $state(false);
-    let waking = $state(false);
     let success = $state(false);
     let errorMsg = $state("");
-    let serverDown = $state(false);
+    let emailCopied = $state(false);
 
     let nameTouched = $state(false);
     let emailTouched = $state(false);
@@ -53,7 +47,7 @@
         try { localStorage.removeItem(draftKey); } catch { }
     }
 
-    if (browser) restoreDraft();
+    restoreDraft();
 
     function validate(): string {
         nameTouched = true;
@@ -68,97 +62,46 @@
         return "";
     }
 
-    async function wakeServer(): Promise<boolean> {
-        // F-P0-4: shared deduped warmup (5s timeout, 30s cooldown) instead of
-        // the old 3x(5s+3s) ~24s loop. Falls back to one legacy retry.
-        waking = true;
-        if (!BASE_URL) return false;
-        try {
-            if (await warmBackend(HEALTH_URL, 5000)) return true;
-        } catch {
-            serverDown = true;
-        }
-        try {
-            if (await warmBackend(HEALTH_URL, 8000)) return true;
-        } catch {
-            serverDown = true;
-        }
-        return false;
-    }
-
-    async function handleSubmit() {
+    function openMailto(): void {
         const err = validate();
         if (err) { errorMsg = err; return; }
         submitting = true;
         errorMsg = "";
 
-        const serverAwake = await wakeServer();
-        waking = false;
-        if (!serverAwake) {
-            serverDown = true;
-            errorMsg = "";
-            submitting = false;
-            return;
-        }
+        const subject = encodeURIComponent(`Portfolio Contact — ${topic}`);
+        const body = encodeURIComponent(
+            `Name: ${name.trim()}\nEmail: ${email.trim()}\nTopic: ${topic}\n\n${message.trim()}`
+        );
+        const url = `${MAILTO}?subject=${subject}&body=${body}`;
+        window.open(url, '_blank');
 
+        success = true;
+        name = ""; email = ""; topic = "general"; message = "";
+        nameTouched = false; emailTouched = false; messageTouched = false;
+        clearDraft();
+        setTimeout(() => { submitting = false; success = false; }, 6000);
+    }
+
+    async function copyEmail(): Promise<void> {
         try {
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 10000);
-            let res: Response;
-            try {
-                res = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: name.trim(), email: email.trim(), topic, message: message.trim() }),
-                    signal: ctrl.signal,
-                });
-            } finally {
-                clearTimeout(timer);
-            }
-            if (res.ok) {
-                success = true;
-                trackEvent("form", "form_submit");
-                name = ""; email = ""; topic = "general"; message = "";
-                nameTouched = false; emailTouched = false; messageTouched = false;
-                clearDraft();
-                setTimeout(() => success = false, 6000);
-            } else if (res.status === 429) {
-                errorMsg = "Please wait a moment before sending another message.";
-            } else {
-                const data = await res.json().catch(() => ({}));
-                errorMsg = data.message || "Server error. Try emailing me directly.";
-            }
+            await navigator.clipboard.writeText(EMAIL);
+            emailCopied = true;
+            setTimeout(() => { emailCopied = false; }, 2500);
         } catch {
-            errorMsg = "Network error. Try emailing me directly.";
-        } finally {
-            submitting = false;
+            // Fallback: select a temporary input
+            const el = document.createElement('input');
+            el.value = EMAIL;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            emailCopied = true;
+            setTimeout(() => { emailCopied = false; }, 2500);
         }
     }
 </script>
 
 <div class="contact-form">
-    {#if serverDown}
-        <div class="server-down-banner" role="alert">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                <line x1="6" y1="18" x2="6.01" y2="18"></line>
-            </svg>
-            <div class="sdb-content">
-                <span class="sdb-title">Server is sleeping</span>
-                <span class="sdb-text">Send me an email directly — I'll respond within 24 hours.</span>
-            </div>
-            <a href="mailto:pranavagarkar8@gmail.com?subject=Hello%20from%20your%20portfolio" class="sdb-cta">
-                Send Email
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"></line>
-                    <polyline points="7 7 17 7 17 17"></polyline>
-                </svg>
-            </a>
-            <button class="sdb-retry" onclick={() => { serverDown = false; errorMsg = ""; }}>Try again</button>
-        </div>
-    {:else}
     <div class="form-progress" aria-hidden="true">
         <div class="form-progress-track">
             <div class="form-progress-fill" style="width: {(fieldsCompleted / totalRequired) * 100}%"></div>
@@ -298,18 +241,13 @@
 
         <button
             class="submit-btn"
-            class:sending={submitting || waking}
+            class:sending={submitting}
             class:done={success}
-            onclick={handleSubmit}
-            disabled={submitting || waking || success}
+            onclick={openMailto}
+            disabled={submitting || success}
             type="button"
         >
-            {#if waking}
-                <span class="btn-content">
-                    <span class="btn-text">Waking server</span>
-                    <span class="btn-dots"><span>.</span><span>.</span><span>.</span></span>
-                </span>
-            {:else if submitting}
+            {#if submitting}
                 <span class="btn-content">
                     <span class="btn-text">Sending</span>
                     <span class="btn-dots"><span>.</span><span>.</span><span>.</span></span>
@@ -353,7 +291,6 @@
             Typically responds within 24 hours
         </span>
     </div>
-    {/if}
 </div>
 
 <style>

@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { Lightbox } from "lightbox3";
     import { Badge, Tag, Icon, type IconName } from "$lib/components/ui";
-    import ReviewSection from "$lib/components/feedback/ReviewSection.svelte";
+    import { repoFullNameFromUrl, type RepoStats } from "$lib/utils/gh-stats";
 
     interface Image {
         src: string;
@@ -23,18 +23,21 @@
         };
         index: number;
         eager?: boolean;
-        liked?: boolean;
-        likeCount?: number;
-        onLike?: (liked: boolean) => void;
+        /** Live GitHub engagement — stars + forks synced from api.github.com. */
+        stats?: RepoStats | null;
     }
 
-    let { project, index, eager = false, liked = false, likeCount = 0, onLike }: Props = $props();
+    let { project, index, eager = false, stats = null }: Props = $props();
     let currentSlide = $state(0);
     let carousel = $state<HTMLDivElement | null>(null);
     let cardEl = $state<HTMLElement | null>(null);
     let watermarkEl = $state<HTMLElement | null>(null);
     let reducedMotion = $state(false);
     let touchStartX = 0;
+
+    let repoUrl = $derived(
+        project.links.find((l) => !!repoFullNameFromUrl(l.url))?.url ?? ""
+    );
 
     function handleKeyDown(e: KeyboardEvent) {
         // H-3: only hijack arrows when focus is inside the carousel, so
@@ -138,6 +141,46 @@
     onkeydown={handleKeyDown}
     tabindex="0"
 >
+    {#snippet ghChip(linked: boolean)}
+        {#if linked}
+            <a
+                class="gh-stats"
+                href={repoUrl}
+                target="_blank"
+                rel="noopener"
+                title="Engagement synced live from the GitHub API"
+                aria-label={stats
+                    ? `GitHub repository — ${stats.stars} stars, ${stats.forks} forks`
+                    : `GitHub repository — ${project.githubStars ?? 0} stars`}
+            >
+                <span class="gh-stat">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span class="gh-stat-num">{stats ? stats.stars : project.githubStars ?? 0}</span>
+                </span>
+                {#if stats}
+                    <span class="gh-stat gh-stat-fork">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><circle cx="18" cy="6" r="3" />
+                            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9" />
+                            <path d="M12 12v3" />
+                        </svg>
+                        <span class="gh-stat-num">{stats.forks}</span>
+                    </span>
+                {/if}
+            </a>
+        {:else}
+            <span class="gh-stats">
+                <span class="gh-stat">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span class="gh-stat-num">{project.githubStars}</span>
+                </span>
+            </span>
+        {/if}
+    {/snippet}
     {#if project.featured}
         <!-- FEATURED LAYOUT: horizontal split — image left, content right -->
         <div class="featured-inner">
@@ -161,6 +204,9 @@
                                     src={img.src}
                                     alt={img.alt}
                                     class="carousel-img"
+                                    width="600"
+                                    height="400"
+                                    sizes="(max-width: 600px) 100vw, 50vw"
                                     loading={eager && i === 0 ? "eager" : "lazy"}
                                     fetchpriority={eager && i === 0 ? "high" : "auto"}
                                     decoding="async"
@@ -214,8 +260,6 @@
                         <span class="tag-overflow" title={project.tags.slice(5).join(', ')}>+{project.tags.length - 5}</span>
                     {/if}
                 </div>
-
-                <ReviewSection projectName={project.name} />
                 <div class="card-links">
                     {#each project.links as link}
                         <a href={link.url} target="_blank" rel="noopener" class="card-link">
@@ -224,12 +268,11 @@
                             <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
                         </a>
                     {/each}
-                    <button class="like-btn" class:liked class:interactive={!!onLike} onclick={() => onLike?.(!liked)} aria-label={liked ? "Unlike" : "Like this project"}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                        </svg>
-                        <span class="like-count">{likeCount}</span>
-                    </button>
+                    {#if repoUrl}
+                        {@render ghChip(true)}
+                    {:else if project.githubStars != null}
+                        {@render ghChip(false)}
+                    {/if}
                 </div>
             </div>
         </div>
@@ -255,6 +298,9 @@
                                 src={img.src}
                                 alt={img.alt}
                                 class="carousel-img"
+                                width="600"
+                                height="400"
+                                sizes="(max-width: 600px) 100vw, 50vw"
                                 loading={eager && i === 0 ? "eager" : "lazy"}
                                 fetchpriority={eager && i === 0 ? "high" : "auto"}
                                 decoding="async"
@@ -313,8 +359,7 @@
                     {/if}
                 </div>
 
-            <ReviewSection projectName={project.name} />
-            <div class="card-links">
+                <div class="card-links">
                 {#each project.links as link}
                     <a href={link.url} target="_blank" rel="noopener" class="card-link">
                         <Icon name={link.icon as IconName} size={14} />
@@ -322,12 +367,11 @@
                         <span class="link-arrow-icon"><Icon name="arrow-up-right" size={12} /></span>
                     </a>
                 {/each}
-                <button class="like-btn" class:liked class:interactive={!!onLike} onclick={() => onLike?.(!liked)} aria-label={liked ? "Unlike" : "Like this project"}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                    </svg>
-                    <span class="like-count">{likeCount}</span>
-                </button>
+                {#if repoUrl}
+                    {@render ghChip(true)}
+                {:else if project.githubStars != null}
+                    {@render ghChip(false)}
+                {/if}
             </div>
             <span class="card-number-watermark" bind:this={watermarkEl} aria-hidden="true"
                 >0{index + 1}</span
@@ -885,88 +929,86 @@
         box-shadow: none;
     }
 
-    /* ── Like Button ── */
+    /* ── GitHub Engagement Chip (stars + forks, synced live) ── */
 
-    .like-btn {
+    .gh-stats {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
         font-family: var(--font-heading);
         font-size: 0.65rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: rgba(255, 255, 255, 0.25);
+        color: rgba(255, 255, 255, 0.6);
         text-decoration: none;
         padding: 5px 10px;
         border: 1.5px solid rgba(255, 255, 255, 0.15);
         background: rgba(255, 255, 255, 0.03);
         box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
-        cursor: default;
-        transition: all 0.15s ease;
         margin-left: auto;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .like-btn.interactive {
+    a.gh-stats {
         cursor: pointer;
     }
 
-    .like-btn.interactive:hover {
-        color: #ef4444;
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.1);
-        box-shadow: 2px 2px 0px #ef4444;
+    a.gh-stats:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+        background: rgba(255, 68, 0, 0.1);
+        box-shadow: 2px 2px 0px var(--accent);
         transform: translate(1px, 1px);
     }
 
-    .like-btn.interactive:active {
+    a.gh-stats:active {
         box-shadow: none;
         transform: translate(3px, 3px);
     }
 
-    .like-btn.liked {
-        color: #ef4444;
-        border-color: rgba(239, 68, 68, 0.4);
-        background: rgba(239, 68, 68, 0.08);
+    .gh-stats:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
     }
 
-    .like-btn.liked.interactive:hover {
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.15);
+    .gh-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 
-    .like-count {
+    .gh-stat-fork {
+        margin-left: 2px;
+        padding-left: 6px;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .gh-stat-num {
         font-size: 0.6rem;
-        opacity: 0.8;
+        opacity: 0.9;
     }
 
-    :global(body.light-mode) .like-btn {
-        color: rgba(0, 0, 0, 0.25);
+    :global(body.light-mode) .gh-stats {
+        color: rgba(0, 0, 0, 0.6);
         border-color: rgba(0, 0, 0, 0.2);
         background: rgba(0, 0, 0, 0.03);
         box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
     }
 
-    :global(body.light-mode) .like-btn.interactive:hover {
-        color: #dc2626;
-        border-color: rgba(220, 38, 38, 0.3);
-        background: rgba(220, 38, 38, 0.06);
-        box-shadow: 1px 1px 0px rgba(220, 38, 38, 0.25);
+    :global(body.light-mode) a.gh-stats:hover {
+        color: var(--light-accent, #d94100);
+        border-color: rgba(200, 50, 0, 0.4);
+        background: rgba(200, 50, 0, 0.06);
+        box-shadow: 1px 1px 0px rgba(200, 50, 0, 0.3);
     }
 
-    :global(body.light-mode) .like-btn.liked {
-        color: #dc2626;
-        border-color: rgba(220, 38, 38, 0.3);
-        background: rgba(220, 38, 38, 0.06);
+    :global(body.light-mode) .gh-stats:focus-visible {
+        outline-color: var(--light-accent, #d94100);
     }
 
-    :global(body.light-mode) .like-btn.liked.interactive:hover {
-        border-color: #dc2626;
-        background: rgba(220, 38, 38, 0.12);
-    }
-
-    :global(body.light-mode) .like-btn.interactive:active {
-        box-shadow: none;
+    :global(body.light-mode) .gh-stat-fork {
+        border-left-color: rgba(0, 0, 0, 0.15);
     }
 
     :global(body.light-mode) .card-links {

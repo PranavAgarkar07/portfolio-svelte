@@ -2,7 +2,6 @@
     import { onMount } from "svelte";
     import { ensureGsap, motionAllowed } from "$lib/motion";
     import { SectionHeader } from "$lib/components/ui";
-    import DevLog from "./DevLog.svelte";
 
     let { skills }: { skills: Array<{ category: string; items: Array<{ name: string; icon: string; level: string; projects?: string[] }> }> } = $props();
     let prefersReducedMotion = $state(false);
@@ -66,8 +65,5 @@
                 </div>
             </div>
         {/each}
-    </div>
-    <div class="skills-footer">
-        <DevLog />
     </div>
 </section>

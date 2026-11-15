@@ -4,13 +4,9 @@
     import { scrollY } from "$lib/stores/scroll";
     import { onMount } from "svelte";
     import { afterNavigate, goto } from "$app/navigation";
-    import { initAnalytics, trackEvent } from "$lib/analytics";
-    import { init, handleCallback, loading } from "$lib/stores/auth";
+    import { initAnalytics, pageview } from "$lib/analytics";
     import type Lenis from "lenis";
-    import "../styles.css";
-    import "../light-mode.css";
     import Header from "$lib/components/Header.svelte";
-    import CookieConsent from "$lib/components/CookieConsent.svelte";
     import { portfolioData } from "$lib/data";
 
     let { children } = $props();
@@ -32,25 +28,11 @@
     onMount(() => {
         let cleanup: (() => void) | undefined;
         (async () => {
-        const hash = window.location.hash.slice(1);
-        const hashParams = new URLSearchParams(hash);
-        const token = hashParams.get('token');
-        if (token) {
-            await handleCallback(token);
-            loading.set(false);
-            window.history.replaceState({}, '', window.location.pathname);
-            const redirect = localStorage.getItem('redirect_after_login');
-            if (redirect) {
-                localStorage.removeItem('redirect_after_login');
-                if (redirect.startsWith('/') && !redirect.startsWith('//') || redirect.startsWith(base + '/') || redirect === base || redirect === `${base}/`) {
-                    goto(redirect, { replaceState: true });
-                }
-            }
-        } else {
-            init();
-        }
-        initAnalytics();
-        trackEvent("pageview", window.location.pathname);
+            let gsapInstance: any = null;
+            let tickerCb: ((time: number) => void) | null = null;
+            const hash = window.location.hash.slice(1);
+            initAnalytics();
+            pageview(window.location.pathname);
 
         function applyTheme(value: 'dark' | 'light') {
             document.getElementById('theme-guard')?.remove();
@@ -78,7 +60,7 @@
         //     navigator.serviceWorker.register(`${base}/service-worker.js`);
         // }
 
-        if ("web-vital" in navigator === false && "PerformanceObserver" in window) {
+        if (!import.meta.env.PROD && "web-vital" in navigator === false && "PerformanceObserver" in window) {
             try {
                 new PerformanceObserver((list) => {
                     for (const entry of list.getEntries()) {
@@ -132,6 +114,7 @@
                 const mods = await motion.ensureGsap();
                 if (mods) {
                     const { gsap, ScrollTrigger } = mods;
+                    gsapInstance = gsap;
                     document.documentElement.classList.add("lenis-active");
                     lenis = new Lenis({
                         duration: 1.2,
@@ -143,11 +126,11 @@
 
                     lenis.on("scroll", ScrollTrigger.update);
 
-                    gsap.ticker.add((time: number) => {
+                    tickerCb = (time: number) => {
                         lenis!.raf(time * 1000);
                         scrollY.set(lenis!.scroll);
-                    });
-                    gsap.ticker.lagSmoothing(33, 16);
+                    };
+                    gsapInstance.ticker.add(tickerCb);
                 }
             } catch {}
         }
@@ -212,6 +195,7 @@
                 });
                 document.documentElement.classList.remove("lenis-active");
                 lenis?.destroy();
+                if (gsapInstance && tickerCb) gsapInstance.ticker.remove(tickerCb);
             };
         })();
         return () => cleanup?.();
@@ -235,7 +219,7 @@
 
 <svelte:head>
     <!-- Content Security Policy (static-site meta-tag variant) -->
-    <meta http-equiv="content-security-policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.fontshare.com; font-src 'self' https: data:; img-src 'self' data: https:; connect-src 'self' https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com https://sentinel-backend-4x3i.onrender.com http://localhost:8080; frame-src 'none'; object-src 'none'; base-uri 'self'" />
+    <meta http-equiv="content-security-policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https: data:; img-src 'self' data: https:; connect-src 'self' https://api.github.com; frame-src 'none'; object-src 'none'; base-uri 'self'" />
 
     <!-- Primary Meta -->
     <title>Pranav Agarkar | Fullstack Developer</title>
@@ -274,11 +258,11 @@
         "name": "Pranav Agarkar",
         "url": "https://pranavagarkar07.github.io/portfolio-svelte/",
         "jobTitle": "Fullstack Developer",
-        "description": "Fullstack Developer specializing in Django, React, Svelte, and Go.",
-        "knowsAbout": ["Django", "React", "Svelte", "SvelteKit", "Go", "Python", "JavaScript", "TypeScript", "PostgreSQL"],
+        "description": "B.Tech CSE student building production-grade systems with Go, Django, and modern frontend frameworks.",
+        "knowsAbout": ["Django", "React", "Svelte", "SvelteKit", "Go", "Python", "JavaScript", "TypeScript", "PostgreSQL", "P2P Networking", "Machine Learning"],
         "sameAs": [
             "https://github.com/PranavAgarkar07",
-            "https://www.linkedin.com/in/pranav-agarkar-344291257/",
+            "https://www.linkedin.com/in/pranavagarkar",
             "https://x.com/PranavAgarkar18"
         ]
     }).replace(/</g, '\\u003c')}</script>`}
@@ -287,15 +271,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
-    <link rel="preconnect" href="https://api.fontshare.com" crossorigin="anonymous" />
-    <link rel="preconnect" href="https://syci1ayb7l.execute-api.ap-south-1.amazonaws.com" crossorigin="anonymous" />
-    <link rel="preconnect" href="https://portfolio-uploads-sentinel.s3.ap-south-1.amazonaws.com" crossorigin="anonymous" />
 
-    <!-- Fonts -->
+    <!-- Fonts (Google Fonts, single provider) -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
     />
+
+    <!-- Critical CSS (blocking, above-the-fold) -->
+    <link rel="stylesheet" href="{base}/styles.critical.css" />
+
+    <!-- Full CSS (deferred via media=print onload) -->
+    <link rel="stylesheet" href="{base}/styles.css" media="print" onload={(e) => (e.target as HTMLLinkElement).media = "all"} />
+    <noscript><link rel="stylesheet" href="{base}/styles.css" /></noscript>
+
+    <!-- Light mode CSS (deferred) -->
+    <link rel="stylesheet" href="{base}/light-mode.css" media="print" onload={(e) => (e.target as HTMLLinkElement).media = "all"} />
+    <noscript><link rel="stylesheet" href="{base}/light-mode.css" /></noscript>
 
     <!-- Icon CDNs -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
@@ -320,4 +312,4 @@
 
 {@render children()}
 
-<CookieConsent />
+

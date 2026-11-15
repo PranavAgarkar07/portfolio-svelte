@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { base } from "$app/paths";
     import { ensureGsap, motionAllowed } from "$lib/motion";
 
     import { theme } from "$lib/stores/theme";
@@ -8,7 +9,7 @@
     import Hero from "$lib/components/Hero.svelte";
     import About from "$lib/components/About.svelte";
     import ProjectCard from "$lib/components/ProjectCard.svelte";
-    import CertificateCard from "$lib/components/CertificateCard.svelte";
+    import CertificateShowcase from "$lib/components/CertificateShowcase.svelte";
 
     import Skills from "$lib/components/Skills.svelte";
     import Footer from "$lib/components/Footer.svelte";
@@ -18,49 +19,41 @@
     import Icon from "$lib/components/ui/Icon/Icon.svelte";
     import SectionHeader from "$lib/components/ui/SectionHeader/SectionHeader.svelte";
     import Card from "$lib/components/ui/Card/Card.svelte";
-    import Skeleton from "$lib/components/ui/Skeleton/Skeleton.svelte";
     import type { IconName } from "$lib/components/ui/Icon/Icon.svelte";
-    import type { Certificate, Badge, MarqueeItem } from "$lib/types";
-    import { fetchProjectLikes, toggleProjectLike } from "$lib/analytics";
+    import type { Certificate } from "$lib/types";
     import FeedbackMarquee from "$lib/components/feedback/FeedbackMarquee.svelte";
-    import { staleWhileRevalidate } from '$lib/utils/cache';
+    import { fetchRepoStats, repoFullNameFromUrl, type RepoStats } from "$lib/utils/gh-stats";
 
     const { profile, about, skills, projects } = portfolioData;
-    const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
     let certificates = $state<Certificate[]>(certsData);
-    let badges = $state<Badge[]>([]);
-    let marqueeItems = $state<MarqueeItem[]>([]);
-    let likes = $state<Record<string, number>>({});
-    let userLikes = $state<Record<string, boolean>>({});
     let prefersReducedMotion = $state(false);
+    let emailCopied = $state(false);
+    async function copyEmail() {
+        try {
+            await navigator.clipboard.writeText('pranavagarkar8@gmail.com');
+            emailCopied = true;
+            setTimeout(() => { emailCopied = false; }, 2500);
+        } catch { /* ignore */ }
+    }
 
-    // F-P0-4: below-fold fetches (badges, marquee, likes) — deferred until
-    // the projects section nears the viewport. Single-fire guard.
+    // GitHub engagement (stars + forks) synced live from the public REST
+    // API — replaces the like counter that required the removed Go API.
+    let repoStats = $state<Record<string, RepoStats | null>>({});
+
+    function statsFor(project: (typeof projects)[number]): RepoStats | null {
+        for (const link of project.links) {
+            const repo = repoFullNameFromUrl(link.url);
+            if (repo && repo in repoStats) return repoStats[repo];
+        }
+        return null;
+    }
+
+    // Below-fold fetches removed — fully frontend stack, no backend.
+    // Badges and marquee required the Go API; likes are now GitHub stats.
     let belowFoldFired = false;
     function loadBelowFold() {
-        if (belowFoldFired || !API_BASE) return;
-        belowFoldFired = true;
-        void Promise.allSettled([
-            staleWhileRevalidate<Badge[]>(
-                'home:badges',
-                `${API_BASE}/api/badges`,
-                30 * 60 * 1000,
-                (data) => { badges = data ?? []; },
-                (raw) => { const d = (raw as { badges?: Badge[] } | null); const list = d?.badges; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as Badge[]); return []; },
-            ),
-            staleWhileRevalidate<MarqueeItem[]>(
-                'home:marquee',
-                `${API_BASE}/api/feedback/marquee`,
-                10 * 60 * 1000,
-                (data) => { marqueeItems = data ?? []; },
-                (raw) => { const d = (raw as { items?: MarqueeItem[] } | null); const list = d?.items; if (Array.isArray(list)) return list; if (Array.isArray(raw)) return (raw as MarqueeItem[]); return []; },
-            ),
-            fetchProjectLikes().then(result => {
-                likes = result.likes;
-                userLikes = result.user_likes;
-            }).catch(() => {}),
-        ]);
+        // No-op: all below-fold data was backend-dependent.
     }
 
     const siteUrl = "https://pranavagarkar07.github.io/portfolio-svelte/";
@@ -73,37 +66,28 @@
     onMount(() => {
         prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+        // Sync GitHub engagement for every project with a repo link.
+        // Static `githubStars` from data.ts is the prerender/markup
+        // fallback; this only upgrades it once real stats arrive.
+        // gh-stats dedupes, caches 1h per session, and fails soft.
+        const repos = [
+            ...new Set(
+                projects.flatMap((p) =>
+                    p.links
+                        .map((l) => repoFullNameFromUrl(l.url))
+                        .filter((r): r is string => !!r)
+                )
+            ),
+        ];
+        if (repos.length > 0) {
+            fetchRepoStats(repos).then((stats) => (repoStats = stats));
+        }
+
         // F-P0-4: critical fetch first (certs); everything below the fold
-        // (badges, marquee, likes) waits for the projects section.
+        // (badges, marquee) waits for the projects section.
 
         let belowFoldObserver: IntersectionObserver | null = null;
         let belowFoldFallback: ReturnType<typeof setTimeout> | undefined;
-        if (API_BASE && !belowFoldFired) {
-            const fire = () => {
-                belowFoldObserver?.disconnect();
-                belowFoldObserver = null;
-                if (belowFoldFallback) clearTimeout(belowFoldFallback);
-                loadBelowFold();
-            };
-            if ("IntersectionObserver" in window) {
-                const target = document.querySelector("#projects");
-                if (target) {
-                    belowFoldObserver = new IntersectionObserver(
-                        (entries) => {
-                            if (entries.some((e) => e.isIntersecting)) fire();
-                        },
-                        { rootMargin: "400px 0px" },
-                    );
-                    belowFoldObserver.observe(target);
-                    // Fallback: never leave below-fold data unfetched.
-                    belowFoldFallback = setTimeout(fire, 8000);
-                } else {
-                    loadBelowFold();
-                }
-            } else {
-                loadBelowFold();
-            }
-        }
 
         // F-P0-1/F-P0-2: motion + reveals load dynamically and only when
         // allowed. Content is default-visible; gsap.from() is used so a
@@ -246,7 +230,6 @@
 
         return () => {
             destroyed = true;
-            belowFoldObserver?.disconnect();
             if (belowFoldFallback) clearTimeout(belowFoldFallback);
             if (handleResize) window.removeEventListener("resize", handleResize);
             if (resizeTimer) clearTimeout(resizeTimer);
@@ -288,71 +271,30 @@
     <meta property="twitter:description" content={pageDescription} />
     <meta property="twitter:image" content={coverImage} />
 
-    <!-- Structured Data (JSON-LD) -->
-    {@html `<noscript><style>.blur-segment,.hero-status,.hero-name-text,.hero-tagline-wrap,.cta-group,.tech-marquee,.hero-scroll,.project-card,.about-visual-col,.about-content-col,.about-spec-row,.about-metric,.contact-info,.contact-form-container,.info-item,.social-link,.skill-category-card,.skill-card{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important}</style></noscript>`}
-    <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "Person",
-            "name": "{profile.name}",
-            "url": "{siteUrl}",
-            "jobTitle": "{profile.role}",
-            "image": "{coverImage}",
-            "sameAs": [
-                {#each profile.socials as social, i}
-                    "{social.url}"{i < profile.socials.length - 1 ? ',' : ''}
-                {/each}
-            ],
-            "description": "{pageDescription}"
-        }
-    </script>
+    <!-- Structured Data (JSON-LD) is handled in +layout.svelte -->
+    {@html `<noscript><style>.blur-segment,.hero-name-text,.hero-tagline-wrap,.cta-group,.tech-marquee,.hero-scroll,.project-card,.about-visual-col,.about-content-col,.about-spec-row,.about-metric,.contact-info,.contact-form-container,.info-item,.social-link,.skill-category-card,.skill-card{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important}</style></noscript>`}
 </svelte:head>
 
 
 <main id="main-content">
     <Hero {profile} {skills} {about} />
 
-    <FeedbackMarquee items={marqueeItems} />
-
     <section id="projects" class="section-container snap-section">
         <SectionHeader title="Featured Projects" count={projects.length} animate />
         <div class="projects-grid" style="margin-top: 1.5rem">
             {#each projects as project, i}
-                <ProjectCard {project} index={i} eager={i === 0} liked={userLikes[project.name] ?? false} likeCount={likes[project.name] ?? 0} onLike={(liked) => {
-                    const name = project.name;
-                    const prevLikes = likes;
-                    userLikes = { ...userLikes, [name]: liked };
-                    likes = { ...likes, [name]: (likes[name] ?? 0) + (liked ? 1 : -1) };
-                    toggleProjectLike(name, liked).then(count => {
-                        if (count < 0) {
-                            userLikes = { ...userLikes, [name]: !liked };
-                            likes = { ...likes, [name]: (likes[name] ?? 0) + (liked ? -1 : 1) };
-                        } else {
-                            likes = { ...likes, [name]: count };
-                        }
-                    });
-                }} />
+                <ProjectCard {project} index={i} eager={i === 0} stats={statsFor(project)} />
             {/each}
         </div>
     </section>
 
     <Skills {skills} />
 
-    <About {profile} {about} {badges} />
+    <About {profile} {about} />
 
     <section id="certifications" class="section-container snap-section">
         <SectionHeader title="Certifications" count={certificates.length} animate />
-        {#if certificates.length > 0}
-            <div class="certs-grid">
-                {#each certificates as cert, i}
-                    <div class="cert-card-wrap">
-                        <CertificateCard certificate={cert} index={i} />
-                    </div>
-                {/each}
-            </div>
-        {:else}
-            <div class="certs-empty">No certificates yet.</div>
-        {/if}
+        <CertificateShowcase certificates={certificates} />
     </section>
 
     <section id="contact" class="contact-section snap-section">
@@ -366,20 +308,36 @@
             <div class="contact-grid">
                 <div class="contact-info">
                     <Card>
-                        <a href="mailto:pranavagarkar8@gmail.com?subject=Opportunity%20from%20your%20portfolio" class="contact-email-cta">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                                <path d="M22 4L12 13 2 4"></path>
-                            </svg>
-                            <div class="contact-email-content">
-                                <span class="contact-email-label">Email me directly</span>
-                                <span class="contact-email-addr">pranavagarkar8@gmail.com</span>
-                            </div>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-email-arrow">
-                                <line x1="7" y1="17" x2="17" y2="7"></line>
-                                <polyline points="7 7 17 7 17 17"></polyline>
-                            </svg>
-                        </a>
+                        <div class="contact-email-row">
+                            <a href="mailto:pranavagarkar8@gmail.com?subject=Opportunity%20from%20your%20portfolio" class="contact-email-cta" target="_blank" rel="noopener">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                    <path d="M22 4L12 13 2 4"></path>
+                                </svg>
+                                <div class="contact-email-content">
+                                    <span class="contact-email-label">Email me directly</span>
+                                    <span class="contact-email-addr">pranavagarkar8@gmail.com</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-email-arrow">
+                                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                                    <polyline points="7 7 17 7 17 17"></polyline>
+                                </svg>
+                            </a>
+                            <button class="copy-email-btn" onclick={copyEmail} aria-label="Copy email address" title="Copy email">
+                                {#if emailCopied}
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Copied!</span>
+                                {:else}
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    <span>Copy</span>
+                                {/if}
+                            </button>
+                        </div>
                         <div class="info-item">
                             <div class="info-icon">
                                 <Icon name="clock" size={20} />
@@ -396,7 +354,7 @@
                         <div class="social-links">
                             {#each profile.socials as social}
                                 <a
-                                    href={social.url}
+                                    href={social.url.startsWith("/") ? `${base}${social.url}` : social.url}
                                     target={social.url.startsWith("mailto") ? undefined : "_blank"}
                                     rel="noopener"
                                     class="social-link"
@@ -420,4 +378,43 @@
 <Footer {profile} />
 
 <style>
+    /* ─── CONTACT EMAIL ROW ─── */
+    .contact-email-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+    .contact-email-row .contact-email-cta {
+        width: 100%;
+        min-width: 0;
+    }
+    .copy-email-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-end;
+        gap: 0.35rem;
+        min-height: 34px;
+        padding: 0 0.8rem;
+        background: transparent;
+        border: 1px solid var(--grid-line);
+        color: var(--text-secondary);
+        font-family: var(--font-body);
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: border-color 0.2s, color 0.2s, background 0.2s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .copy-email-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .copy-email-btn svg {
+        stroke: currentColor;
+    }
 </style>

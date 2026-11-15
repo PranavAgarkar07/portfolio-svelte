@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { Icon, type IconName } from "$lib/components/ui";
-    import { base } from "$app/paths";
 
     interface Props {
         profile: {
@@ -55,19 +54,18 @@
         <div class="footer-section links">
             <h4>Navigation</h4>
             <div class="footer-nav-list">
-                <a href="#about">About</a>
-                <a href="#skills">Skills</a>
-                <a href="#certifications">Certifications</a>
                 <a href="#projects">Projects</a>
+                <a href="#skills">Skills</a>
+                <a href="#about">About</a>
+                <a href="#certifications">Certifications</a>
                 <a href="#contact">Contact</a>
-                <a href="{base}/admin/dashboard">Login</a>
             </div>
         </div>
         <div class="footer-section info">
             <h4>Contact</h4>
             <p>pranavagarkar8@gmail.com</p>
             <p>Solapur, India</p>
-            <p class="footer-status">Available for opportunities</p>
+            <p class="footer-status">Seeking Internships & SDE Roles</p>
         </div>
     </div>
 
