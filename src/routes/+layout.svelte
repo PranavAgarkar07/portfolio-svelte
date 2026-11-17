@@ -279,15 +279,16 @@
     />
 
     <!-- Critical CSS (blocking, above-the-fold) -->
-    <link rel="stylesheet" href="{base}/styles.critical.css" />
+    <link rel="stylesheet" href="{base}/styles.critical.css?v={__CSS_BUILD__}" />
 
-    <!-- Full CSS (deferred via media=print onload) -->
-    <link rel="stylesheet" href="{base}/styles.css" media="print" onload={(e) => (e.target as HTMLLinkElement).media = "all"} />
-    <noscript><link rel="stylesheet" href="{base}/styles.css" /></noscript>
+    <!-- Full CSS (deferred via media=print onload) — ?v busts the browser
+         cache on every build so an edited static sheet is never served stale -->
+    <link rel="stylesheet" href="{base}/styles.css?v={__CSS_BUILD__}" media="print" onload={(e) => (e.target as HTMLLinkElement).media = "all"} />
+    <noscript><link rel="stylesheet" href="{base}/styles.css?v={__CSS_BUILD__}" /></noscript>
 
     <!-- Light mode CSS (deferred) -->
-    <link rel="stylesheet" href="{base}/light-mode.css" media="print" onload={(e) => (e.target as HTMLLinkElement).media = "all"} />
-    <noscript><link rel="stylesheet" href="{base}/light-mode.css" /></noscript>
+    <link rel="stylesheet" href="{base}/light-mode.css?v={__CSS_BUILD__}" media="print" onload={(e) => (e.target as HTMLLinkElement).media = "all"} />
+    <noscript><link rel="stylesheet" href="{base}/light-mode.css?v={__CSS_BUILD__}" /></noscript>
 
     <!-- Icon CDNs -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
